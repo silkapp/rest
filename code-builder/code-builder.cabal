@@ -1,0 +1,18 @@
+Name:                code-builder
+Version:             0.1
+Synopsis:            Simple system for generating code
+License:             OtherLicense
+License-File:        LICENSE
+Author:              typLAB
+Maintainer:          code@typlab.com
+Category:            Data
+Build-type:          Simple
+Cabal-version:       >=1.6
+
+Library
+  Hs-Source-Dirs:    src
+  Exposed-Modules:   Code.Build
+                     Code.Build.JavaScript
+  Build-Depends:     base == 4.*
+                   , containers >= 0.3 && < 0.5
+  Ghc-Options:       -Wall
