@@ -6,8 +6,11 @@ import Data.List
 jsObject :: [(String, Code)] -> Code
 jsObject items = ("{ " <-> many ", ") |><| mkStack (map fst items) |><| many ": " |>+<| map snd items <-> "}"
 
+statements :: CodeList a => a -> Code
+statements = mkStack . map (<+> ";") . codeList
+
 block :: CodeList a => a -> Code
-block c = "{" <-> indent 2 (mkStack $ map (<+> ";") $ codeList c) <-> "}"
+block c = "{" <-> indent 2 (statements c) <-> "}"
 
 iff :: (Codeable a, CodeList b) => a -> b -> Code
 iff cond blk = "if" <++> parenthesis cond <++> block blk
