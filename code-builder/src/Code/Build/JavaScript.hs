@@ -14,20 +14,20 @@ block :: CodeList a => a -> Code
 block c = "{" <-> indent 2 (statements c) <-> "}"
 
 iff :: (Codeable a, CodeList b) => a -> b -> Code
-iff cond blk = "if" <++> parenthesis cond <++> block blk
+iff cond blk = "if" <++> parenthesis cond <-> block blk
 
 for :: (Codeable a, CodeList b) => a -> b -> Code
-for cond blk = "for" <++> parenthesis cond <++> block blk
+for cond blk = "for" <++> parenthesis cond <-> block blk
 
 function :: CodeList a => [String] -> a -> Code
-function pars body = "function" <++> parenthesis (intercalate ", " pars) <++> block body
+function pars body = "function" <++> parenthesis (intercalate ", " pars) <-> block body
 
 functionDecl :: CodeList a => String -> [String] -> a -> Code
-functionDecl name pars body = "function" <++> name <++> parenthesis (intercalate ", " pars) <++> block body
+functionDecl name pars body = "function" <++> name <++> parenthesis (intercalate ", " pars) <-> block body
 
 call :: CodeList a => String -> a -> Code
-call func as | all singleLine (codeList as) = func <++> parenthesis (interleave "," $ codeList as)
-             | otherwise                    = func <+| ((" (" <-> many " ,") |>+<| as) <+> ")"
+call func as | all singleLine (codeList as) = func <+> parenthesis (interleave ", " $ codeList as)
+             | otherwise                    = func <+| (("( " <-> many ", ") |>+<| as) <+> ")"
 
 proc :: CodeList a => String -> a -> Code
 proc f a = call f a <+> ";"
