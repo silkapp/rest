@@ -13,8 +13,11 @@ statements = mkStack . codeList
 block :: CodeList a => a -> Code
 block c = "{" <-> indent 2 (statements c) <-> "}"
 
-iff :: (Codeable a, CodeList b) => a -> b -> Code
-iff cond blk = "if" <++> parenthesis cond <-> block blk
+jsIf :: (Codeable a, CodeList b) => a -> b -> Code
+jsIf cond blk = "if" <++> parenthesis cond <-> block blk
+
+jsElse :: CodeList a => a -> Code
+jsElse blk = "else" <-> block blk
 
 for :: (Codeable a, CodeList b) => a -> b -> Code
 for cond blk = "for" <++> parenthesis cond <-> block blk
