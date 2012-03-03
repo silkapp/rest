@@ -84,10 +84,12 @@ mkSequence = foldl (<+>) noCode . map code
 mkStack :: Codeable a => [a] -> Code
 mkStack = foldl (<->) noCode . map code
 
-interleave :: Codeable a => a -> [Code] -> Code
-interleave _ []      = noCode
-interleave _ [x]     = x
-interleave c (x: xs) = x <+> code c <+> interleave c xs
+interleave :: (Codeable a, CodeList l) => a -> l -> Code
+interleave c l =
+  case codeList l of
+    []      -> noCode
+    [x]     -> x
+    (x: xs) -> x <+> code c <+> interleave c xs
 
 -- * Combinators for building blocks of code
 infixl 4 <+>

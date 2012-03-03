@@ -13,6 +13,7 @@ Library
   Hs-Source-Dirs:    src
   Exposed-Modules:   Code.Build
                      Code.Build.JavaScript
+                     Code.Build.Haskell
                      Code.Build.PHP
                      Code.Build.Ruby
   Build-Depends:     base == 4.*
