@@ -1,0 +1,28 @@
+Name:             rest-types
+Version:          1.0
+Description:      Silk Rest Framework Types
+Synopsis:         Silk Rest Framework Types
+Maintainer:       code@silkapp.com
+Category:         Web
+Build-Type:       Simple
+Cabal-Version:    >= 1.8
+License:          OtherLicense
+
+Library
+  GHC-Options:     -Wall
+  Hs-Source-Dirs:   src
+  Build-Depends:
+
+      base == 4.*
+    , containers == 0.4.*
+    , json >= 0.4 && < 0.6
+    , json-schema == 0.2.1.1
+    , mtl == 2.0.1.*
+    , regular == 0.3.*
+    , regular-json == 0.2.*
+    , regular-xmlpickler-typlab == 0.4.*
+    , hxt == 9.0.111
+
+  Exposed-Modules: Rest.Types.Container
+                   Rest.Types.Error
+  GHC-Options:      
