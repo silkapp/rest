@@ -7,7 +7,12 @@
   , StandaloneDeriving
   , DeriveDataTypeable
   #-}
-module Rest.Types.Error where
+module Rest.Types.Error
+  ( DataError(..
+  , DomainReason(..)
+  , Status(..)
+  , Reason(..)
+  ) where
 
 import Control.Monad.Error
 import Data.JSON.Schema

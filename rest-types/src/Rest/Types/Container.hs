@@ -7,7 +7,12 @@
   , DeriveDataTypeable
   , GADTs
   #-}
-module Rest.Types.Container where
+module Rest.Types.Container 
+  ( List(..)
+  , Key(..)
+  , Map(..)
+  , Xml(..)
+  ) where
 
 import Control.Arrow
 import Data.JSON.Schema hiding (key)
