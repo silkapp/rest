@@ -8,7 +8,7 @@
   , DeriveDataTypeable
   #-}
 module Rest.Types.Error
-  ( DataError(..
+  ( DataError(..)
   , DomainReason(..)
   , Status(..)
   , Reason(..)
@@ -84,7 +84,7 @@ data Reason a
   | InputError   DataError
   | OutputError  DataError
 
-  | Domain       (DomainReason a)
+  | CustomReason (DomainReason a)
   | Unknown      String
   deriving (Show, Typeable)
 
