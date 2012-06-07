@@ -11,6 +11,7 @@ module Rest.Types.Error
   ( DataError(..)
   , DomainReason(..)
   , Status(..)
+  , Reason_
   , Reason(..)
   ) where
 
@@ -69,6 +70,8 @@ instance (JSONSchema a, JSONSchema b) => JSONSchema (Status a b) where
   schema = gSchema
 
 instance (Json a, Json b) => Json (Status a b)
+
+type Reason_ = Reason ()
 
 data Reason a
   = NotFound
