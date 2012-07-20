@@ -24,4 +24,4 @@ Library
     , hxt == 9.0.111
 
   Exposed-Modules: Rest.Types.Container
-                   Rest.Types.Error   
+                   Rest.Types.Error
