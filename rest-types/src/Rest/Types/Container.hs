@@ -11,7 +11,6 @@ module Rest.Types.Container
   ( List(..)
   , Key(..)
   , Map(..)
-  , Xml(..)
   ) where
 
 import Control.Arrow
@@ -82,9 +81,3 @@ instance JSONSchema b => JSONSchema (Map Key b) where
   schema _ = field "key" False (schema (Proxy :: Proxy b))
 
 instance Json b => Json (Map Key b)
-
-
-data Xml = Xml { unXml :: String } deriving (Show, Typeable)
-
-instance XmlPickler Xml where
-  xpickle = (Xml, unXml) `xpWrap` xpXmlText
