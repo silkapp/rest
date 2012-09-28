@@ -24,7 +24,6 @@ import Generics.Regular.XmlPickler (gxpickle)
 import Generics.Regular.JSON
 import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
-import Text.XML.HXT.Arrow.Pickle.Schema
 
 -- Error utilities.
 
@@ -41,16 +40,14 @@ instance Show a => Show (DomainReason a) where
   showsPrec a (DomainReason _ e) = showParen (a >= 11) (showString "Domain " . showsPrec 11 e)
 
 instance XmlPickler a => XmlPickler (DomainReason a) where
-  xpickle = PU (\(DomainReason _ e, st) -> appPickle xpickle (e, st))
-    (error "no unpickler available for DomainReason xpickle")
-    (Element "domainData" (CharData (DTDescr "silk" "domainData" [])))
+  xpickle = xpWrap (DomainReason (error "No error function defined for DomainReason parsed from JSON"), reason) xpickle
 
 instance JSON a => JSON (DomainReason a) where
   showJSON (DomainReason _ e) = showJSON e
-  readJSON = error "no readJSON available for DomainReason JSON instance"
+  readJSON = fmap (DomainReason (error "No error function defined for DomainReason parsed from JSON")) . readJSON
 
 instance JSONSchema a => JSONSchema (DomainReason a) where
-  schema _ = Choice []
+  schema = schema . fmap reason
 
 instance Json a => Json (DomainReason a)
 
