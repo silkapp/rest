@@ -7,7 +7,7 @@
   , DeriveDataTypeable
   , GADTs
   #-}
-module Rest.Types.Container 
+module Rest.Types.Container
   ( List(..)
   , Key(..)
   , Map(..)
