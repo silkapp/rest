@@ -14,7 +14,7 @@ Library
   Build-Depends:
 
       base == 4.*
-    , containers == 0.4.*
+    , containers >= 0.4 && < 0.6
     , json >= 0.4 && < 0.6
     , json-schema == 0.3.*
     , mtl >= 2.0 && < 2.2
