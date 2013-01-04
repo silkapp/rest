@@ -21,7 +21,7 @@ Library
     , regular == 0.3.*
     , regular-json == 0.3.*
     , regular-xmlpickler-typlab == 0.4.*
-    , hxt == 9.0.111
+    , hxt >= 9.2 && < 9.4
 
   Exposed-Modules: Rest.Types.Container
                    Rest.Types.Error
