@@ -78,6 +78,7 @@ data Reason a
   | UnsupportedVersion
   | NotAllowed
   | AuthenticationFailed
+  | Busy
 
   | IdentError   DataError
   | ParamError   DataError
