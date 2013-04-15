@@ -22,6 +22,8 @@ Library
     , regular-json == 0.3.*
     , regular-xmlpickler-typlab == 0.4.*
     , hxt >= 9.2 && < 9.4
+    , uuid == 1.2.*
 
   Exposed-Modules: Rest.Types.Container
                    Rest.Types.Error
+                   Rest.Types.ShowUrl
