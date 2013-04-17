@@ -76,6 +76,7 @@ data Reason a
   | UnsupportedResource
   | UnsupportedAction
   | UnsupportedVersion
+  | UnsupportedDocumentFormat
   | NotAllowed
   | AuthenticationFailed
   | Busy
