@@ -81,6 +81,7 @@ data Reason a
   | Busy
 
   | IdentError   DataError
+  | HeaderError  DataError
   | ParamError   DataError
   | InputError   DataError
   | OutputError  DataError
