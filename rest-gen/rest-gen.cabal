@@ -1,0 +1,67 @@
+Name:             rest-gen
+Version:          0.1
+Description:      Documentation and client generation from rest definition.
+Synopsis:         Documentation and client generation from rest definition.
+Maintainer:       code@silkapp.com
+Category:         Web
+Build-Type:       Simple
+Cabal-Version:    >= 1.8
+License:          OtherLicense
+
+Data-Dir:         files
+Data-Files:       Docs/*.st
+                  Docs/*.js
+                  Docs/*.css
+                  Haskell/Base.hs
+                  Haskell/Internal.hs
+                  Javascript/base.js
+                  Ruby/base.rb
+
+Library
+  GHC-Options:     -Wall
+  Hs-Source-Dirs:   src
+  Build-Depends:
+
+      base == 4.*
+    , blaze-html >= 0.5 && < 0.6
+    , bytestring >= 0.9 && < 0.11
+    , code-builder == 0.1.*
+    , containers >= 0.4 && < 0.6
+    , directory >= 1.1 && < 1.3
+    , fclabels >= 1.0.4 && < 1.2
+    , filepath >= 1.2 && < 1.4
+    , hslogger == 1.1.*
+    , HStringTemplate ==0.6.*
+    , json >= 0.4 && < 0.8
+    , json-schema == 0.3.*
+    , regular == 0.3.*
+    , regular-json == 0.3.0.2
+    , regular-xmlpickler-typlab == 0.4.*
+    , hxt >= 9.2 && < 9.4
+    , mtl >= 2.0 && < 2.2
+    , pretty >= 1.0 && < 1.2
+    , utf8-string == 0.3.*
+    , rest-types == 1.4
+    , safe >= 0.2 && < 0.4
+    , happstack-server >= 7.0.5 && < 7.2
+    , split >= 0.1 && < 0.3
+    , text == 0.11.*
+    , rest == 0.18.*
+
+  Exposed-Modules:  Rest.Gen.Base
+                    Rest.Gen.Base.ActionInfo
+                    Rest.Gen.Base.ActionInfo.Ident
+                    Rest.Gen.Base.ApiTree
+                    Rest.Gen.Base.JSON
+                    Rest.Gen.Base.JSON.Pretty
+                    Rest.Gen.Base.Link
+                    Rest.Gen.Base.XML
+                    Rest.Gen.Docs.Generate
+                    Rest.Gen.Docs.Happstack
+                    Rest.Gen.Haskell.Generate
+                    Rest.Gen.JavaScript.Generate
+                    Rest.Gen.Ruby.Generate
+                    Rest.Gen.Utils
+
+  Other-Modules: Paths_rest_gen
+

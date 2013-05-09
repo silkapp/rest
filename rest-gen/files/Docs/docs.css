@@ -1,0 +1,51 @@
+/* Resources panel fixed */
+.container-fluid > .sidebar {
+  position: fixed;
+}
+
+/*Override some bootstrap border settings */
+.data-description td, .data-description tr, .data-description th, .data-description thead th+th, .data-description tbody td+td {
+  border: none;
+}
+
+/*Fix the widths of url tables*/
+.Input, .Output { width: 160px; }
+.Method th { width: 30px; }
+.Description th { width: 30px; }
+.URL { width: 400px; }
+.data-description { width: 150px; }
+
+/*Input/Output tables*/
+.data-description td {
+  padding: 2px;
+}
+
+.data-description tr+tr {
+  border-top: 1px solid #ddd;
+}
+
+.open-modal {
+  padding: 1px;
+}
+
+.parent-separator { margin: 0 3 0 3; }
+/*Style url tables*/ 
+.stripe-1 {background-color:#f9f9f9;}
+
+.url-data-row > td:first-child { border-top: none; }
+.url-main-row > td { border-top: 1px solid #aaa} 
+
+/* .resource-table > tbody > tr > td:first-child { border-right: 1px solid #aaa} */
+/* .resource-table > thead > tr > th:first-child { border-right: 1px solid #aaa } */
+.resource-table { border-color: #aaa }
+
+h1 {
+  text-align: center;
+}
+
+.resource-title h1, .resource-link {background-color:#fee9cc;cpadding:1px 3px;padding:0 3px 2px;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;}
+
+.link-block { 
+  display: inline-block;
+  background-color:#fee9cc;
+}
