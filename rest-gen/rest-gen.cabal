@@ -1,5 +1,5 @@
 Name:             rest-gen
-Version:          0.1
+Version:          0.1.1
 Description:      Documentation and client generation from rest definition.
 Synopsis:         Documentation and client generation from rest definition.
 Maintainer:       code@silkapp.com
@@ -46,7 +46,7 @@ Library
     , happstack-server >= 7.0.5 && < 7.2
     , split >= 0.1 && < 0.3
     , text == 0.11.*
-    , rest-core == 0.18.*
+    , rest-core == 0.19.*
 
   Exposed-Modules:  Rest.Gen.Base
                     Rest.Gen.Base.ActionInfo
