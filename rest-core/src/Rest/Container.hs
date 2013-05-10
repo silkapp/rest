@@ -17,8 +17,8 @@ module Rest.Container
   , reasonE
   ) where
 
+import Rest.Dictionary
 import Rest.Error
-import Rest.Action
 import Rest.Types.Container
 
 listI :: Inputs a -> Inputs (List a)

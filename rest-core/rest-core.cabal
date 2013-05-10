@@ -27,7 +27,8 @@ Library
 
   Exposed-Modules:  Rest.Action
                     Rest.Container
+                    Rest.Dictionary
                     Rest.Error
+                    Rest.Info
                     Rest.Resource
-                    Rest.ReadInfo
 

@@ -87,6 +87,11 @@ names r = concatMap ($ r)
 -------------------------------------------------------------------------------
 -- A routing table of REST resources.
 
+-- Generic existential types.
+
+data Some  f where Some  :: f (a :: *     ) -> Some  f
+data Some1 f where Some1 :: f (a :: * -> *) -> Some1 f
+
 data Router m s where
   Embed :: Monad s => Resource m s a -> [Some1 (Router s)] -> Router m s
 
