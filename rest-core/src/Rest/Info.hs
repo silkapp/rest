@@ -19,6 +19,9 @@ class Typeable a => Info a where
 instance Info String where
   describe _ = "string"
 
+instance Info Int where
+  describe _ = "integer"
+
 instance Info Integer where
   describe _ = "integer"
 

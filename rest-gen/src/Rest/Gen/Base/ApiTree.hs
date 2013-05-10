@@ -6,7 +6,6 @@ import Data.List
 import Data.Maybe
 import Data.Function
 
-import Rest.Action hiding (ident)
 import Rest.Gen.Base.ActionInfo
 import Rest.Gen.Base.ActionInfo.Ident (description)
 import Rest.Gen.Base.Link

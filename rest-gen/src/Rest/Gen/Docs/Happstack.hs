@@ -6,7 +6,6 @@ import Control.Monad.Trans
 import Happstack.Server
 import Rest.Gen.Base
 import Rest.Gen.Docs.Generate
-import Rest.Action
 import Rest.Resource
 
 -- | Web interface for documentation

@@ -8,13 +8,15 @@ import Data.Typeable
 import Data.List.Split
 #endif
 import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident))
-import Rest.ReadInfo
+import Rest.Info
 import qualified Rest.Gen.Base.JSON as J
 import qualified Rest.Gen.Base.XML as X
 
 import Rest.Resource
-import Rest.Action hiding (Ident, ident)
-import qualified Rest.Action as Action
+import Rest.Dictionary hiding (Ident)
+import Rest.Action     hiding (ident)
+
+import qualified Rest.Dictionary as Dictionary
 
 -- | Representation of resource
 type ResourceId  = [String]
@@ -122,7 +124,7 @@ handlerInputs (Handler (_, _, _, inps, _, _) _ _ _) = concatMap (handlerInput (e
         handlerInput _ StringI  = [defaultDescription { dataTypeDesc = "String" }]
         handlerInput _ FileI    = [defaultDescription { dataType     = File
                                                       , dataTypeDesc = "File" }]
-        handlerInput d ReadI    = [defaultDescription { dataTypeDesc = describeType d }]
+        handlerInput d ReadI    = [defaultDescription { dataTypeDesc = describe d }]
         handlerInput d XmlI     = [defaultDescription { dataType     = XML
                                                       , dataTypeDesc = "XML"
                                                       , dataSchema   = X.showSchema . X.getXmlSchema $ d
@@ -176,7 +178,7 @@ handlerOutputs list (Handler (_, _, _, _, outps, _) _ _ _) = concatMap (handlerO
 -- | Extract input description from handlers
 handlerErrors :: Handler m a -> [DataDescription]
 handlerErrors (Handler (_, _, _, _, _, ers) _ _ _) = concatMap (handleError (error "Don't evaluate proxy object from handlerInputs")) ers
-  where handleError :: a -> DomainError a -> [DataDescription]
+  where handleError :: a -> Error a -> [DataDescription]
         handleError _ NoE      = []
         handleError d XmlE     = [defaultDescription { dataType      = XML
                                                      , dataTypeDesc  = "XML"
@@ -221,10 +223,10 @@ modString = filter (/= "") . modString' . typeOf
 -- | Extract whether a handler contains an identifier
 handlerIdent :: Handler m a -> Maybe Ident
 handlerIdent (Handler (hid, _, _, _, _, _) _ _ _) = gId hid (error "Don't evaluate proxy object from handlerIdent")
-  where gId :: Action.Ident i -> i -> Maybe Ident
+  where gId :: Dictionary.Ident i -> i -> Maybe Ident
         gId NoId     _ = Nothing
         gId StringId _ = Just (Ident "string" "String" [])
-        gId ReadId   x = Just (Ident (describeType x) (typeString x) (modString x))
+        gId ReadId   x = Just (Ident (describe x) (typeString x) (modString x))
 
 mkActionDescription :: String -> ActionInfo -> String
 mkActionDescription res ai =

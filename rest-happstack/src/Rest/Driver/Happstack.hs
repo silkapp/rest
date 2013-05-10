@@ -31,6 +31,7 @@ import qualified Data.Map                  as M
 
 import Rest.Action
 import Rest.Container
+import Rest.Dictionary
 import Rest.Error
 import Rest.Resource
 
