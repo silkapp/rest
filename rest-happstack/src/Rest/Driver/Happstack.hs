@@ -339,7 +339,7 @@ outputWriter formats outputs v = OutputError `mapE`
     try (StringO : _ ) StringFormat = lift (contentType StringFormat >> ok (toResponse v))
     try (FileO   : _ ) FileFormat   = lift $ do let mime = fromMaybe "application/octet-stream" (M.lookup (map toLower (snd v)) mimeTypes)
                                                 setHeaderM "Content-Type" mime
-                                                setHeaderM "Cache-Control" "private, max-age=86400"
+                                                setHeaderM "Cache-Control" "private, max-age=604800"
                                                 return (resultBS 200 (fst v))
     try []             t            = throwError (UnsupportedFormat (show t))
     try (_       : xs) t            = try xs t
