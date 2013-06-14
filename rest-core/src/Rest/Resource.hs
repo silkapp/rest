@@ -101,15 +101,17 @@ route = flip Embed []
 compose :: Router m s -> Router s t -> Router m s
 compose (Embed r xs) b = Embed r (xs ++ [Some1 b])
 
+infixl 4 ----/
 infixl 5 ---/
 infixl 6 --/
 infixl 7 -/
 
-(---/), (--/), (-/) :: Router m s -> Router s t -> Router m s
+(----/), (---/), (--/), (-/) :: Router m s -> Router s t -> Router m s
 
-(---/) = compose
-( --/) = compose
-(  -/) = compose
+(----/) = compose
+(---/)  = compose
+( --/)  = compose
+(  -/)  = compose
 
 -------------------------------------------------------------------------------
 
