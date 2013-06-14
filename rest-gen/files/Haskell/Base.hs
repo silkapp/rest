@@ -126,7 +126,7 @@ data ApiResponse e a  =
     , httpVersion     :: (Int, Int)
     , responseHeaders :: [(CI ByteString , ByteString)]
     , responseBody    :: Either (Reason e) a
-    }
+    } deriving Show
 
 responseToMaybe :: ApiResponse e a -> Maybe a
 responseToMaybe = either (const Nothing) Just . responseBody
