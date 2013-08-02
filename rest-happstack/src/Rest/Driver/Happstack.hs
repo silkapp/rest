@@ -424,6 +424,7 @@ failureWriter es e =
             NotAllowed                         -> forbidden
             AuthenticationFailed               -> unauthorized
             Busy                               -> resp 503
+            Gone                               -> resp 410
             OutputError (UnsupportedFormat _)  -> resp 406
             InputError  _                      -> badRequest
             OutputError _                      -> internalServerError

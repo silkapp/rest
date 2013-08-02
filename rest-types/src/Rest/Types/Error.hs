@@ -80,6 +80,7 @@ data Reason a
   | NotAllowed
   | AuthenticationFailed
   | Busy
+  | Gone
 
   | IdentError   DataError
   | HeaderError  DataError
