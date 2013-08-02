@@ -1,5 +1,5 @@
 Name:             rest-gen
-Version:          0.1.4
+Version:          0.1.5
 Description:      Documentation and client generation from rest definition.
 Synopsis:         Documentation and client generation from rest definition.
 Maintainer:       code@silkapp.com
@@ -41,7 +41,7 @@ Library
     , mtl >= 2.0 && < 2.2
     , pretty >= 1.0 && < 1.2
     , utf8-string == 0.3.*
-    , rest-types == 1.4
+    , rest-types == 1.4.1
     , safe >= 0.2 && < 0.4
     , happstack-server >= 7.0.5 && < 7.2
     , split >= 0.1 && < 0.3
