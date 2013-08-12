@@ -24,6 +24,8 @@ Library
     , safe                      >= 0.2 && < 0.4
     , split                     >= 0.1 && < 0.3
     , text                      == 0.11.*
+    , regular-json              == 0.3.*
+    , regular                   == 0.3.*
 
   Exposed-Modules:  Rest.Action
                     Rest.Container

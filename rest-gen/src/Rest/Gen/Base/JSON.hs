@@ -3,7 +3,7 @@ module Rest.Gen.Base.JSON where
 import Control.Applicative
 import Data.JSON.Schema
 import Rest.Gen.Base.JSON.Pretty
-import Rest.Types.Container hiding (key)
+import Rest.Types.Container
 import Text.JSON
 import Text.PrettyPrint.HughesPJ
 
@@ -25,3 +25,4 @@ showExample = render . pp_value . showExample'
     showExample' Boolean         = JSBool True
     showExample' (Number l _)    = JSRational False (toRational l)
     showExample' Null            = JSNull
+

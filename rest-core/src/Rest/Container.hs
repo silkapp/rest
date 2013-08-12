@@ -17,9 +17,14 @@ module Rest.Container
   , reasonE
   ) where
 
+import Data.String
+import Data.String.ToString
+import Data.Typeable
+
 import Rest.Dictionary
 import Rest.Error
 import Rest.Types.Container
+
 
 listI :: Inputs a -> Inputs (List a)
 listI []          = []
@@ -33,13 +38,13 @@ listO (XmlO  : r) = XmlO  : listO r
 listO (JsonO : r) = JsonO : listO r
 listO (_     : r) = listO r
 
-mappingO :: Outputs o -> Outputs (Map Key o)
+mappingO :: (Typeable k, IsString k, ToString k) => Outputs o -> Outputs (Map k o)
 mappingO []          = []
 mappingO (XmlO  : r) = XmlO  : mappingO r
 mappingO (JsonO : r) = JsonO : mappingO r
 mappingO (_     : r) = mappingO r
 
-mappingI :: Inputs i -> Inputs (Map Key i)
+mappingI :: (Typeable k, IsString k, ToString k) => Inputs i -> Inputs (Map k i)
 mappingI []          = []
 mappingI (XmlI  : r) = XmlI  : mappingI r
 mappingI (JsonI : r) = JsonI : mappingI r
@@ -56,3 +61,4 @@ reasonE []          = []
 reasonE (XmlE  : r) = XmlE  : reasonE r
 reasonE (JsonE : r) = JsonE : reasonE r
 reasonE (_     : r) = reasonE r
+

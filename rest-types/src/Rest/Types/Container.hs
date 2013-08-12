@@ -1,27 +1,32 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
-    TemplateHaskell
+   DeriveDataTypeable
   , EmptyDataDecls
-  , TypeFamilies
+  , FlexibleContexts
   , FlexibleInstances
-  , ScopedTypeVariables
-  , DeriveDataTypeable
   , GADTs
+  , ScopedTypeVariables
+  , TemplateHaskell
+  , TypeFamilies
+  , UndecidableInstances
   #-}
 module Rest.Types.Container
   ( List(..)
-  , Key(..)
   , Map(..)
   ) where
 
 import Control.Arrow
 import Data.JSON.Schema hiding (key)
 import Data.JSON.Schema.Combinators (field)
+import Data.Text (Text)
 import Data.Typeable
 import Generics.Regular (deriveAll, PF)
 import Generics.Regular.JSON
 import Generics.Regular.XmlPickler (gxpickle)
 import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
+import Data.String
+import Data.String.ToString
 
 -------------------------------------------------------------------------------
 
@@ -31,7 +36,7 @@ data List a = List
   , items  :: a
   } deriving (Show, Typeable)
 
-$(deriveAll ''List "PFList")
+deriveAll ''List "PFList"
 type instance PF (List a) = PFList a
 
 instance XmlPickler a => XmlPickler (List a) where
@@ -48,36 +53,28 @@ instance Json a => Json (List a)
 
 -------------------------------------------------------------------------------
 
-newtype Key = Key { key :: String } deriving (Show, Typeable)
+deriveAll ''Text "PFText"
+type instance PF Text = PFText
 
-$(deriveAll ''Key "PFKey")
-type instance PF Key = PFKey
-
-instance XmlPickler Key where
-  xpickle = xpElem "key" (xpWrap (Key, key) xpText0)
-
-instance JSON Key where
-  showJSON = gshowJSON
-  readJSON = greadJSON
-
-instance JSONSchema Key where
-  schema = gSchema
+instance XmlPickler Text where
+  xpickle = xpWrap (undefined, undefined) xpText0
 
 -------------------------------------------------------------------------------
 
 newtype Map a b = Map { unMap :: [(a, b)] } deriving (Show, Typeable)
 
-$(deriveAll ''Map "PFMap")
+deriveAll ''Map "PFMap"
 type instance PF (Map a b) = PFMap a b
 
-instance (XmlPickler a, XmlPickler b) => XmlPickler (Map a b) where
-  xpickle = xpElem "map" (xpWrap (Map, unMap) (xpList (xpPair xpickle xpickle)))
+instance (IsString a, ToString a, XmlPickler b) => XmlPickler (Map a b) where
+  xpickle = xpElem "map" (xpWrap (Map, unMap) (xpList (xpPair (xpElem "key" (xpWrap (fromString,toString) xpText)) xpickle)))
 
-instance JSON b => JSON (Map Key b) where
-  showJSON = showJSON . toJSObject . map (first key) . unMap
-  readJSON = fmap (Map . map (first Key) . fromJSObject) . readJSON
+instance (ToString a, IsString a, JSON b) => JSON (Map a b) where
+  showJSON = showJSON . toJSObject . map (first toString) . unMap
+  readJSON = fmap (Map . map (first fromString) . fromJSObject) . readJSON
 
-instance JSONSchema b => JSONSchema (Map Key b) where
+instance (IsString a, ToString a, JSONSchema b) => JSONSchema (Map a b) where
   schema _ = field "key" False (schema (Proxy :: Proxy b))
 
-instance Json b => Json (Map Key b)
+instance (IsString a, ToString a, Json b) => Json (Map a b)
+

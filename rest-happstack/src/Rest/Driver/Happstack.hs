@@ -145,7 +145,7 @@ updates run = (\(Action a) -> one a)
                   hs <- HeaderError `mapE` headers h
                   ps <- ParamError  `mapE` parameters p
                   Env _ _ _ (Map vs) <- fetchInputs "" (NoId, NoHeader, NoParam, mappingI j, o, es)
-                  bs <- lift $ forM vs $ \(Key k, v) -> runErrorT $
+                  bs <- lift $ forM vs $ \(k, v) -> runErrorT $
                     do is <- IdentError `mapE` identifiers i k
                        mapErrorT run (act (Env is hs ps v)) >>= mapErrorT run . prep
                   let mapping = Map (map fst vs `zip` map eitherToStatus bs)
