@@ -13,20 +13,23 @@
 module Rest.Types.Container
   ( List(..)
   , StringMap(..)
+  , fromStringMap
+  , toStringMap
   ) where
 
 import Control.Arrow
 import Data.JSON.Schema hiding (key)
 import Data.JSON.Schema.Combinators (field)
+import Data.Map (Map)
 import Data.String
 import Data.String.ToString
-import Data.Text (Text)
 import Data.Typeable
 import Generics.Regular (deriveAll, PF)
 import Generics.Regular.JSON
 import Generics.Regular.XmlPickler (gxpickle)
 import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
+import qualified Data.Map as M
 
 -------------------------------------------------------------------------------
 
@@ -53,14 +56,6 @@ instance Json a => Json (List a)
 
 -------------------------------------------------------------------------------
 
-deriveAll ''Text "PFText"
-type instance PF Text = PFText
-
-instance XmlPickler Text where
-  xpickle = xpWrap (T.pack, T.unpack) xpText0
-
--------------------------------------------------------------------------------
-
 newtype StringMap a b = StringMap { unMap :: [(a, b)] } deriving (Show, Typeable)
 
 deriveAll ''StringMap "PFStringMap"
@@ -77,4 +72,10 @@ instance (IsString a, ToString a, JSONSchema b) => JSONSchema (StringMap a b) wh
   schema _ = field "key" False (schema (Proxy :: Proxy b))
 
 instance (IsString a, ToString a, Json b) => Json (StringMap a b)
+
+fromStringMap :: (Ord a, IsString a, ToString a) => StringMap a b -> Map a b
+fromStringMap = M.fromList . unMap
+
+toStringMap :: (Ord a, IsString a, ToString a) => Map a b -> StringMap a b
+toStringMap = StringMap . M.toList
 
