@@ -12,12 +12,14 @@
   #-}
 module Rest.Types.Container
   ( List(..)
-  , Map(..)
+  , StringMap(..)
   ) where
 
 import Control.Arrow
 import Data.JSON.Schema hiding (key)
 import Data.JSON.Schema.Combinators (field)
+import Data.String
+import Data.String.ToString
 import Data.Text (Text)
 import Data.Typeable
 import Generics.Regular (deriveAll, PF)
@@ -25,8 +27,6 @@ import Generics.Regular.JSON
 import Generics.Regular.XmlPickler (gxpickle)
 import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
-import Data.String
-import Data.String.ToString
 
 -------------------------------------------------------------------------------
 
@@ -57,24 +57,24 @@ deriveAll ''Text "PFText"
 type instance PF Text = PFText
 
 instance XmlPickler Text where
-  xpickle = xpWrap (undefined, undefined) xpText0
+  xpickle = xpWrap (T.pack, T.unpack) xpText0
 
 -------------------------------------------------------------------------------
 
-newtype Map a b = Map { unMap :: [(a, b)] } deriving (Show, Typeable)
+newtype StringMap a b = StringMap { unMap :: [(a, b)] } deriving (Show, Typeable)
 
-deriveAll ''Map "PFMap"
-type instance PF (Map a b) = PFMap a b
+deriveAll ''StringMap "PFStringMap"
+type instance PF (StringMap a b) = PFStringMap a b
 
-instance (IsString a, ToString a, XmlPickler b) => XmlPickler (Map a b) where
-  xpickle = xpElem "map" (xpWrap (Map, unMap) (xpList (xpPair (xpElem "key" (xpWrap (fromString,toString) xpText)) xpickle)))
+instance (IsString a, ToString a, XmlPickler b) => XmlPickler (StringMap a b) where
+  xpickle = xpElem "map" (xpWrap (StringMap, unMap) (xpList (xpPair (xpElem "key" (xpWrap (fromString,toString) xpText)) xpickle)))
 
-instance (ToString a, IsString a, JSON b) => JSON (Map a b) where
+instance (ToString a, IsString a, JSON b) => JSON (StringMap a b) where
   showJSON = showJSON . toJSObject . map (first toString) . unMap
-  readJSON = fmap (Map . map (first fromString) . fromJSObject) . readJSON
+  readJSON = fmap (StringMap . map (first fromString) . fromJSObject) . readJSON
 
-instance (IsString a, ToString a, JSONSchema b) => JSONSchema (Map a b) where
+instance (IsString a, ToString a, JSONSchema b) => JSONSchema (StringMap a b) where
   schema _ = field "key" False (schema (Proxy :: Proxy b))
 
-instance (IsString a, ToString a, Json b) => Json (Map a b)
+instance (IsString a, ToString a, Json b) => Json (StringMap a b)
 

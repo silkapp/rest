@@ -38,13 +38,13 @@ listO (XmlO  : r) = XmlO  : listO r
 listO (JsonO : r) = JsonO : listO r
 listO (_     : r) = listO r
 
-mappingO :: (Typeable k, IsString k, ToString k) => Outputs o -> Outputs (Map k o)
+mappingO :: (Typeable k, IsString k, ToString k) => Outputs o -> Outputs (StringMap k o)
 mappingO []          = []
 mappingO (XmlO  : r) = XmlO  : mappingO r
 mappingO (JsonO : r) = JsonO : mappingO r
 mappingO (_     : r) = mappingO r
 
-mappingI :: (Typeable k, IsString k, ToString k) => Inputs i -> Inputs (Map k i)
+mappingI :: (Typeable k, IsString k, ToString k) => Inputs i -> Inputs (StringMap k i)
 mappingI []          = []
 mappingI (XmlI  : r) = XmlI  : mappingI r
 mappingI (JsonI : r) = JsonI : mappingI r

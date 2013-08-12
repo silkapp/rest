@@ -144,11 +144,11 @@ updates run = (\(Action a) -> one a)
                do validator formats o
                   hs <- HeaderError `mapE` headers h
                   ps <- ParamError  `mapE` parameters p
-                  Env _ _ _ (Map vs) <- fetchInputs "" (NoId, NoHeader, NoParam, mappingI j, o, es)
+                  Env _ _ _ (StringMap vs) <- fetchInputs "" (NoId, NoHeader, NoParam, mappingI j, o, es)
                   bs <- lift $ forM vs $ \(k, v) -> runErrorT $
                     do is <- IdentError `mapE` identifiers i k
                        mapErrorT run (act (Env is hs ps v)) >>= mapErrorT run . prep
-                  let mapping = Map (map fst vs `zip` map eitherToStatus bs)
+                  let mapping = StringMap (map fst vs `zip` map eitherToStatus bs)
                   outputWriter formats ((mappingO . flip statusO (reasonE es)) o) mapping
              either (failureWriter es) return res
 
