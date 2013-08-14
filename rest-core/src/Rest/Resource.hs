@@ -36,6 +36,15 @@ data Resource m s a where
     , multiActions   :: [(String, Action m)]
 
     -- Working with a single resource at the same time.
+    -- Difference between the different 'get' functions:
+    -- * singleGet with an empty string key is a singleton resource,
+    --   e.g. /taglist.
+    -- * singleGet with a string key is a singleton with a name, e.g.
+    --   /user/current.
+    -- * singleGetBy with an empty string key is a resource with a
+    --   default identifier, e.g. /page/<page-name>.
+    -- * singleGetBy with a string key is a resource with a named
+    --   identifier, e.g. /server/ip/<server-ip>.
     , singleGet      :: [(String, Handler m a)]
     , singleGetBy    :: [(String, Handler m a)]
     , singleCreate   :: Maybe (Action m)
