@@ -1,5 +1,5 @@
 Name:             rest-types
-Version:          1.4.1
+Version:          1.5
 Description:      Silk Rest Framework Types
 Synopsis:         Silk Rest Framework Types
 Maintainer:       code@silkapp.com
@@ -20,11 +20,11 @@ Library
     , mtl >= 2.0 && < 2.2
     , regular == 0.3.*
     , regular-json == 0.3.*
-    , regular-xmlpickler-typlab == 0.4.*
+    , regular-xmlpickler-typlab == 0.5.*
     , hxt >= 9.2 && < 9.4
     , uuid == 1.2.*
     , text == 0.11.*
-    , tostring == 0.1.*
+    , tostring == 0.2.*
     , utf8-string == 0.3.*
 
   Exposed-Modules: Rest.Types.Container

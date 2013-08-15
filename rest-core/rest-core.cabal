@@ -1,5 +1,5 @@
 Name:             rest-core
-Version:          0.21.1
+Version:          0.21.2
 Description:      Rest API library.
 Synopsis:         Rest API library.
 Maintainer:       code@silkapp.com
@@ -19,14 +19,14 @@ Library
     , json                      >= 0.4 && < 0.8
     , json-schema               == 0.3.*
     , mtl                       >= 2.0 && < 2.2
-    , regular-xmlpickler-typlab == 0.4.*
-    , rest-types                == 1.4.1
+    , regular-xmlpickler-typlab == 0.5.*
+    , rest-types                == 1.5
     , safe                      >= 0.2 && < 0.4
     , split                     >= 0.1 && < 0.3
     , text                      == 0.11.*
     , regular-json              == 0.3.*
     , regular                   == 0.3.*
-    , tostring                  == 0.1.*
+    , tostring                  == 0.2.*
 
   Exposed-Modules:  Rest.Action
                     Rest.Container
