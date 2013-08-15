@@ -24,10 +24,10 @@ Library
     , hxt >= 9.2 && < 9.4
     , uuid == 1.2.*
     , text == 0.11.*
+    , tostring == 0.1.*
     , utf8-string == 0.3.*
 
-  Exposed-Modules: Data.String.ToString
-                   Rest.Types.Container
+  Exposed-Modules: Rest.Types.Container
                    Rest.Types.Error
                    Rest.Types.ShowUrl
 

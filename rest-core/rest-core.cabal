@@ -26,6 +26,7 @@ Library
     , text                      == 0.11.*
     , regular-json              == 0.3.*
     , regular                   == 0.3.*
+    , tostring                  == 0.1.*
 
   Exposed-Modules:  Rest.Action
                     Rest.Container
