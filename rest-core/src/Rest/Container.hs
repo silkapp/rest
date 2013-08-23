@@ -60,5 +60,5 @@ reasonE :: Errors a -> Errors (Reason a)
 reasonE []          = []
 reasonE (XmlE  : r) = XmlE  : reasonE r
 reasonE (JsonE : r) = JsonE : reasonE r
-reasonE (_     : r) = reasonE r
+reasonE (NoE   : _) = [XmlE, JsonE]
 
