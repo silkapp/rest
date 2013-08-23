@@ -118,6 +118,9 @@ mkGetterEnv d i a = mkHandler d i a
 mkAction :: Monad m => Modifier () () () i o e -> (a -> ErrorT (Reason e) m o) -> (i -> ErrorT (Reason e) m a) -> Action m
 mkAction d i a = Action (mkHandler d i (a . input))
 
+mkActionEnv :: Monad m => Modifier () h p i o e -> (a -> ErrorT (Reason e) m o) -> (Env () h p i -> ErrorT (Reason e) m a) -> Action m
+mkActionEnv d i a = Action (mkHandler d i a)
+
 constHandler :: Monad m => Modifier () () () () o e -> (a -> ErrorT (Reason e) m o) -> ErrorT (Reason e) m a -> Handler m a
 constHandler d i a = mkHandler d i (const a)
 
