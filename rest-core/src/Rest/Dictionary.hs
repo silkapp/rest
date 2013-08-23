@@ -19,6 +19,7 @@ response body, and the `e` for a possible error.
   , KindSignatures
   , TupleSections
   , DeriveDataTypeable
+  , StandaloneDeriving
   #-}
 module Rest.Dictionary
 (
@@ -130,6 +131,8 @@ data Ident id where
   ReadId   :: (Info id, Read id, Show id) => Ident id
   StringId ::                                Ident String
 
+deriving instance Show (Ident id)
+
 -- | The explicit dictionary `Header` describes how to translate HTTP request
 -- headers to some Haskell value. The first field in the `Header` constructor
 -- is a white list of headers we can recognize, used in generic validation and
@@ -176,6 +179,8 @@ data Input i where
   XmlTextI ::                               Input Text
   RawXmlI  ::                               Input ByteString
 
+deriving instance Show (Input i)
+
 -- | The explicitly dictionary `Output` describes how to translate some Haskell
 -- value to a response body. We currently use a constructor for every
 -- combination of input type to output type.
@@ -188,6 +193,8 @@ data Output o where
   XmlO     :: (Typeable o, XmlPickler o) => Output o
   StringO  ::                               Output String
 
+deriving instance Show (Output o)
+
 -- | The explicitly dictionary `Error` describes how to translate some Haskell
 -- error value to a response body.
 
@@ -195,6 +202,8 @@ data Error e where
   NoE     ::                                Error ()
   JsonE   :: (Typeable e, Json e)        => Error e
   XmlE    :: (Typeable e, XmlPickler e)  => Error e
+
+deriving instance Show (Error e)
 
 -- | The `Dict` datatype containing sub-dictionaries for translation of
 -- identifiers (i), headers (h), parameters (p), inputs (i), outputs (o), and
