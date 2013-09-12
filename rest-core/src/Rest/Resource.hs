@@ -13,7 +13,7 @@ module Rest.Resource where
 
 import Data.Char
 import Data.Function (on)
-import Data.List
+import Data.List (sortBy)
 import Data.List.Split
 import Data.Ord (comparing)
 
@@ -21,77 +21,81 @@ import Rest.Action
 
 import Safe
 
--------------------------------------------------------------------------------
--- A description of a single REST resource.
+-- | A 'Schema' described how (part of the) route to a resource looks,
+-- and returns an identifier for a single resource ('sid'), many
+-- resources ('mid') or an action ('aid').
+-- The first argument specifies the top level resource (no path
+-- segments). The second specifies a what happens at the first step in
+-- the path.
 
-data Resource m s a where
+data Schema sid mid aid = Schema (Maybe (Cardinality sid mid)) (Step sid mid aid)
+
+-- | A step in the routing of a resource. A part of the uri either
+-- identifies a 'Named' resource, or an 'Unnamed' resource. Named
+-- resources can be actions ('Left') or one or many singletons or
+-- by's.
+
+data Step sid mid aid = Named   [(String, Either aid (Cardinality (Getter sid) (Getter mid)))]
+                      | Unnamed (Cardinality (String -> sid) (String -> mid))
+
+-- | Specifies if we're identifying a single resource, or many (a
+-- listing).
+data Cardinality s m = Single s
+                     | Many   m
+
+-- | A 'Getter' can either be a 'Singleton' (there is only one) or it
+-- can be identified 'By' a 'String'.
+
+data Getter id = Singleton id | By (String -> id)
+
+
+-- | The 'Void' type is used as the identifier for resources that
+-- can't be routed to. It contains no values apart from bottom.
+
+newtype Void = Void { magic :: forall a. a }
+
+voidHandler :: Monad m => GenHandler Void m f
+voidHandler = mkHandler id (\(Env void _ _ _) -> magic void)
+
+data Resource m s sid mid aid where
   Resource ::
-    { identifier     :: String
-    , private        :: Bool
-    , enter          :: forall b. a -> s b -> m b
+    { name           :: String -- ^ The name for this resource, used as a path segment in routing.
+    , description    :: String -- ^ A description of the resource, used for documentation.
+    , schema         :: Schema sid mid aid -- ^ The schema for routing and identification.
+    , private        :: Bool -- ^ Private resources are not documented, but they are exposed.
+    , enter          :: forall b. sid -> s b -> m b -- ^ How to run a subresource given an id.
 
-    -- Specific cases for working on multiple resources at the same time.
-    , multiGet       :: Maybe (Handler m [a])
-    , multiGetBy     :: [(String, Handler m [a])]
-    , multiActions   :: [(String, Action m)]
+    , list           :: ListHandler mid m -- ^ List handler, both toplevel and deeper (search).
 
-    -- Working with a single resource at the same time.
-    -- Difference between the different 'get' functions:
-    -- * singleGet with an empty string key is a singleton resource,
-    --   e.g. /taglist.
-    -- * singleGet with a string key is a singleton with a name, e.g.
-    --   /user/current.
-    -- * singleGetBy with an empty string key is a resource with a
-    --   default identifier, e.g. /page/<page-name>.
-    -- * singleGetBy with a string key is a resource with a named
-    --   identifier, e.g. /server/ip/<server-ip>.
-    , singleGet      :: [(String, Handler m a)]
-    , singleGetBy    :: [(String, Handler m a)]
-    , singleCreate   :: Maybe (Action m)
-    , singleDelete   :: Maybe (Action s)
-    , singleUpdate   :: [(String, Action m)]
-    , singleUpdateBy :: [(String, Action m)]
-    , singleSelects  :: [(String, Action s)]
-    , singleActions  :: [(String, Action s)]
+    , statics        :: Handler aid m -- ^ Static actions, e.g. signin.
 
-    , resourceDescription :: String
-    } -> Resource m s a
+    , get            :: Maybe (Handler sid m) -- ^ Get a single resource identified by id.
+    , update         :: Maybe (Handler sid m) -- ^ Update a single resource identified by id.
+    , remove         :: Maybe (Handler sid m) -- ^ Delete a single resource identified by id.
+    , create         :: Maybe (Handler ()  m) -- ^ Create a single resource, generating a new id.
+    , actions        :: [(String, Handler sid m)] -- ^ Actions performed on a single resource.
+    , selects        :: [(String, Handler sid m)] -- ^ Properties of a single resource.
+    } -> Resource m s sid mid aid
 
-mkResource :: Monad m => Resource m s a
+mkResource :: Monad m => Resource m s sid Void Void
 mkResource = Resource
-  { identifier     = ""
+  { name           = ""
+  , description    = ""
+  , schema         = Schema Nothing (Named [])
   , private        = False
   , enter          = error "'enter' not defined for this resource"
 
-  , multiGet       = Nothing
-  , multiGetBy     = []
-  , multiActions   = []
+  , list           = voidHandler
 
-  , singleCreate   = Nothing
-  , singleGet      = []
-  , singleGetBy    = []
-  , singleDelete   = Nothing
-  , singleUpdate   = []
-  , singleUpdateBy = []
-  , singleSelects  = []
-  , singleActions  = []
+  , statics        = voidHandler
 
-  , resourceDescription = ""
+  , get            = Nothing
+  , update         = Nothing
+  , remove         = Nothing
+  , create         = Nothing
+  , actions        = []
+  , selects        = []
   }
-
--- | Which names does this resource claim.
-
-names :: Resource m s a -> [String]
-names r = concatMap ($ r)
-  [ map fst . multiGetBy
-  , map fst . multiActions
-  , map fst . singleGet
-  , map fst . singleGetBy
-  , map fst . singleUpdate
-  , map fst . singleUpdateBy
-  , map fst . singleSelects
-  , map fst . singleActions
-  ]
 
 -------------------------------------------------------------------------------
 -- A routing table of REST resources.
@@ -102,9 +106,9 @@ data Some  f where Some  :: f (a :: *     ) -> Some  f
 data Some1 f where Some1 :: f (a :: * -> *) -> Some1 f
 
 data Router m s where
-  Embed :: Monad s => Resource m s a -> [Some1 (Router s)] -> Router m s
+  Embed :: Resource m s sid mid aid -> [Some1 (Router s)] -> Router m s
 
-route :: Monad s => Resource m s a -> Router m s
+route :: Monad s => Resource m s sid mid aid -> Router m s
 route = flip Embed []
 
 compose :: Router m s -> Router s t -> Router m s
