@@ -411,7 +411,7 @@ failureWriter es e =
 
     -- | Try to print the error in the same format as requested, otherwise just print the error
     tryPrint JsonFormat   = concatMap (\v -> case v of { JsonE -> [encode e]; NoE -> [encode e]; _ -> []}) es
-    tryPrint XmlFormat    = concatMap (\v -> case v of { XmlE -> [toXML e]; NoE -> [toXML e]; _ -> []}) es
+    tryPrint XmlFormat    = concatMap (\v -> case v of { XmlE  -> [toXML e];  NoE -> [toXML e];  _ -> []}) es
     tryPrint _            = tryPrint XmlFormat ++ tryPrint JsonFormat
 
     out = case e of
