@@ -118,9 +118,9 @@ infixl 7 -/
 (----/), (---/), (--/), (-/) :: Router m s -> Router s t -> Router m s
 
 (----/) = compose
-(---/)  = compose
-( --/)  = compose
-(  -/)  = compose
+( ---/) = compose
+(  --/) = compose
+(   -/) = compose
 
 -------------------------------------------------------------------------------
 
