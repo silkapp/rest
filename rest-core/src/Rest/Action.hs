@@ -1,9 +1,10 @@
-{-# LANGUAGE GADTs, KindSignatures, TupleSections, DeriveDataTypeable #-}
+{-# LANGUAGE GADTs, KindSignatures, TupleSections, DeriveDataTypeable, TypeFamilies #-}
 module Rest.Action where
 
 import Control.Arrow
 import Control.Applicative hiding (empty)
 import Control.Monad.Error
+import Control.Monad.Identity
 import Safe
 
 import Rest.Dictionary
@@ -27,40 +28,39 @@ data Env id h p i = Env
   , input  :: i
   }
 
-data Handler m a where
-  Handler :: Monad m =>
-    { dictionary :: Dict id h p i o e
-    , prepare    :: a -> ErrorT (Reason e) m o
-    , action     :: Env id h p i -> ErrorT (Reason e) m a
+data GenHandler id m f where
+  GenHandler :: Monad m =>
+    { dictionary :: Dict h p i o e
+    , action     :: Env id h p i -> ErrorT (Reason e) m (Apply f o)
     , secure     :: Bool
-    } -> Handler m a
+    } -> GenHandler id m f
 
-mkHandler :: Monad m => Modifier id h p i o e -> (a -> ErrorT (Reason e) m o) -> (Env id h p i -> ErrorT (Reason e) m a) -> Handler m a
-mkHandler d p a = Handler (d empty) p a False
+mkHandler :: Monad m => Modifier h p i o e -> (Env id h p i -> ErrorT (Reason e) m (Apply f o)) -> GenHandler id m f
+mkHandler d a = GenHandler (d empty) a False
 
-data Action m where Action :: Handler m a -> Action m
+type family Apply (f :: * -> *) a :: *
+type instance Apply Identity a = a
+type instance Apply []       a = [a]
+
+type Handler     id m = GenHandler id m Identity
+type ListHandler id m = GenHandler id m []
 
 secureHandler :: Handler m a -> Handler m a
 secureHandler h = h { secure = True }
 
-secureAction :: Action m -> Action m
-secureAction (Action h) = Action (secureHandler h)
-
 mkListing
   :: Monad m
-  => Modifier () () () () o e
-  -> ([a] -> ErrorT (Reason e) m o)
-  -> ((Int, Int) -> ErrorT (Reason e) m [a])
-  -> Handler m [a]
-mkListing d i a = mkHandler (mkPar range . d) i (a . param)
+  => Modifier () () () o e
+  -> ((Int, Int) -> ErrorT (Reason e) m [o])
+  -> ListHandler id m
+mkListing d a = mkHandler (mkPar range . d) (a . param)
 
 mkListingBy
   :: Monad m
-  => Modifier id () () () o e
-  -> ([a] -> ErrorT (Reason e) m o)
-  -> (Env id () (Int, Int) () -> ErrorT (Reason e) m [a])
-  -> Handler m [a]
-mkListingBy d i a = mkHandler (mkPar range . d) i a
+  => Modifier () () () o e
+  -> (Env id () (Int, Int) () -> ErrorT (Reason e) m [o])
+  -> ListHandler id m
+mkListingBy d a = mkHandler (mkPar range . d) a
 
 range :: Param (Int, Int)
 range = Param ["offset", "count"] $ \xs ->
@@ -75,19 +75,17 @@ range = Param ["offset", "count"] $ \xs ->
 
 mkOrderedListing
   :: Monad m
-  => Modifier () () () () o e
-  -> ([a] -> ErrorT (Reason e) m o)
-  -> ((Int, Int, Maybe String, Maybe String) -> ErrorT (Reason e) m [a])
-  -> Handler m [a]
-mkOrderedListing d i a = mkHandler (mkPar orderedRange . d) i (a . param)
+  => Modifier () () () o e
+  -> ((Int, Int, Maybe String, Maybe String) -> ErrorT (Reason e) m [o])
+  -> ListHandler id m
+mkOrderedListing d a = mkHandler (mkPar orderedRange . d) (a . param)
 
 mkOrderedListingBy
   :: Monad m
-  => Modifier id () () () o e
-  -> ([a] -> ErrorT (Reason e) m o)
-  -> (Env id () (Int, Int, Maybe String, Maybe String) () -> ErrorT (Reason e) m [a])
-  -> Handler m [a]
-mkOrderedListingBy d i a = mkHandler (mkPar orderedRange . d) i a
+  => Modifier () () () o e
+  -> (Env id () (Int, Int, Maybe String, Maybe String) () -> ErrorT (Reason e) m [o])
+  -> ListHandler id m
+mkOrderedListingBy d a = mkHandler (mkPar orderedRange . d) a
 
 orderedRange :: Param (Int, Int, Maybe String, Maybe String)
 orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
@@ -103,27 +101,23 @@ orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
     _ -> error "Internal error in orderedRange rest parameters"
   where normalize = (max 0 *** (min 1000 . max 0))
 
-mkCreate :: Monad m => Modifier () () () i o e -> (a -> ErrorT (Reason e) m o) -> (i -> ErrorT (Reason e) m a) -> Action m
-mkCreate d i a = Action (mkHandler d i (a . input))
+mkCreate :: Monad m => Modifier () () i o e -> (i -> ErrorT (Reason e) m o) -> Handler () m
+mkCreate d a = mkHandler d (a . input)
 
-mkUpdate :: Monad m => Modifier id h p i o e -> (a -> ErrorT (Reason e) m o) -> (Env id h p i -> ErrorT (Reason e) m a) -> Action m
-mkUpdate d i a = Action (mkHandler d i a)
+mkUpdate :: Monad m => Modifier h p i o e -> (Env id h p i -> ErrorT (Reason e) m o) -> Handler id m
+mkUpdate d a = mkHandler d a
 
-mkGetter :: Monad m => Modifier id () () () o e -> (a -> ErrorT (Reason e) m o) -> (id -> ErrorT (Reason e) m a) -> Handler m a
-mkGetter d i a = mkHandler d i (a . ident)
+mkGetter :: Monad m => Modifier () () () o e -> (id -> ErrorT (Reason e) m o) -> Handler id m
+mkGetter d a = mkHandler d (a . ident)
 
-mkGetterEnv :: Monad m => Modifier id h p i o e -> (a -> ErrorT (Reason e) m o) -> (Env id h p i -> ErrorT (Reason e) m a) -> Handler m a
-mkGetterEnv d i a = mkHandler d i a
+mkGetterEnv :: Monad m => Modifier h p i o e -> (Env id h p i -> ErrorT (Reason e) m o) -> Handler id m
+mkGetterEnv d a = mkHandler d a
 
-mkAction :: Monad m => Modifier () () () i o e -> (a -> ErrorT (Reason e) m o) -> (i -> ErrorT (Reason e) m a) -> Action m
-mkAction d i a = Action (mkHandler d i (a . input))
+mkAction :: Monad m => Modifier () () i o e -> (i -> ErrorT (Reason e) m o) -> Handler id m
+mkAction d a = mkHandler d (a . input)
 
-mkActionEnv :: Monad m => Modifier () h p i o e -> (a -> ErrorT (Reason e) m o) -> (Env () h p i -> ErrorT (Reason e) m a) -> Action m
-mkActionEnv d i a = Action (mkHandler d i a)
+mkActionEnv :: Monad m => Modifier h p i o e -> (Env id h p i -> ErrorT (Reason e) m o) -> Handler id m
+mkActionEnv d a = mkHandler d a
 
-constHandler :: Monad m => Modifier () () () () o e -> (a -> ErrorT (Reason e) m o) -> ErrorT (Reason e) m a -> Handler m a
-constHandler d i a = mkHandler d i (const a)
-
-constAction :: Monad m => Modifier () () () () o e -> (a -> ErrorT (Reason e) m o) -> ErrorT (Reason e) m a -> Action m
-constAction d i a = mkAction d i (const a)
-
+constHandler :: Monad m => Modifier () () () o e -> ErrorT (Reason e) m o -> Handler id m
+constHandler d a = mkHandler d (const a)
