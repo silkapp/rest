@@ -17,7 +17,6 @@ module Rest.Types.Error
 
 import Control.Monad.Error
 import Data.JSON.Schema
-import Data.String
 import Data.Typeable
 import Generics.Regular
 import Generics.Regular.XmlPickler (gxpickle)
@@ -71,34 +70,33 @@ instance (Json a, Json b) => Json (Status a b)
 type Reason_ = Reason ()
 
 data Reason a
-  = NotFound
-  | PreparationFailed
-  | UnsupportedResource
-  | UnsupportedAction
+  -- Thrown in the router.
+  = UnsupportedRoute
+  | UnsupportedMethod
   | UnsupportedVersion
-  | UnacceptedFormat
-  | NotAllowed
-  | AuthenticationFailed
-  | Busy
-  | Gone
 
+  -- Thrown during generic IO.
+  | UnacceptedFormat
   | IdentError   DataError
   | HeaderError  DataError
   | ParamError   DataError
   | InputError   DataError
   | OutputError  DataError
 
+  -- Generic errors thrown in specific handlers.
+  | NotFound
+  | NotAllowed
+  | AuthenticationFailed
+  | Busy
+  | Gone
+
+  -- Custom domain reasons.
   | CustomReason (DomainReason a)
-  | Unknown      String
   deriving (Show, Typeable)
 
 instance Error DataError
 
-instance IsString (Reason e) where
-  fromString = Unknown
-
-instance Error (Reason e) where
-  strMsg = fromString
+instance Error (Reason e)
 
 $(deriveAll ''DataError "PFDataError")
 $(deriveAll ''Reason    "PFReason")
