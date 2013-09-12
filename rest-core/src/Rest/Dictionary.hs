@@ -35,7 +35,6 @@ module Rest.Dictionary
 
 -- * Dictionary aspects.
 
-, Ident (..)
 , Header (..)
 , Param (..)
 , Input (..)
@@ -52,11 +51,6 @@ module Rest.Dictionary
 -- * Combinators for building dictionaries.
 
 , empty
-
--- ** Adding identifier types
-
-, stringId
-, readId
 
 -- ** Header dictionaries
 
@@ -120,18 +114,6 @@ data Format
   | FileFormat
   | NoFormat
   deriving (Eq, Ord, Enum, Bounded, Show)
-
--- | The explicit dictionary `Ident` describes how to translate a resource
--- identifier (originating from a request URI) to a Haskell value. We allow
--- plain `String` identifiers or all Haskell types that have a `Read` instance.
--- The absence of an identifier is recognized with `NoId`.
-
-data Ident id where
-  NoId     ::                                Ident ()
-  ReadId   :: (Info id, Read id, Show id) => Ident id
-  StringId ::                                Ident String
-
-deriving instance Show (Ident id)
 
 -- | The explicit dictionary `Header` describes how to translate HTTP request
 -- headers to some Haskell value. The first field in the `Header` constructor
@@ -210,9 +192,8 @@ deriving instance Show (Error e)
 -- errors (e). Inputs, outputs and errors can have multiple associated
 -- dictionaries.
 
-type Dict id h p i o e =
-  ( Ident   id
-  , Header  h
+type Dict h p i o e =
+  ( Header  h
   , Param   p
   , Inputs  i
   , Outputs o
@@ -230,143 +211,132 @@ type Errors  e = [Error e]
 
 -- | Type synonym for dictionary modification.
 
-type Modifier id h p i o e = Dict () () () () () () -> Dict id h p i o e
+type Modifier h p i o e = Dict () () () () () -> Dict h p i o e
 
 -------------------------------------------------------------------------------
 
 -- | The empty dictionary, recognizing no types.
 
-empty :: Dict () () () () () ()
-empty = (NoId, NoHeader, NoParam, [NoI], [NoO], [NoE])
-
--- | Identifiers are directly usable as `String`.
-
-stringId :: Dict id h p i o e -> Dict String h p i o e
-stringId (_, b, c, d, e, f) = (StringId, b, c, d, e, f)
-
--- | Identifiers are can be read into some instance of `Read`. For inspection
--- reasons the type must also be an instance of both `Info` and `Show`.
-
-readId :: (Info id, Read id, Show id) => Dict x h p i o e -> Dict id h p i o e
-readId (_, b, c, d, e, f) = (ReadId, b, c, d, e, f)
+empty :: Dict () () () () ()
+empty = (NoHeader, NoParam, [NoI], [NoO], [NoE])
 
 -- | Add custom sub-dictionary for recognizing headers.
 
-mkHeader :: Header h -> Dict id x p i o e -> Dict id h p i o e
-mkHeader h (a, _, c, d, e, f) = (a, h, c, d, e, f)
+mkHeader :: Header h -> Dict x p i o e -> Dict h p i o e
+mkHeader h (_, c, d, e, f) = (h, c, d, e, f)
 
 -- | Add custom sub-dictionary for recognizing parameters.
 
-mkPar :: Param p -> Dict id h x i o e -> Dict id h p i o e
-mkPar p (a, b, _, d, e, f) = (a, b, p, d, e, f)
+mkPar :: Param p -> Dict h x i o e -> Dict h p i o e
+mkPar p (b, _, d, e, f) = (b, p, d, e, f)
 
 -- | Open up input type for extension with custom dictionaries.
 
-someI :: Dict id h p () o e -> Dict id h p i o e
-someI (a, b, c, _, e, f) = (a, b, c, [], e, f)
+someI :: Dict h p () o e -> Dict h p i o e
+someI (b, c, _, e, f) = (b, c, [], e, f)
 
 -- | Allow direct usage of as input as `String`.
 
-stringI :: Dict id h p i o e -> Dict id h p String o e
-stringI (a, b, c, _, e, f) = (a, b, c, [StringI], e, f)
+stringI :: Dict h p i o e -> Dict h p String o e
+stringI (b, c, _, e, f) = (b, c, [StringI], e, f)
 
 -- | Allow direct usage of as input as raw Xml `Text`.
 
-xmlTextI :: Dict id h p i o e -> Dict id h p Text o e
-xmlTextI (a, b, c, _, e, f) = (a, b, c, [XmlTextI], e, f)
+xmlTextI :: Dict h p i o e -> Dict h p Text o e
+xmlTextI (b, c, _, e, f) = (b, c, [XmlTextI], e, f)
 
 -- | Allow usage of input as file contents, represented as a `ByteString`.
 
-fileI :: Dict id h p i o e -> Dict id h p ByteString o e
-fileI (a, b, c, _, e, f) = (a, b, c, [FileI], e, f)
+fileI :: Dict h p i o e -> Dict h p ByteString o e
+fileI (b, c, _, e, f) = (b, c, [FileI], e, f)
 
 -- | The input can be read into some instance of `Read`. For inspection reasons
 -- the type must also be an instance of both `Info` and `Show`.
 
-readI :: (Info i, Read i, Show i) => Dict id h p i o e -> Dict id h p i o e
-readI (a, b, c, d, e, f) = (a, b, c, ReadI : d, e, f)
+readI :: (Info i, Read i, Show i) => Dict h p i o e -> Dict h p i o e
+readI (b, c, d, e, f) = (b, c, ReadI : d, e, f)
 
 -- | The input can be read into some instance of `XmlPickler`.
 
-xmlI :: (Typeable i, XmlPickler i) => Dict id h p i o e -> Dict id h p i o e
-xmlI (a, b, c, d, e, f) = (a, b, c, XmlI : d, e, f)
+xmlI :: (Typeable i, XmlPickler i) => Dict h p i o e -> Dict h p i o e
+xmlI (b, c, d, e, f) = (b, c, XmlI : d, e, f)
 
 -- | The input can be used as an XML `ByteString`.
 
-rawXmlI :: Dict id h p i o e -> Dict id h p ByteString o e
-rawXmlI (a, b, c, _, e, f) = (a, b, c, [RawXmlI], e, f)
+rawXmlI :: Dict h p i o e -> Dict h p ByteString o e
+rawXmlI (b, c, _, e, f) = (b, c, [RawXmlI], e, f)
 
 -- | The input can be read into some instance of `Json`.
 
-jsonI :: (Typeable i, Json i) => Dict id h p i o e -> Dict id h p i o e
-jsonI (a, b, c, d, e, f) = (a, b, c, JsonI : d, e, f)
+jsonI :: (Typeable i, Json i) => Dict h p i o e -> Dict h p i o e
+jsonI (b, c, d, e, f) = (b, c, JsonI : d, e, f)
 
 -- | Open up output type for extension with custom dictionaries.
 
-someO :: Dict id h p i () e -> Dict id h p i o e
-someO (a, b, c, d, _, f) = (a, b, c, d, [], f)
+someO :: Dict h p i () e -> Dict h p i o e
+someO (b, c, d, _, f) = (b, c, d, [], f)
 
 -- | Allow output as plain String.
 
-stringO :: Dict id h p i () e -> Dict id h p i String e
-stringO (a, b, c, d, _, f) = (a, b, c, d, [StringO], f)
+stringO :: Dict h p i () e -> Dict h p i String e
+stringO (b, c, d, _, f) = (b, c, d, [StringO], f)
 
 -- | Allow file output using a combination of the raw data and a mime type.
 
-fileO :: Dict id h p i o e -> Dict id h p i (ByteString, String) e
-fileO (a, b, c, d, _, f) = (a, b, c, d, [FileO], f)
+fileO :: Dict h p i o e -> Dict h p i (ByteString, String) e
+fileO (b, c, d, _, f) = (b, c, d, [FileO], f)
 
 -- | Allow output as XML using the `XmlPickler` type class.
 
-xmlO :: (Typeable o, XmlPickler o) => Dict id h p i o e -> Dict id h p i o e
-xmlO (a, b, c, d, e, f) = (a, b, c, d, XmlO : e, f)
+xmlO :: (Typeable o, XmlPickler o) => Dict h p i o e -> Dict h p i o e
+xmlO (b, c, d, e, f) = (b, c, d, XmlO : e, f)
 
 -- | Allow output as raw XML represented as a `ByteString`.
 
-rawXmlO :: Dict id h p i () e -> Dict id h p i ByteString e
-rawXmlO (a, b, c, d, _, f) = (a, b, c, d, [RawXmlO], f)
+rawXmlO :: Dict h p i () e -> Dict h p i ByteString e
+rawXmlO (b, c, d, _, f) = (b, c, d, [RawXmlO], f)
 
 -- | Allow output as JSON using the `Json` type class.
 
-jsonO :: (Typeable o, Json o) => Dict id h p i o e -> Dict id h p i o e
-jsonO (a, b, c, d, e, f) = (a, b, c, d, JsonO : e, f)
+jsonO :: (Typeable o, Json o) => Dict h p i o e -> Dict h p i o e
+jsonO (b, c, d, e, f) = (b, c, d, JsonO : e, f)
 
 -- | Open up error type for extension with custom dictionaries.
 
-someE :: (Typeable e, Json e) => Dict id h p i o () -> Dict id h p i o e
-someE (a, b, c, d, e, _) = (a, b, c, d, e, [])
+someE :: (Typeable e, Json e) => Dict h p i o () -> Dict h p i o e
+someE (b, c, d, e, _) = (b, c, d, e, [])
 
 -- | Allow error output as JSON using the `Json` type class.
 
-jsonE :: (Typeable e, Json e) => Dict id h p i o e -> Dict id h p i o e
-jsonE (a, b, c, d, e, f) = (a, b, c, d, e, JsonE : f)
+jsonE :: (Typeable e, Json e) => Dict h p i o e -> Dict h p i o e
+jsonE (b, c, d, e, f) = (b, c, d, e, JsonE : f)
 
 -- | Allow error output as XML using the `XmlPickler` type class.
 
-xmlE :: (Typeable e, XmlPickler e) => Dict id h p i o e -> Dict id h p i o e
-xmlE (a, b, c, d, e, f) = (a, b, c, d, e, XmlE : f)
+xmlE :: (Typeable e, XmlPickler e) => Dict h p i o e -> Dict h p i o e
+xmlE (b, c, d, e, f) = (b, c, d, e, XmlE : f)
 
 -- | The input can be read into some instance of both `Json` and `XmlPickler`.
 
-xmlJsonI :: (Typeable i, Json i, XmlPickler i) => Dict id h p () o e -> Dict id h p i o e
+xmlJsonI :: (Typeable i, Json i, XmlPickler i) => Dict h p () o e -> Dict h p i o e
 xmlJsonI = xmlI . jsonI . someI
 
 -- | Allow output as JSON using the `Json` type class and allow output as XML
 -- using the `XmlPickler` type class.
 
-xmlJsonO :: (Typeable o, Json o, XmlPickler o) => Dict id h p i () e -> Dict id h p i o e
+xmlJsonO :: (Typeable o, Json o, XmlPickler o) => Dict h p i () e -> Dict h p i o e
 xmlJsonO = xmlO . jsonO . someO
 
 -- | Allow error output as JSON using the `Json` type class and allow output as
 -- XML using the `XmlPickler` type class.
 
-xmlJsonE :: (Typeable e, Json e, XmlPickler e) => Dict id h p i o () -> Dict id h p i o e
+xmlJsonE :: (Typeable e, Json e, XmlPickler e) => Dict h p i o () -> Dict h p i o e
 xmlJsonE = xmlE . jsonE . someE
 
 -- | The input can be read into some instance of both `Json` and `XmlPickler`
 -- and allow output as JSON using the `Json` type class and allow output as XML
 -- using the `XmlPickler` type class.
 
-xmlJson :: (Typeable i, Typeable o, Json i, Json o, XmlPickler i, XmlPickler o) => Dict id h p () () e -> Dict id h p i o e
+xmlJson :: (Typeable i, Typeable o, Json i, Json o, XmlPickler i, XmlPickler o) => Dict h p () () e -> Dict h p i o e
 xmlJson = xmlJsonI . xmlJsonO
 
