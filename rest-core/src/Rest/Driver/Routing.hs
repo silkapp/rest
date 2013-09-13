@@ -21,7 +21,8 @@ import qualified Data.ByteString.UTF8  as UTF8
 import qualified Control.Monad.State   as State
 
 import Network.URI.Encode (decodeByteString)
-import Rest.Action (ListHandler)
+import Rest.Action (ListHandler, Handler, GenHandler (..), Env (..), range)
+import Rest.Container
 import Rest.Dictionary
 import Rest.Error
 import Rest.Resource (Some1(..))
@@ -70,7 +71,7 @@ routeToplevel :: Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> May
 routeToplevel resource@(Rest.Resource { Rest.list }) subRouters mToplevel = hoistMaybe mToplevel >>= \toplevel ->
   case toplevel of
     Rest.Single sid -> lift $ withSubresource sid resource subRouters
-    Rest.Many   mid -> guardNullPath >> guardMethod GET >> return (RunnableHandler mid id list)
+    Rest.Many   mid -> guardNullPath >> guardMethod GET >> return (RunnableHandler mid id (mkListHandler list))
 
 routeCreate :: Rest.Resource m s sid mid aid -> MaybeT Router (RunnableHandler m)
 routeCreate (Rest.Resource { Rest.create }) = guardNullPath >> guardMethod POST >>
@@ -96,7 +97,7 @@ routeUnnamed :: Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Rest
 routeUnnamed resource@(Rest.Resource { Rest.list }) subRouters cardinality = popSegment >>= \seg ->
   case cardinality of
     Rest.Single sBy -> withSubresource (sBy seg) resource subRouters
-    Rest.Many   mBy -> noRestPath >> hasMethod GET >> return (RunnableHandler (mBy seg) id list)
+    Rest.Many   mBy -> noRestPath >> hasMethod GET >> return (RunnableHandler (mBy seg) id (mkListHandler list))
 
 routeGetter :: Rest.Getter sid -> Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Router (RunnableHandler m)
 routeGetter getter resource subRouters =
@@ -109,8 +110,8 @@ routeGetter getter resource subRouters =
 routeListGetter :: Rest.Getter mid -> ListHandler mid m -> Router (RunnableHandler m)
 routeListGetter getter list = hasMethod GET >>
   case getter of
-    Rest.Singleton mid -> noRestPath >> return (RunnableHandler mid id list)
-    Rest.By        mBy -> popSegment >>= \seg -> noRestPath  >> return (RunnableHandler (mBy seg) id list)
+    Rest.Singleton mid -> noRestPath >> return (RunnableHandler mid id (mkListHandler list))
+    Rest.By        mBy -> popSegment >>= \seg -> noRestPath  >> return (RunnableHandler (mBy seg) id (mkListHandler list))
 
 withSubresource :: sid -> Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Router (RunnableHandler m)
 withSubresource sid resource@(Rest.Resource { Rest.enter, Rest.selects, Rest.actions }) subRouters =  withSegment (routeSingle sid resource) $ \seg ->
@@ -186,3 +187,11 @@ hasMethod wantedMethod = ask >>= \method ->
 
 guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)
+
+mkListHandler :: ListHandler id m -> Handler id m
+mkListHandler (GenHandler (h, p, i, o, e) act sec) = GenHandler (addPar range (h, p, i, listO o, e)) (mkListAction act) sec
+
+mkListAction :: Monad m => (Env id h p i -> ErrorT (Reason e) m [a]) -> Env id h ((Int, Int), p) i -> ErrorT (Reason e) m (List a)
+mkListAction act (Env ident h ((f, c), p) i) = do
+  xs <- act (Env ident h p i)
+  return (List f (min c (length xs)) (take c xs))
