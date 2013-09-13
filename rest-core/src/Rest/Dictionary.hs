@@ -59,6 +59,7 @@ module Rest.Dictionary
 -- ** Parameter dictionaries
 
 , mkPar
+, addPar
 
 -- ** Input dictionaries
 
@@ -142,8 +143,9 @@ data Header h where
 -- parsed type.
 
 data Param p where
-  NoParam  ::                                                       Param ()
-  Param    :: [String] -> ([Maybe String] -> Either DataError p) -> Param p
+  NoParam   ::                                                       Param ()
+  Param     :: [String] -> ([Maybe String] -> Either DataError p) -> Param p
+  TwoParams :: Param p -> Param q                                 -> Param (p, q)
 
 -- | The explicitly dictionary `Input` describes how to translate the request
 -- body into some Haskell value. We currently use a constructor for every
@@ -225,10 +227,15 @@ empty = (NoHeader, NoParam, [NoI], [NoO], [NoE])
 mkHeader :: Header h -> Dict x p i o e -> Dict h p i o e
 mkHeader h (_, c, d, e, f) = (h, c, d, e, f)
 
--- | Add custom sub-dictionary for recognizing parameters.
+-- | Set custom sub-dictionary for recognizing parameters.
 
 mkPar :: Param p -> Dict h x i o e -> Dict h p i o e
 mkPar p (b, _, d, e, f) = (b, p, d, e, f)
+
+-- | Add custom sub-dictionary for recognizing parameters.
+
+addPar :: Param p -> Dict h p' i o e -> Dict h (p, p') i o e
+addPar p (b, p', d, e, f) = (b, TwoParams p p', d, e, f)
 
 -- | Open up input type for extension with custom dictionaries.
 
