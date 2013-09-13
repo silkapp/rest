@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     RankNTypes
   , EmptyDataDecls
@@ -14,7 +15,7 @@ module Rest.Driver.Happstack (apiToHandler, apiToHandler') where
 import Control.Applicative
 import Control.Concurrent (readMVar)
 import Control.Monad.Error
-import Data.ByteString.Char8 (unpack)
+import Data.ByteString.Char8 (pack, unpack)
 import Data.Char (isSpace, toLower)
 import Data.List
 import Data.List.Split
@@ -30,12 +31,14 @@ import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Map                  as M
 
 import Rest.Action
-import Rest.Container
 import Rest.Dictionary
 import Rest.Error
-import Rest.Resource
-
-type Run m n = forall a. m a -> n a
+import Rest.Resource (Api)
+import Rest.Driver.Perform (runAction, HasInput, writeResponse, CanOutput)
+import Rest.Driver.Routing (route, ApiError (..))
+import Rest.Driver.Types
+import qualified Rest.Driver.Routing as Rest
+import qualified Rest.Driver.Perform as Rest
 
 class    ( Functor m
          , Applicative m
@@ -59,12 +62,240 @@ instance ( Functor m
          , FilterMonad Response m
          ) => M m
 
-apiToHandler :: M n => Api n -> n Response
-apiToHandler = versionHandler id
+apiToHandler :: (ServerMonad m, HasInput m, CanOutput m, Rest.Response m ~ Response) => Api m -> m Response
+apiToHandler = apiToHandler' id
 
-apiToHandler' :: (Monad m, M n) => Run m n -> Api m -> n Response
-apiToHandler' = versionHandler
+apiToHandler' :: (ServerMonad n, HasInput n, CanOutput n, Rest.Response n ~ Response) => Run m n -> Api m -> n Response
+apiToHandler' run api = do
+  rq <- askRq
+  case route (toRestMethod $ rqMethod rq) (pack $ rqUri rq) api of
+    Left  (ApiError e r)  -> Rest.writeFailure e r
+    Right (RunnableHandler idnt run' h) ->
+      let out = runAction (RunnableHandler idnt (run . run') h)
+      -- TODO: validator
+      in writeResponse out
 
+instance (Functor m, MonadPlus m, MonadIO m) => HasInput (ServerPartT m) where
+  fetchInputs = fetchInputs
+
+instance (Functor m, MonadPlus m, MonadIO m) => CanOutput (ServerPartT m) where
+  type Response (ServerPartT m) = Response
+  writeOutput  = outputWriter
+  writeFailure = failureWriter
+
+-------------------------------------------------------------------------------
+-- Fetching the input resource.
+
+{-
+fetchValue :: M n => Run m n -> Handler m a -> String -> ErrorT SomeError n a
+fetchValue run (Handler (idents, hs, params, inputs, _, es) _ act _) inp = mapE (SomeError es) $
+  do i <- IdentError  `mapE` identifiers idents inp
+     h <- HeaderError `mapE` headers hs
+     p <- ParamError  `mapE` parameters params
+     j <- InputError  `mapE` parser NoFormat inputs B.empty
+     mapErrorT run (act (Env i h p j))
+     -}
+
+fetchInputs :: (Alternative m, MonadIO m, HasRqData m, ServerMonad m) => id -> Dict h p j o e -> ErrorT (Reason e) m (Env id h p j)
+fetchInputs idnt (hs, params, inputs, _, _) =
+  do bs <- lift requestBody
+     ct <- parseContentType
+
+     -- i <- IdentError  `mapE` identifiers idents idnt
+     h <- HeaderError `mapE` headers hs
+     p <- ParamError  `mapE` parameters params
+     j <- InputError  `mapE`
+            case inputs of
+              [NoI] -> return ()
+              _     ->
+                case ct of
+                  Just XmlFormat      -> parser XmlFormat     inputs bs
+                  Just JsonFormat     -> parser JsonFormat    inputs bs
+                  Just StringFormat   -> parser StringFormat  inputs bs
+                  Just FileFormat     -> parser FileFormat    inputs bs
+                  Just x              -> throwError (UnsupportedFormat (show x))
+                  Nothing | B.null bs -> parser NoFormat inputs bs
+                  Nothing             -> throwError (UnsupportedFormat "unknown")
+     return (Env idnt h p j)
+
+parseContentType :: ServerMonad m => m (Maybe Format)
+parseContentType =
+  do ct <- (maybe "" unpack . getHeader "Content-Type") `liftM` askRq
+     let segs  = concat (take 1 . splitOn ";" <$> splitOn "," ct)
+         types = flip concatMap segs $ \ty ->
+                   case splitOn "/" ty of
+                     ["application", "xml"]          -> [XmlFormat]
+                     ["application", "json"]         -> [JsonFormat]
+                     ["text",        "xml"]          -> [XmlFormat]
+                     ["text",        "json"]         -> [JsonFormat]
+                     ["text",        "plain"]        -> [StringFormat]
+                     ["application", "octet-stream"] -> [FileFormat]
+                     ["application", _             ] -> [FileFormat]
+                     ["image",       _             ] -> [FileFormat]
+                     _                               -> []
+     return (headMay types)
+
+headers :: (ServerMonad m, Functor m, Monad m) => Header h -> ErrorT DataError m h
+headers NoHeader      = return ()
+headers (Header xs h) = mapM findHeader xs >>= either throwError return . h
+  where findHeader x = askRq >>= return . fmap unpack . getHeader x
+
+parameters :: (HasRqData m, Alternative m, Functor m, Monad m) => Param p -> ErrorT DataError m p
+parameters NoParam      = return ()
+parameters (Param xs p) = mapM (lift . findParam) xs >>= either throwError return . p
+  where findParam x = Just <$> look x <|> return Nothing
+parameters (TwoParams p1 p2) = (,) <$> parameters p1 <*> parameters p2
+
+requestBody :: (MonadIO m, ServerMonad m) => m UTF8.ByteString
+requestBody =
+  do rq <- askRq
+     body <- liftIO (readMVar (rqBody rq))
+     return (unBody body)
+
+parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m j
+parser XmlFormat     (XmlI     : _ ) v = case eitherFromXML (UTF8.toString v) of
+                                           Left err -> throwError (ParseError err)
+                                           Right  r -> return r
+parser XmlFormat     (XmlTextI : _ ) v = return (decodeUtf8 v)
+parser NoFormat      (NoI      : _ ) _ = return ()
+parser StringFormat  (ReadI    : _ ) v = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
+parser JsonFormat    (JsonI    : _ ) v = case decode (UTF8.toString v) of
+                                           Ok a      -> return a
+                                           Error msg -> throwError (ParseError msg)
+parser StringFormat  (StringI  : _ ) v = return (UTF8.toString v)
+parser FileFormat    (FileI    : _ ) v = return v
+parser XmlFormat     (RawXmlI  : _ ) v = return v
+parser t             []              _ = throwError (UnsupportedFormat (show t))
+parser t             (_        : xs) v = parser t xs v
+
+toRestMethod :: Method -> Rest.Method
+toRestMethod GET = Rest.GET
+toRestMethod POST = Rest.POST
+toRestMethod PUT = Rest.PUT
+toRestMethod DELETE = Rest.DELETE
+toRestMethod _ = undefined
+
+-------------------------------------------------------------------------------
+-- Failure responses.
+
+failureWriter :: (Alternative m, MonadPlus m, ServerMonad m, HasRqData m, FilterMonad Response m) => Errors e -> Reason e -> m Response
+failureWriter es e =
+  do formats <- (++ [XmlFormat]) <$> accept
+     msum (errorPrinter <$> formats)
+
+  where
+{-   errorPrinter JsonFormat = contentType JsonFormat >> out (encode e)
+    errorPrinter XmlFormat  = contentType XmlFormat  >> out (toXML e)
+    errorPrinter _          = contentType XmlFormat  >> out (toXML e)
+-}
+    errorPrinter f = case tryPrint f of
+                        []      -> failureWriter [NoE] (OutputError (UnsupportedFormat $ formatCT f))
+                        (x : _) -> contentType f >> out x
+
+    formatCT :: Format -> String
+    formatCT v =
+      case v of
+        XmlFormat    -> "xml"
+        JsonFormat   -> "json"
+        StringFormat -> "text/plain"
+        FileFormat   -> "application/octet-stream"
+        NoFormat     -> "any"
+
+    -- | Try to print the error in the same format as requested, otherwise just print the error
+    tryPrint JsonFormat   = concatMap (\v -> case v of { JsonE -> [encode e]; NoE -> [encode e]; _ -> []}) es
+    tryPrint XmlFormat    = concatMap (\v -> case v of { XmlE  -> [toXML e];  NoE -> [toXML e];  _ -> []}) es
+    tryPrint _            = tryPrint XmlFormat ++ tryPrint JsonFormat
+
+    out = case e of
+            NotFound                           -> notFound
+            UnsupportedRoute                   -> notFound
+            UnsupportedMethod                  -> notFound
+            UnsupportedVersion                 -> notFound
+            UnacceptedFormat                   -> resp 422
+            NotAllowed                         -> forbidden
+            AuthenticationFailed               -> unauthorized
+            Busy                               -> resp 503
+            Gone                               -> resp 410
+            OutputError (UnsupportedFormat _)  -> resp 406
+            InputError  _                      -> badRequest
+            OutputError _                      -> internalServerError
+            IdentError  _                      -> badRequest
+            HeaderError _                      -> badRequest
+            ParamError  _                      -> badRequest
+            CustomReason (DomainReason toRespCode c) -> resp (toRespCode c)
+          . toResponse
+
+-------------------------------------------------------------------------------
+-- Printing the output resource.
+
+contentType :: FilterMonad Response m => Format -> m ()
+contentType c = setHeaderM "Content-Type" $
+  case c of
+    JsonFormat -> "application/json; charset=UTF-8"
+    XmlFormat  -> "application/xml; charset=UTF-8"
+    _          -> "text/plain; charset=UTF-8"
+
+outputWriter :: forall v m e. (Alternative m, ServerMonad m, HasRqData m, FilterMonad Response m) => Outputs v -> v -> ErrorT (Reason e) m Response
+outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
+  (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
+
+  where
+    try :: Outputs v -> Format -> ErrorT DataError m Response
+    try (XmlO    : _ ) XmlFormat    = lift (contentType XmlFormat    >> ok (toResponse (toXML v)))
+    try (RawXmlO : _ ) XmlFormat    = lift (contentType XmlFormat    >> return (resultBS 200 v))
+    try (NoO     : _ ) NoFormat     = lift (contentType NoFormat     >> ok (toResponse ("" :: String)))
+    try (NoO     : _ ) XmlFormat    = lift (contentType NoFormat     >> ok (toResponse ("<done/>" :: String)))
+    try (NoO     : _ ) JsonFormat   = lift (contentType NoFormat     >> ok (toResponse ("{}" :: String)))
+    try (NoO     : _ ) StringFormat = lift (contentType NoFormat     >> ok (toResponse ("done" :: String)))
+    try (JsonO   : _ ) JsonFormat   = lift (contentType JsonFormat   >> ok (toResponse (encode v)))
+    try (StringO : _ ) StringFormat = lift (contentType StringFormat >> ok (toResponse v))
+    try (FileO   : _ ) FileFormat   = lift $ do let mime = fromMaybe "application/octet-stream" (M.lookup (map toLower (snd v)) mimeTypes)
+                                                setHeaderM "Content-Type" mime
+                                                setHeaderM "Cache-Control" "private, max-age=604800"
+                                                return (resultBS 200 (fst v))
+    try []             t            = throwError (UnsupportedFormat (show t))
+    try (_       : xs) t            = try xs t
+
+accept :: (Alternative m, HasRqData m, ServerMonad m) => m [Format]
+accept =
+  do rq <- askRq
+     ct <- parseContentType
+     ty <- look "type" <|> return ""
+     let fromQuery =
+           case ty of
+             "json" -> [JsonFormat]
+             "xml"  -> [XmlFormat]
+             _      -> []
+         fromAccept = maybe (allFormats ct) (splitter ct . unpack) (getHeader "Accept" rq)
+     return (fromQuery ++ fromAccept)
+
+  where
+    allFormats ct = (maybe id (:) ct) [minBound .. maxBound]
+    splitter ct hdr = nub (match ct =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
+
+    match ct ty =
+      case map trim <$> (splitOn "+" . trim <$> splitOn "/" ty) of
+        [ ["*"]           , ["*"] ] -> allFormats ct
+        [ ["*"]                   ] -> allFormats ct
+        [ ["text"]        , xs    ] -> xs >>= txt
+        [ ["application"] , xs    ] -> xs >>= app
+        [ ["image"]       , xs    ] -> xs >>= img
+        _                           -> []
+
+    trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+
+    txt "*"     = [XmlFormat, JsonFormat, StringFormat]
+    txt "json"  = [JsonFormat]
+    txt "xml"   = [XmlFormat]
+    txt "plain" = [StringFormat]
+    txt _       = []
+    app "*"     = [XmlFormat, JsonFormat]
+    app "xml"   = [XmlFormat]
+    app "json"  = [JsonFormat]
+    app _       = []
+    img _       = [FileFormat]
+
+{-
 versionHandler :: (M n, Monad m) => Run m n -> Api m -> n Response
 versionHandler run versions = path $ \i ->
   case i `lookupVersion` versions of
@@ -76,6 +307,7 @@ routerToHandler run (Embed res subs) =
   (if null (identifier res) then id else dir (identifier res)) $
     msum [ dispatch run res subs
          , multiHandlers run res
+         -- , batchedGet run res subs
          , failureWriter [NoE] UnsupportedAction
          ]
 
@@ -160,6 +392,17 @@ multiHandlers run res = msum
                       Nothing         -> failureWriter [NoE] UnsupportedAction
   ]
 
+{-
+newtype BatchedGet = BatchedGet [Uri]
+newtype Uri = Uri String
+
+batchedGet :: M n => Run m n -> Resource m s a -> [Some1 (Router s)] -> n Response
+batchedGet run res subs =
+  do Env _ _ _ (BatchedGet uris) <- fetchInputs "" (NoId, NoHeader, NoParam, [XmlI, JsonI], [], [])
+     forM uris $ \(Uri uri) -> do
+       dispatch run res subs
+-}
+
 listing :: M n => Run m n -> String -> Handler m [a] -> n Response
 listing run idnt h@(Handler (i, hs, p, j, o, es) prep act sec) =
   case o of
@@ -207,93 +450,6 @@ respond run idnt w (Handler d@(_, _, _, _, o, es) prep act _) =
             Just v  -> return v
           mapErrorT run (prep v) >>= outputWriter formats o
      either (failureWriter es) return res
-
-requestBody :: M m => m B.ByteString
-requestBody =
-  do rq <- askRq
-     body <- liftIO (readMVar (rqBody rq))
-     return (unBody body)
-
--------------------------------------------------------------------------------
--- Fetching the input resource.
-
-fetchValue :: M n => Run m n -> Handler m a -> String -> ErrorT SomeError n a
-fetchValue run (Handler (idents, hs, params, inputs, _, es) _ act _) inp = mapE (SomeError es) $
-  do i <- IdentError  `mapE` identifiers idents inp
-     h <- HeaderError `mapE` headers hs
-     p <- ParamError  `mapE` parameters params
-     j <- InputError  `mapE` parser NoFormat inputs B.empty
-     mapErrorT run (act (Env i h p j))
-
-fetchInputs :: M m => String -> Dict i h p j o e -> ErrorT (Reason e) m (Env i h p j)
-fetchInputs idnt (idents, hs, params, inputs, _, _) =
-  do bs <- lift requestBody
-     ct <- parseContentType
-
-     i <- IdentError  `mapE` identifiers idents idnt
-     h <- HeaderError `mapE` headers hs
-     p <- ParamError  `mapE` parameters params
-     j <- InputError  `mapE`
-            case inputs of
-              [NoI] -> return ()
-              _     ->
-                case ct of
-                  Just XmlFormat      -> parser XmlFormat     inputs bs
-                  Just JsonFormat     -> parser JsonFormat    inputs bs
-                  Just StringFormat   -> parser StringFormat  inputs bs
-                  Just FileFormat     -> parser FileFormat    inputs bs
-                  Just x              -> throwError (UnsupportedFormat (show x))
-                  Nothing | B.null bs -> parser NoFormat inputs bs
-                  Nothing             -> throwError (UnsupportedFormat "unknown")
-     return (Env i h p j)
-
-parseContentType :: ServerMonad m => m (Maybe Format)
-parseContentType =
-  do ct <- (maybe "" unpack . getHeader "Content-Type") `liftM` askRq
-     let segs  = concat (take 1 . splitOn ";" <$> splitOn "," ct)
-         types = flip concatMap segs $ \ty ->
-                   case splitOn "/" ty of
-                     ["application", "xml"]          -> [XmlFormat]
-                     ["application", "json"]         -> [JsonFormat]
-                     ["text",        "xml"]          -> [XmlFormat]
-                     ["text",        "json"]         -> [JsonFormat]
-                     ["text",        "plain"]        -> [StringFormat]
-                     ["application", "octet-stream"] -> [FileFormat]
-                     ["application", _             ] -> [FileFormat]
-                     ["image",       _             ] -> [FileFormat]
-                     _                               -> []
-     return (headMay types)
-
-headers :: (ServerMonad m, Functor m, Monad m) => Header h -> ErrorT DataError m h
-headers NoHeader      = return ()
-headers (Header xs h) = mapM findHeader xs >>= either throwError return . h
-  where findHeader x = askRq >>= return . fmap unpack . getHeader x
-
-parameters :: (HasRqData m, Alternative m, Functor m, Monad m) => Param p -> ErrorT DataError m p
-parameters NoParam      = return ()
-parameters (Param xs p) = mapM (lift . findParam) xs >>= either throwError return . p
-  where findParam x = Just <$> look x <|> return Nothing
-
-identifiers :: Monad m => Ident i -> String -> ErrorT DataError m i
-identifiers (NoId    ) _ = return ()
-identifiers (ReadId  ) v = (throwError (ParseError "Read") `maybe` return) (readMay v)
-identifiers (StringId) v = return v
-
-parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m j
-parser XmlFormat     (XmlI     : _ ) v = case eitherFromXML (UTF8.toString v) of
-                                           Left err -> throwError (ParseError err)
-                                           Right  r -> return r
-parser XmlFormat     (XmlTextI : _ ) v = return (decodeUtf8 v)
-parser NoFormat      (NoI      : _ ) _ = return ()
-parser StringFormat  (ReadI    : _ ) v = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
-parser JsonFormat    (JsonI    : _ ) v = case decode (UTF8.toString v) of
-                                           Ok a      -> return a
-                                           Error msg -> throwError (ParseError msg)
-parser StringFormat  (StringI  : _ ) v = return (UTF8.toString v)
-parser FileFormat    (FileI    : _ ) v = return v
-parser XmlFormat     (RawXmlI  : _ ) v = return v
-parser t             []              _ = throwError (UnsupportedFormat (show t))
-parser t             (_        : xs) v = parser t xs v
 
 -------------------------------------------------------------------------------
 -- Printing the output resource.
@@ -435,3 +591,4 @@ failureWriter es e =
             Unknown     _                      -> internalServerError
           . toResponse
 
+-}
