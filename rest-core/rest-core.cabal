@@ -36,6 +36,7 @@ Library
   Exposed-Modules:  Rest.Action
                     Rest.Container
                     Rest.Dictionary
+                    Rest.Driver.Perform
                     Rest.Driver.Routing
                     Rest.Driver.Types
                     Rest.Error
