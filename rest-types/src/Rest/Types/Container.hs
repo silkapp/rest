@@ -36,7 +36,7 @@ import qualified Data.Map as M
 data List a = List
   { offset :: Int
   , count  :: Int
-  , items  :: a
+  , items  :: [a]
   } deriving (Show, Typeable)
 
 deriveAll ''List "PFList"
