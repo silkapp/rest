@@ -70,8 +70,8 @@ apiToHandler' run api = do
   rq <- askRq
   case route (toRestMethod $ rqMethod rq) (pack $ rqUri rq) api of
     Left  (ApiError e r)  -> Rest.writeFailure e r
-    Right (RunnableHandler idnt run' h) ->
-      let out = runAction (RunnableHandler idnt (run . run') h)
+    Right (RunnableHandler run' h) ->
+      let out = runAction (RunnableHandler (run . run') h)
       -- TODO: validator
       in writeResponse out
 
@@ -96,12 +96,11 @@ fetchValue run (Handler (idents, hs, params, inputs, _, es) _ act _) inp = mapE 
      mapErrorT run (act (Env i h p j))
      -}
 
-fetchInputs :: (Alternative m, MonadIO m, HasRqData m, ServerMonad m) => id -> Dict h p j o e -> ErrorT (Reason e) m (Env id h p j)
-fetchInputs idnt (hs, params, inputs, _, _) =
+fetchInputs :: (Alternative m, MonadIO m, HasRqData m, ServerMonad m) => Dict h p j o e -> ErrorT (Reason e) m (Env h p j)
+fetchInputs (hs, params, inputs, _, _) =
   do bs <- lift requestBody
      ct <- parseContentType
 
-     -- i <- IdentError  `mapE` identifiers idents idnt
      h <- HeaderError `mapE` headers hs
      p <- ParamError  `mapE` parameters params
      j <- InputError  `mapE`
@@ -116,7 +115,7 @@ fetchInputs idnt (hs, params, inputs, _, _) =
                   Just x              -> throwError (UnsupportedFormat (show x))
                   Nothing | B.null bs -> parser NoFormat inputs bs
                   Nothing             -> throwError (UnsupportedFormat "unknown")
-     return (Env idnt h p j)
+     return (Env h p j)
 
 parseContentType :: ServerMonad m => m (Maybe Format)
 parseContentType =

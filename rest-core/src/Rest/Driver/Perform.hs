@@ -13,12 +13,12 @@ data Writable m = forall h p j o e. Writable (Dict h p j o e) (ErrorT (Reason e)
 
 -- TODO: secure flag is unused.
 runAction :: HasInput m => RunnableHandler m -> Writable m
-runAction (RunnableHandler identifier run (GenHandler dict act _)) = Writable dict $ do
-  inputs <- fetchInputs identifier dict
+runAction (RunnableHandler run (GenHandler dict act _)) = Writable dict $ do
+  inputs <- fetchInputs dict
   mapErrorT run (act inputs)
 
 class Monad m => HasInput m where
-  fetchInputs :: i -> Dict h p j o e -> ErrorT (Reason e) m (Env i h p j)
+  fetchInputs :: Dict h p j o e -> ErrorT (Reason e) m (Env h p j)
 
 writeResponse :: CanOutput m => Writable m -> m (Response m)
 writeResponse (Writable (_, _, _, o, e) act) = do

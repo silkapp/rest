@@ -35,6 +35,7 @@ module Rest.Dictionary
 
 -- * Dictionary aspects.
 
+, Ident (..)
 , Header (..)
 , Param (..)
 , Input (..)
@@ -51,6 +52,8 @@ module Rest.Dictionary
 -- * Combinators for building dictionaries.
 
 , empty
+
+-- ** Constructing Ident dictionaries.
 
 -- ** Header dictionaries
 
@@ -115,6 +118,16 @@ data Format
   | FileFormat
   | NoFormat
   deriving (Eq, Ord, Enum, Bounded, Show)
+
+-- | The explicit dictionary `Ident` describes how to translate a resource
+-- identifier (originating from a request URI) to a Haskell value. We allow
+-- plain `String` identifiers or all Haskell types that have a `Read` instance.
+
+data Ident id where
+  ReadId   :: (Info id, Read id, Show id) => Ident id
+  StringId ::                                Ident String
+
+deriving instance Show (Ident id)
 
 -- | The explicit dictionary `Header` describes how to translate HTTP request
 -- headers to some Haskell value. The first field in the `Header` constructor

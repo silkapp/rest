@@ -18,6 +18,8 @@ import Data.List.Split
 import Data.Ord (comparing)
 
 import Rest.Action
+import Rest.Dictionary (Ident (..))
+import Rest.Info (Info)
 
 import Safe
 
@@ -36,7 +38,7 @@ data Schema sid mid aid = Schema (Maybe (Cardinality sid mid)) (Step sid mid aid
 -- by's.
 
 data Step sid mid aid = Named   [(String, Either aid (Cardinality (Getter sid) (Getter mid)))]
-                      | Unnamed (Cardinality (String -> Maybe sid) (String -> Maybe mid))
+                      | Unnamed (Cardinality (Id sid) (Id mid))
 
 -- | Specifies if we're identifying a single resource, or many (a
 -- listing).
@@ -46,7 +48,13 @@ data Cardinality s m = Single s
 -- | A 'Getter' can either be a 'Singleton' (there is only one) or it
 -- can be identified 'By' a 'String'.
 
-data Getter id = Singleton id | By (String -> Maybe id)
+data Getter id = Singleton id | By (Id id)
+
+-- | An identification of an item in a resource. It contains a
+-- dictionary describing how to identify the resource, and a function
+-- for this identification type to an 'id'.
+
+data Id id = forall a. Id (Ident a) (a -> id)
 
 -- * A set of combinators for creating schemas.
 
@@ -71,13 +79,13 @@ single :: sid -> Either aid (Cardinality (Getter sid) (Getter mid))
 single = Right . Single . Singleton
 
 singleBy :: (String -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
-singleBy by = singleMaybe (Just . by)
+singleBy = singleIdent StringId
 
-singleRead :: Read a => (a -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
-singleRead by = singleMaybe (fmap by . readMay)
+singleRead :: (Show a, Read a, Info a) => (a -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleRead = singleIdent ReadId
 
-singleMaybe :: (String -> Maybe sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
-singleMaybe = Right . Single . By
+singleIdent :: Ident a -> (a -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleIdent ident = Right . Single . By . Id ident
 
 -- TODO: name clash with listing from Resource, maybe rename back to
 -- many?
@@ -86,61 +94,58 @@ listing :: mid -> Either aid (Cardinality (Getter sid) (Getter mid))
 listing = Right . Many . Singleton
 
 listingBy :: (String -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
-listingBy by = listingMaybe (Just . by)
+listingBy = listingIdent StringId
 
-listingRead :: Read a => (a -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
-listingRead by = listingMaybe (fmap by . readMay)
+listingRead :: (Show a, Read a, Info a) => (a -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingRead = listingIdent ReadId
 
-listingMaybe :: (String -> Maybe mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
-listingMaybe = Right . Many . By
+listingIdent :: Ident a -> (a -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingIdent ident = Right . Many . By . Id ident
 
 unnamedSingle :: (String -> sid) -> Step sid mid aid
-unnamedSingle by = unnamedSingleMaybe (Just . by)
+unnamedSingle = unnamedSingleIdent StringId
 
-unnamedSingleRead :: Read a => (a -> sid) -> Step sid mid aid
-unnamedSingleRead by = unnamedSingleMaybe (fmap by . readMay)
+unnamedSingleRead :: (Show a, Read a, Info a) => (a -> sid) -> Step sid mid aid
+unnamedSingleRead = unnamedSingleIdent ReadId
 
-unnamedSingleMaybe :: (String -> Maybe sid) -> Step sid mid aid
-unnamedSingleMaybe = Unnamed . Single
+unnamedSingleIdent :: Ident a -> (a -> sid) -> Step sid mid aid
+unnamedSingleIdent ident = Unnamed . Single . Id ident
 
 unnamedListing :: (String -> mid) -> Step sid mid aid
-unnamedListing by = unnamedListingMaybe (Just . by)
+unnamedListing = unnamedListingIdent StringId
 
-unnamedListingRead :: Read a => (a -> mid) -> Step sid mid aid
-unnamedListingRead by = unnamedListingMaybe (fmap by . readMay)
+unnamedListingRead :: (Show a, Read a, Info a) => (a -> mid) -> Step sid mid aid
+unnamedListingRead = unnamedListingIdent ReadId
 
-unnamedListingMaybe :: (String -> Maybe mid) -> Step sid mid aid
-unnamedListingMaybe = Unnamed . Many
+unnamedListingIdent :: Ident a -> (a -> mid) -> Step sid mid aid
+unnamedListingIdent ident = Unnamed . Many . Id ident
 
 -- | The 'Void' type is used as the identifier for resources that
 -- can't be routed to. It contains no values apart from bottom.
 
 newtype Void = Void { magic :: forall a. a }
 
-voidHandler :: Monad m => GenHandler Void m f
-voidHandler = mkHandler id (\(Env void _ _ _) -> magic void)
-
 data Resource m s sid mid aid where
   Resource ::
-    { name           :: String -- ^ The name for this resource, used as a path segment in routing.
-    , description    :: String -- ^ A description of the resource, used for documentation.
-    , schema         :: Schema sid mid aid -- ^ The schema for routing and identification.
-    , private        :: Bool -- ^ Private resources are not documented, but they are exposed.
+    { name           :: String                      -- ^ The name for this resource, used as a path segment in routing.
+    , description    :: String                      -- ^ A description of the resource, used for documentation.
+    , schema         :: Schema sid mid aid          -- ^ The schema for routing and identification.
+    , private        :: Bool                        -- ^ Private resources are not documented, but they are exposed.
     , enter          :: forall b. sid -> s b -> m b -- ^ How to run a subresource given an id.
 
-    , list           :: ListHandler mid m -- ^ List handler, both toplevel and deeper (search).
+    , list           :: mid -> ListHandler m        -- ^ List handler, both toplevel and deeper (search).
 
-    , statics        :: Handler aid m -- ^ Static actions, e.g. signin.
+    , statics        :: aid -> Handler m            -- ^ Static actions, e.g. signin.
 
-    , get            :: Maybe (Handler sid m) -- ^ Get a single resource identified by id.
-    , update         :: Maybe (Handler sid m) -- ^ Update a single resource identified by id.
-    , remove         :: Maybe (Handler sid m) -- ^ Delete a single resource identified by id.
-    , create         :: Maybe (Handler ()  m) -- ^ Create a single resource, generating a new id.
-    , actions        :: [(String, Handler sid m)] -- ^ Actions performed on a single resource.
-    , selects        :: [(String, Handler sid m)] -- ^ Properties of a single resource.
+    , get            :: Maybe (Handler s)           -- ^ Get a single resource identified by id.
+    , update         :: Maybe (Handler s)           -- ^ Update a single resource identified by id.
+    , remove         :: Maybe (Handler s)           -- ^ Delete a single resource identified by id.
+    , create         :: Maybe (Handler m)           -- ^ Create a single resource, generating a new id.
+    , actions        :: [(String, Handler s)]       -- ^ Actions performed on a single resource.
+    , selects        :: [(String, Handler s)]       -- ^ Properties of a single resource.
     } -> Resource m s sid mid aid
 
-mkResource :: Monad m => Resource m s sid Void Void
+mkResource :: Resource m s sid Void Void
 mkResource = Resource
   { name           = ""
   , description    = ""
@@ -148,9 +153,9 @@ mkResource = Resource
   , private        = False
   , enter          = error "'enter' not defined for this resource"
 
-  , list           = voidHandler
+  , list           = magic
 
-  , statics        = voidHandler
+  , statics        = magic
 
   , get            = Nothing
   , update         = Nothing
