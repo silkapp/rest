@@ -36,7 +36,7 @@ data Schema sid mid aid = Schema (Maybe (Cardinality sid mid)) (Step sid mid aid
 -- by's.
 
 data Step sid mid aid = Named   [(String, Either aid (Cardinality (Getter sid) (Getter mid)))]
-                      | Unnamed (Cardinality (String -> sid) (String -> mid))
+                      | Unnamed (Cardinality (String -> Maybe sid) (String -> Maybe mid))
 
 -- | Specifies if we're identifying a single resource, or many (a
 -- listing).
@@ -46,7 +46,7 @@ data Cardinality s m = Single s
 -- | A 'Getter' can either be a 'Singleton' (there is only one) or it
 -- can be identified 'By' a 'String'.
 
-data Getter id = Singleton id | By (String -> id)
+data Getter id = Singleton id | By (String -> Maybe id)
 
 
 -- | The 'Void' type is used as the identifier for resources that

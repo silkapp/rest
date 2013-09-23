@@ -93,17 +93,17 @@ routeNamed resource@(Rest.Resource { Rest.list, Rest.statics }) subRouters h =
     Right (Rest.Single getter) -> routeGetter getter resource subRouters
     Right (Rest.Many   getter) -> routeListGetter getter list
 
-routeUnnamed :: Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Rest.Cardinality (String -> sid) (String -> mid) -> Router (RunnableHandler m)
+routeUnnamed :: Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Rest.Cardinality (String -> Maybe sid) (String -> Maybe mid) -> Router (RunnableHandler m)
 routeUnnamed resource@(Rest.Resource { Rest.list }) subRouters cardinality = popSegment >>= \seg ->
   case cardinality of
-    Rest.Single sBy -> withSubresource (sBy seg) resource subRouters
-    Rest.Many   mBy -> noRestPath >> hasMethod GET >> return (RunnableHandler (mBy seg) id (mkListHandler list))
+    Rest.Single sBy -> parseIdent sBy seg >>= \sid -> withSubresource sid resource subRouters
+    Rest.Many   mBy -> parseIdent mBy seg >>= \mid -> noRestPath >> hasMethod GET >> return (RunnableHandler mid id (mkListHandler list))
 
 routeGetter :: Rest.Getter sid -> Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Router (RunnableHandler m)
 routeGetter getter resource subRouters =
   case getter of
     Rest.Singleton sid -> getOrDeep sid
-    Rest.By        sBy -> popSegment >>= getOrDeep . sBy
+    Rest.By        sBy -> popSegment >>= parseIdent sBy >>= getOrDeep
   where
     getOrDeep sid = withSubresource sid resource subRouters
 
@@ -111,7 +111,7 @@ routeListGetter :: Rest.Getter mid -> ListHandler mid m -> Router (RunnableHandl
 routeListGetter getter list = hasMethod GET >>
   case getter of
     Rest.Singleton mid -> noRestPath >> return (RunnableHandler mid id (mkListHandler list))
-    Rest.By        mBy -> popSegment >>= \seg -> noRestPath  >> return (RunnableHandler (mBy seg) id (mkListHandler list))
+    Rest.By        mBy -> popSegment >>= parseIdent mBy >>= \mid -> noRestPath  >> return (RunnableHandler mid id (mkListHandler list))
 
 withSubresource :: sid -> Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Router (RunnableHandler m)
 withSubresource sid resource@(Rest.Resource { Rest.enter, Rest.selects, Rest.actions }) subRouters =  withSegment (routeSingle sid resource) $ \seg ->
@@ -148,6 +148,12 @@ lookupRouter _    [] = Nothing
 lookupRouter name (Some1 router@(Rest.Embed resource _) : routers)
    =  (guard (Rest.name resource == name) >> return (Some1 router))
   <|> lookupRouter name routers
+
+parseIdent :: (String -> Maybe sid) -> String -> Router sid
+parseIdent byF seg =
+  case byF seg of
+    Nothing  -> apiError [NoE] (IdentError (ParseError $ "Failed to parse " ++ seg))
+    Just sid -> return sid
 
 splitUri :: Uri -> [String]
 splitUri = filter (/= "") . map (UTF8.toString . decodeByteString) . Char.split '/'
