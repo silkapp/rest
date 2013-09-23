@@ -48,6 +48,69 @@ data Cardinality s m = Single s
 
 data Getter id = Singleton id | By (String -> Maybe id)
 
+-- * A set of combinators for creating schemas.
+
+withListing :: mid -> Step sid mid aid -> Schema sid mid aid
+withListing mid = Schema (Just (Many mid))
+
+noListing :: Step sid mid aid -> Schema sid mid aid
+noListing = Schema Nothing
+
+singleton :: sid -> Step sid mid aid -> Schema sid mid aid
+singleton sid = Schema (Just (Single sid))
+
+named :: [(String, Either aid (Cardinality (Getter sid) (Getter mid)))] -> Step sid mid aid
+named = Named
+
+-- TODO: name clash with action from Rest.Action
+
+action :: aid -> Either aid (Cardinality (Getter sid) (Getter mid))
+action = Left
+
+single :: sid -> Either aid (Cardinality (Getter sid) (Getter mid))
+single = Right . Single . Singleton
+
+singleBy :: (String -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleBy by = singleMaybe (Just . by)
+
+singleRead :: Read a => (a -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleRead by = singleMaybe (fmap by . readMay)
+
+singleMaybe :: (String -> Maybe sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleMaybe = Right . Single . By
+
+-- TODO: name clash with listing from Resource, maybe rename back to
+-- many?
+
+listing :: mid -> Either aid (Cardinality (Getter sid) (Getter mid))
+listing = Right . Many . Singleton
+
+listingBy :: (String -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingBy by = listingMaybe (Just . by)
+
+listingRead :: Read a => (a -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingRead by = listingMaybe (fmap by . readMay)
+
+listingMaybe :: (String -> Maybe mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingMaybe = Right . Many . By
+
+unnamedSingle :: (String -> sid) -> Step sid mid aid
+unnamedSingle by = unnamedSingleMaybe (Just . by)
+
+unnamedSingleRead :: Read a => (a -> sid) -> Step sid mid aid
+unnamedSingleRead by = unnamedSingleMaybe (fmap by . readMay)
+
+unnamedSingleMaybe :: (String -> Maybe sid) -> Step sid mid aid
+unnamedSingleMaybe = Unnamed . Single
+
+unnamedListing :: (String -> mid) -> Step sid mid aid
+unnamedListing by = unnamedListingMaybe (Just . by)
+
+unnamedListingRead :: Read a => (a -> mid) -> Step sid mid aid
+unnamedListingRead by = unnamedListingMaybe (fmap by . readMay)
+
+unnamedListingMaybe :: (String -> Maybe mid) -> Step sid mid aid
+unnamedListingMaybe = Unnamed . Many
 
 -- | The 'Void' type is used as the identifier for resources that
 -- can't be routed to. It contains no values apart from bottom.
