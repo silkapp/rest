@@ -30,7 +30,7 @@ data Env h p i = Env
 data GenHandler m f where
   GenHandler :: Monad m =>
     { dictionary :: Dict h p i o e
-    , action     :: Env h p i -> ErrorT (Reason e) m (Apply f o)
+    , handler    :: Env h p i -> ErrorT (Reason e) m (Apply f o)
     , secure     :: Bool
     } -> GenHandler m f
 
