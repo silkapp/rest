@@ -29,6 +29,7 @@ import Rest.Dictionary
 import Rest.Error
 import Rest.Resource (Some1(..))
 import qualified Rest.Resource as Rest
+import qualified Rest.Schema   as Rest
 
 import Rest.Driver.Types
 

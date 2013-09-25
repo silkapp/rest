@@ -42,6 +42,7 @@ Library
                     Rest.Error
                     Rest.Info
                     Rest.Resource
+                    Rest.Schema
 
 Test-suite rest-tests
   build-depends:       base                 >= 4.5    && < 4.7
