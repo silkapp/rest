@@ -24,6 +24,9 @@ import Rest.Schema
 import qualified Rest.Dictionary as Dictionary
 import qualified Rest.Resource   as Rest
 
+--------------------
+-- * The types describing a resource's actions.
+
 -- | Representation of resource
 type ResourceId  = [String]
 
@@ -70,6 +73,9 @@ chooseType :: [DataDescription] -> Maybe DataDescription
 chooseType []         = Nothing
 chooseType ls@(x : _) = Just $ fromMaybe x $ find ((JSON ==) . dataType) ls
 
+--------------------
+-- * Traverse a resource's Schema and Handlers to create a [ActionInfo].
+
 resourceToActionInfo :: Resource m s sid mid aid -> [ActionInfo]
 resourceToActionInfo r =
   case schema r of
@@ -112,6 +118,9 @@ singleActionInfo r mIdent pth = foldMap (return . getActionInfo    mIdent pth) (
                              ++ map     (uncurry selectActionInfo)             (Rest.selects r)
                              ++ map     (uncurry actionActionInfo)             (Rest.actions r)
 
+--------------------
+-- * Smart constructors for ActionInfo.
+
 getActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
 getActionInfo mIdent pth = handlerActionInfo mIdent False Retrieve Self pth GET
 
@@ -150,6 +159,9 @@ handlerActionInfo mIdent postAct actType actTarget pth mth h = ActionInfo
   , params       = handlerParams  h
   , https        = secure         h
   }
+
+--------------------
+-- * Utilities for extraction information from Handlers.
 
 handlerParams :: GenHandler m f -> [String]
 handlerParams (GenHandler (_, p, _, _, _) _ _) = paramNames p
@@ -259,7 +271,6 @@ modString = filter (/= "") . modString' . typeOf
           in (intercalate "." . init . splitOn "." . tyConString $ tyCon) : concatMap modString' subs
 #endif
 
--- | Extract whether a handler contains an identifier
 actionIdent :: forall a. Dictionary.Ident a -> Ident
 actionIdent StringId = Ident "string" "String" []
 actionIdent ReadId   = Ident (describe proxy_) (typeString proxy_) (modString proxy_)
