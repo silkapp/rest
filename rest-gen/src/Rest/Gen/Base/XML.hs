@@ -1,18 +1,13 @@
-module Rest.Gen.Base.XML (getXmlListSchema, getXmlSchema, showSchema, showExample) where
+module Rest.Gen.Base.XML (getXmlSchema, showSchema, showExample) where
 
 import Data.List
-import Prelude hiding (div)
-import Rest.Types.Container
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 
-getXmlListSchema :: XmlPickler a => a -> Schema
-getXmlListSchema = getXmlSchema . List 0 0
-
-getXmlSchema :: XmlPickler a => a -> Schema
+getXmlSchema :: XmlPickler a => proxy a -> Schema
 getXmlSchema = theSchema . getPU
 
-getPU :: XmlPickler a => a -> PU a
+getPU :: XmlPickler a => proxy a -> PU a
 getPU _ = xpickle
 
 showSchema :: Schema -> String

@@ -13,7 +13,7 @@ import Prelude hiding (catch)
 
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import Rest.Resource
+import Rest.Resource (Version, Router)
 
 mkJsApi :: String -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =

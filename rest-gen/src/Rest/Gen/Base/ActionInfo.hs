@@ -1,22 +1,28 @@
-{-# LANGUAGE GADTs, CPP #-}
+{-# LANGUAGE GADTs, CPP, ScopedTypeVariables #-}
 module Rest.Gen.Base.ActionInfo where
 
+import Data.Foldable (foldMap)
 import Data.List
 import Data.Maybe
+import Data.Proxy
 import Data.Typeable
 #if __GLASGOW_HASKELL__ < 704
 import Data.List.Split
 #endif
 import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident))
 import Rest.Info
+import qualified Data.JSON.Schema   as J
 import qualified Rest.Gen.Base.JSON as J
 import qualified Rest.Gen.Base.XML as X
 
-import Rest.Resource
+import Rest.Action
 import Rest.Dictionary hiding (Ident)
-import Rest.Action     hiding (ident)
+import Rest.Driver.Routing (mkListHandler)
+import Rest.Resource
+import Rest.Schema
 
 import qualified Rest.Dictionary as Dictionary
+import qualified Rest.Resource   as Rest
 
 -- | Representation of resource
 type ResourceId  = [String]
@@ -64,62 +70,99 @@ chooseType :: [DataDescription] -> Maybe DataDescription
 chooseType []         = Nothing
 chooseType ls@(x : _) = Just $ fromMaybe x $ find ((JSON ==) . dataType) ls
 
-resourceToActionInfo :: Resource m s a -> [ActionInfo]
+resourceToActionInfo :: Resource m s sid mid aid -> [ActionInfo]
 resourceToActionInfo r =
-  let
-    hId :: Handler m a -> Maybe Ident
-    hId = handlerIdent
-    aId :: Action m -> Maybe Ident
-    aId (Action h) = hId h
+  case schema r of
+    Schema mTopLevel step -> foldMap (topLevelActionInfo r) mTopLevel
+                          ++ stepActionInfo r step
+                          ++ foldMap (return . createActionInfo) (Rest.create r)
 
-    hInp :: Handler m a -> [DataDescription]
-    hInp =  handlerInputs
-    aInp :: Action m -> [DataDescription]
-    aInp (Action h) = hInp h
+topLevelActionInfo :: Resource m s sid mid aid -> Cardinality sid mid -> [ActionInfo]
+topLevelActionInfo r (Single _  ) = singleActionInfo r Nothing ""
+topLevelActionInfo r (Many   mid) = return . listActionInfo Nothing "" . Rest.list r $ mid
 
-    hOut :: Bool -> Handler m a -> [DataDescription]
-    hOut =  handlerOutputs
-    aOut :: Bool -> Action m -> [DataDescription]
-    aOut b (Action h) = hOut b h
+stepActionInfo :: Resource m s sid mid aid -> Step sid mid aid -> [ActionInfo]
+stepActionInfo r (Named hs) = concatMap (uncurry (namedActionInfo r)) hs
+stepActionInfo r (Unnamed h) = unnamedActionInfo r h
 
-    hErr :: Handler m a -> [DataDescription]
-    hErr =  handlerErrors
-    aErr :: Action m -> [DataDescription]
-    aErr (Action h) = hErr h
+namedActionInfo :: Resource m s sid mid aid -> String -> Either aid (Cardinality (Getter sid) (Getter mid)) -> [ActionInfo]
+namedActionInfo r pth (Left aid) = [staticActionInfo Nothing pth (Rest.statics r aid)]
+namedActionInfo r pth (Right (Single g)) = getterActionInfo     r pth g
+namedActionInfo r pth (Right (Many   l)) = listGetterActionInfo r pth l
 
-    hPar :: Handler m a -> [String]
-    hPar (Handler (_, _, pars, _, _, _) _ _ _) =
-      case pars of
-        NoParam      -> []
-        (Param s _) -> s
+unnamedActionInfo :: Resource m s sid mid aid -> Cardinality (Id sid) (Id mid) -> [ActionInfo]
+unnamedActionInfo r (Single (Id idnt _   )) = singleActionInfo r (Just $ actionIdent idnt) ""
+unnamedActionInfo r (Many   (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) "" (Rest.list r (midF listIdErr))]
 
-    aPar :: Action m -> [String]
-    aPar (Action h) = hPar h
+getterActionInfo :: Resource m s sid mid aid -> String -> Getter sid -> [ActionInfo]
+getterActionInfo r pth (Singleton _)    = singleActionInfo r Nothing                   pth
+getterActionInfo r pth (By (Id idnt _)) = singleActionInfo r (Just $ actionIdent idnt) pth
 
-    hSec :: Handler m a -> Bool
-    hSec = secure
+listGetterActionInfo :: Resource m s sid mid aid -> String -> Getter mid -> [ActionInfo]
+listGetterActionInfo r pth (Singleton mid)     = [listActionInfo Nothing                   pth (Rest.list r mid)]
+listGetterActionInfo r pth (By (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))]
 
-    aSec :: Action m -> Bool
-    aSec (Action h) = hSec h
+listIdErr :: mid
+listIdErr = error "Don't evaluate the fields of a list identifier unless in the body of the handler. They are undefined during generation of documentation and code."
 
-    sGet      = map (\(s, h) ->            ActionInfo (hId h)  False Retrieve Self s  GET    (hInp h)  (hOut False h)  (hErr h)  (hPar h)  (hSec h))  $ singleGet r
-    sGetBy    = map (\(s, h) ->            ActionInfo (hId h)  False Retrieve Self s  GET    (hInp h)  (hOut False h)  (hErr h)  (hPar h)  (hSec h))  $ singleGetBy r
-    sCreate   = maybeToList . fmap (\ac -> ActionInfo (aId ac) False Create   Self "" POST   (aInp ac) (aOut False ac) (aErr ac) (aPar ac) (aSec ac)) $ singleCreate r
-    sDelete   = maybeToList . fmap (\ac -> ActionInfo (aId ac) True  Delete   Self "" DELETE (aInp ac) (aOut False ac) (aErr ac) (aPar ac) (aSec ac)) $ singleDelete r
-    sUpdate   = map (\(s, ac) ->           ActionInfo (aId ac) False Update   Any  s  PUT    (aInp ac) (aOut False ac) (aErr ac) (aPar ac) (aSec ac)) $ singleUpdate r
-    sUpdateBy = map (\(s, ac) ->           ActionInfo (aId ac) False Update   Any  s  PUT    (aInp ac) (aOut False ac) (aErr ac) (aPar ac) (aSec ac)) $ singleUpdateBy r
-    sSelects  = map (\(s, ac) ->           ActionInfo (aId ac) True  Retrieve Any  s  GET    (aInp ac) (aOut False ac) (aErr ac) (aPar ac) (aSec ac)) $ singleSelects r
-    sActions  = map (\(s, ac) ->           ActionInfo (aId ac) True  Modify   Any  s  POST   (aInp ac) (aOut False ac) (aErr ac) (aPar ac) (aSec ac)) $ singleActions r
-    mGet      = maybeToList . fmap (\h ->  ActionInfo (hId h)  False List     Self "" GET    (hInp h)  (hOut True  h)  (hErr h)  (hPar h)  (hSec h))  $ multiGet r
-    mGetBy    = map (\(s, h) ->            ActionInfo (hId h)  False List     Self s  GET    (hInp h)  (hOut True  h)  (hErr h)  (hPar h)  (hSec h))  $ multiGetBy r
-    mActions  = map (\(s, ac) ->           ActionInfo (aId ac) False Modify   Any  s  POST   (aInp ac) (aOut False ac) (aErr ac) (aPar ac) (aSec ac)) $ multiActions r
+singleActionInfo :: Resource m s sid mid aid -> Maybe Ident -> String -> [ActionInfo]
+singleActionInfo r mIdent pth = foldMap (return . getActionInfo    mIdent pth) (Rest.get     r)
+                             ++ foldMap (return . updateActionInfo mIdent pth) (Rest.update  r)
+                             ++ foldMap (return . removeActionInfo mIdent    ) (Rest.remove  r)
+                             ++ map     (uncurry selectActionInfo)             (Rest.selects r)
+                             ++ map     (uncurry actionActionInfo)             (Rest.actions r)
 
-  in concat [mGet, mGetBy, mActions, sGet, sGetBy, sCreate, sDelete, sUpdate, sUpdateBy, sSelects, sActions]
+getActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
+getActionInfo mIdent pth = handlerActionInfo mIdent False Retrieve Self pth GET
+
+updateActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
+updateActionInfo mIdent pth = handlerActionInfo mIdent False Update Any pth PUT
+
+removeActionInfo :: Maybe Ident -> Handler m -> ActionInfo
+removeActionInfo mIdent = handlerActionInfo mIdent True Delete Self "" DELETE
+
+listActionInfo :: Maybe Ident -> String -> ListHandler m -> ActionInfo
+listActionInfo mIdent pth = handlerActionInfo mIdent False List Self pth GET . mkListHandler
+
+staticActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
+staticActionInfo mIdent pth = handlerActionInfo mIdent False Modify Any pth POST
+
+createActionInfo :: Handler m -> ActionInfo
+createActionInfo = handlerActionInfo Nothing False Create Self "" POST
+
+selectActionInfo :: String -> Handler m -> ActionInfo
+selectActionInfo pth = handlerActionInfo Nothing True Retrieve Any pth GET
+
+actionActionInfo :: String -> Handler m -> ActionInfo
+actionActionInfo pth = handlerActionInfo Nothing True Modify Any pth POST
+
+handlerActionInfo :: Maybe Ident -> Bool -> ActionType -> ActionTarget -> String -> RequestMethod -> Handler m -> ActionInfo
+handlerActionInfo mIdent postAct actType actTarget pth mth h = ActionInfo
+  { ident        = mIdent
+  , postAction   = postAct
+  , actionType   = actType
+  , actionTarget = actTarget
+  , resDir       = pth
+  , method       = mth
+  , inputs       = handlerInputs  h
+  , outputs      = handlerOutputs h
+  , errors       = handlerErrors  h
+  , params       = handlerParams  h
+  , https        = secure         h
+  }
+
+handlerParams :: GenHandler m f -> [String]
+handlerParams (GenHandler (_, p, _, _, _) _ _) = paramNames p
+
+paramNames :: Param a -> [String]
+paramNames NoParam = []
+paramNames (Param s _) = s
+paramNames (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 
 -- | Extract input description from handlers
-handlerInputs :: Handler m a -> [DataDescription]
-handlerInputs (Handler (_, _, _, inps, _, _) _ _ _) = concatMap (handlerInput (error "Don't evaluate proxy object from handlerInputs")) inps
-  where handlerInput :: a -> Input a -> [DataDescription]
+handlerInputs :: Handler m -> [DataDescription]
+handlerInputs (GenHandler (_, _, inps, _, _) _ _) = concatMap (handlerInput Proxy) inps
+  where handlerInput :: Proxy a -> Input a -> [DataDescription]
         handlerInput _ NoI      = []
         handlerInput _ StringI  = [defaultDescription { dataTypeDesc = "String" }]
         handlerInput _ FileI    = [defaultDescription { dataType     = File
@@ -127,7 +170,7 @@ handlerInputs (Handler (_, _, _, inps, _, _) _ _ _) = concatMap (handlerInput (e
         handlerInput d ReadI    = [defaultDescription { dataTypeDesc = describe d }]
         handlerInput d XmlI     = [defaultDescription { dataType     = XML
                                                       , dataTypeDesc = "XML"
-                                                      , dataSchema   = X.showSchema . X.getXmlSchema $ d
+                                                      , dataSchema   = X.showSchema  . X.getXmlSchema $ d
                                                       , dataExample  = X.showExample . X.getXmlSchema $ d
                                                       , haskellType  = typeString d
                                                       , haskellModule = modString d
@@ -137,7 +180,7 @@ handlerInputs (Handler (_, _, _, inps, _, _) _ _ _) = concatMap (handlerInput (e
                                                       , haskellType  = "String" }]
         handlerInput d JsonI    = [defaultDescription { dataType     = JSON
                                                       , dataTypeDesc = "JSON"
-                                                      , dataExample  = J.showExample . J.getJsonSchema $ d
+                                                      , dataExample  = J.showExample . J.schema $ d
                                                       , haskellType  = typeString d
                                                       , haskellModule = modString d
                                                       }]
@@ -147,26 +190,22 @@ handlerInputs (Handler (_, _, _, inps, _, _) _ _ _) = concatMap (handlerInput (e
                                                       }]
 
 -- | Extract output description from handlers
-handlerOutputs :: Bool -> Handler m a -> [DataDescription]
-handlerOutputs list (Handler (_, _, _, _, outps, _) _ _ _) = concatMap (handlerOutput (error "Don't evaluate proxy object from handlerOutputs")) outps
-  where handlerOutput :: a -> Output a -> [DataDescription]
+handlerOutputs :: Handler m -> [DataDescription]
+handlerOutputs (GenHandler (_, _, _, outps, _) _ _) = concatMap (handlerOutput Proxy) outps
+  where handlerOutput :: Proxy a -> Output a -> [DataDescription]
         handlerOutput _ NoO      = []
         handlerOutput _ FileO    = [defaultDescription { dataType      = File
                                                        , dataTypeDesc  = "File" }]
-        handlerOutput d XmlO     =
-                                let schema = if list then X.getXmlListSchema d else X.getXmlSchema d
-                                in [defaultDescription { dataType      = XML
+        handlerOutput d XmlO     = [defaultDescription { dataType      = XML
                                                        , dataTypeDesc  = "XML"
-                                                       , dataSchema    = X.showSchema schema
-                                                       , dataExample   = X.showExample schema
+                                                       , dataSchema    = X.showSchema  . X.getXmlSchema $ d
+                                                       , dataExample   = X.showExample . X.getXmlSchema $ d
                                                        , haskellType   = typeString d
                                                        , haskellModule = modString d
                                                        }]
-        handlerOutput d JsonO    =
-                               let schema = if list then J.getJsonListSchema d else J.getJsonSchema d
-                               in  [defaultDescription { dataType      = JSON
+        handlerOutput d JsonO    = [defaultDescription { dataType      = JSON
                                                        , dataTypeDesc  = "JSON"
-                                                       , dataExample   = J.showExample schema
+                                                       , dataExample   = J.showExample . J.schema $ d
                                                        , haskellType   = typeString d
                                                        , haskellModule = modString d
                                                        }]
@@ -176,20 +215,20 @@ handlerOutputs list (Handler (_, _, _, _, outps, _) _ _ _) = concatMap (handlerO
         handlerOutput _ StringO  = [defaultDescription { dataTypeDesc = "Text" }]
 
 -- | Extract input description from handlers
-handlerErrors :: Handler m a -> [DataDescription]
-handlerErrors (Handler (_, _, _, _, _, ers) _ _ _) = concatMap (handleError (error "Don't evaluate proxy object from handlerInputs")) ers
-  where handleError :: a -> Error a -> [DataDescription]
+handlerErrors :: Handler m -> [DataDescription]
+handlerErrors (GenHandler (_, _, _, _, ers) _ _) = concatMap (handleError Proxy) ers
+  where handleError :: Proxy a -> Error a -> [DataDescription]
         handleError _ NoE      = []
         handleError d XmlE     = [defaultDescription { dataType      = XML
                                                      , dataTypeDesc  = "XML"
-                                                     , dataSchema    = X.showSchema . X.getXmlSchema $ d
+                                                     , dataSchema    = X.showSchema  . X.getXmlSchema $ d
                                                      , dataExample   = X.showExample . X.getXmlSchema $ d
                                                      , haskellType   = typeString d
                                                      , haskellModule = modString d
                                                      }]
         handleError d JsonE    = [defaultDescription { dataType      = JSON
                                                      , dataTypeDesc  = "JSON"
-                                                     , dataExample   = J.showExample . J.getJsonSchema $ d
+                                                     , dataExample   = J.showExample . J.schema $ d
                                                      , haskellType   = typeString d
                                                      , haskellModule = modString d
                                                      }]
@@ -221,12 +260,12 @@ modString = filter (/= "") . modString' . typeOf
 #endif
 
 -- | Extract whether a handler contains an identifier
-handlerIdent :: Handler m a -> Maybe Ident
-handlerIdent (Handler (hid, _, _, _, _, _) _ _ _) = gId hid (error "Don't evaluate proxy object from handlerIdent")
-  where gId :: Dictionary.Ident i -> i -> Maybe Ident
-        gId NoId     _ = Nothing
-        gId StringId _ = Just (Ident "string" "String" [])
-        gId ReadId   x = Just (Ident (describe x) (typeString x) (modString x))
+actionIdent :: forall a. Dictionary.Ident a -> Ident
+actionIdent StringId = Ident "string" "String" []
+actionIdent ReadId   = Ident (describe proxy_) (typeString proxy_) (modString proxy_)
+  where
+    proxy_ :: Proxy a
+    proxy_ = Proxy
 
 mkActionDescription :: String -> ActionInfo -> String
 mkActionDescription res ai =

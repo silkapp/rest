@@ -12,8 +12,8 @@ import Data.Typeable
 -- type.
 
 class Typeable a => Info a where
-  describe :: a -> String
-  example  :: a -> String
+  describe :: proxy a -> String
+  example  :: proxy a -> String
   example _ = ""
 
 instance Info String where

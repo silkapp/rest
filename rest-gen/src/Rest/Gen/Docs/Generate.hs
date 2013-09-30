@@ -27,7 +27,7 @@ import Text.StringTemplate
 
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import Rest.Resource
+import Rest.Resource (Version, Router)
 import System.Log.Logger
 
 -- | Information about the context in which a resource is contained

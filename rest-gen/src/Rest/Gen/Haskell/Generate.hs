@@ -13,7 +13,7 @@ import Prelude hiding (catch)
 
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import Rest.Resource
+import Rest.Resource (Version, Router)
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 
 import Safe

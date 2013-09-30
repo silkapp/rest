@@ -47,6 +47,7 @@ Library
     , split >= 0.1 && < 0.3
     , text == 0.11.*
     , rest-core == 0.21.*
+    , tagged >= 0.2 && < 0.8
 
   Exposed-Modules:  Rest.Gen.Base
                     Rest.Gen.Base.ActionInfo

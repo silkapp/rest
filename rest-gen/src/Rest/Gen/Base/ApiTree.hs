@@ -10,7 +10,8 @@ import Rest.Gen.Base.ActionInfo
 import Rest.Gen.Base.ActionInfo.Ident (description)
 import Rest.Gen.Base.Link
 import Rest.Gen.Utils
-import Rest.Resource
+import Rest.Resource (Router (..), Some1 (..))
+import qualified Rest.Resource as Res
 
 data ApiAction =
   ApiAction
@@ -40,18 +41,18 @@ apiTree = apiTree' [] []
 
 apiTree' :: ResourceId -> Link -> Router m s -> ApiResource
 apiTree' rid lnk (Embed r routes) =
-    let myId        = rid ++ [identifier r]
-        myLnk       = lnk ++ [LResource (identifier r)]
+    let myId        = rid ++ [Res.name r]
+        myLnk       = lnk ++ [LResource (Res.name r)]
         accessLinks = [ actionInfoToLink [] ai | ai <- resourceToActionInfo r, isAccessor ai ]
     in TreeItem
-        { resName        = identifier r
+        { resName        = Res.name r
         , resId          = myId
         , resParents     = rid
         , resLink        = myLnk
         , resIdents      = accessLinks
-        , resPrivate     = private r
+        , resPrivate     = Res.private r
         , resItems       = [ ApiAction myId (myLnk ++ actionInfoToLink [LAccess accessLinks] ai) ai | ai <- resourceToActionInfo r ]
-        , resDescription = resourceDescription r
+        , resDescription = Res.description r
         , subResources   = map (\(Some1 chd) -> apiTree' myId (myLnk ++ [LAccess accessLinks]) chd) routes
         }
 

@@ -1,17 +1,9 @@
 module Rest.Gen.Base.JSON where
 
-import Control.Applicative
 import Data.JSON.Schema
 import Rest.Gen.Base.JSON.Pretty
-import Rest.Types.Container
 import Text.JSON
 import Text.PrettyPrint.HughesPJ
-
-getJsonListSchema :: JSONSchema a => a -> Schema
-getJsonListSchema = getJsonSchema . List 0 0
-
-getJsonSchema :: JSONSchema a => a -> Schema
-getJsonSchema = schema . pure
 
 showExample :: Schema -> String
 showExample = render . pp_value . showExample'
