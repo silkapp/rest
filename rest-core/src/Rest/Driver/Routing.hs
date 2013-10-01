@@ -23,7 +23,7 @@ import qualified Data.ByteString.UTF8  as UTF8
 import qualified Control.Monad.State   as State
 
 import Network.URI.Encode (decodeByteString)
-import Rest.Action (ListHandler, Handler, GenHandler (..), Env (..), range)
+import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range)
 import Rest.Container
 import Rest.Dictionary
 import Rest.Error

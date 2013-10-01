@@ -15,9 +15,9 @@ import qualified Data.JSON.Schema   as J
 import qualified Rest.Gen.Base.JSON as J
 import qualified Rest.Gen.Base.XML as X
 
-import Rest.Action
 import Rest.Dictionary hiding (Ident)
 import Rest.Driver.Routing (mkListHandler)
+import Rest.Handler
 import Rest.Resource
 import Rest.Schema
 

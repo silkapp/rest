@@ -17,7 +17,7 @@ import Data.List (sortBy)
 import Data.List.Split
 import Data.Ord (comparing)
 
-import Rest.Action
+import Rest.Handler
 import Rest.Schema (Schema (..), Step (..))
 
 import Safe

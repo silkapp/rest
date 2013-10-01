@@ -30,7 +30,7 @@ import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Map                  as M
 
-import Rest.Action
+import Rest.Handler
 import Rest.Dictionary
 import Rest.Error
 import Rest.Resource (Api)

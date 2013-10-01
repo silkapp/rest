@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs, KindSignatures, TupleSections, DeriveDataTypeable, TypeFamilies #-}
-module Rest.Action where
+module Rest.Handler where
 
 import Control.Arrow
 import Control.Applicative hiding (empty)

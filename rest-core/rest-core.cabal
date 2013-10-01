@@ -33,13 +33,13 @@ Library
     , uri-encode                == 1.4.*
     , utf8-string               == 0.3.*
 
-  Exposed-Modules:  Rest.Action
-                    Rest.Container
+  Exposed-Modules:  Rest.Container
                     Rest.Dictionary
                     Rest.Driver.Perform
                     Rest.Driver.Routing
                     Rest.Driver.Types
                     Rest.Error
+                    Rest.Handler
                     Rest.Info
                     Rest.Resource
                     Rest.Schema

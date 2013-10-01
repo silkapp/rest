@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification, RankNTypes #-}
 module Rest.Driver.Types where
 
-import Rest.Action (Handler)
+import Rest.Handler (Handler)
 
 type Run m n = forall a. m a -> n a
 

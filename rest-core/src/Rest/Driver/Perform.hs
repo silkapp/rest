@@ -3,7 +3,7 @@ module Rest.Driver.Perform where
 
 import Control.Monad.Error
 
-import Rest.Action
+import Rest.Handler
 import Rest.Dictionary
 import Rest.Error
 
