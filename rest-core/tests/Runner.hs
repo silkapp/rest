@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 
 import Control.Monad
+import Control.Monad.Reader
 import Data.Monoid
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
@@ -9,8 +10,9 @@ import Test.HUnit (Assertion, assertFailure)
 import qualified Data.ByteString.Char8 as Char8
 
 import Rest.Driver.Routing
-import Rest.Action
+import Rest.Handler
 import Rest.Resource hiding (route)
+import Rest.Schema
 import Rest.Dictionary
 import qualified Rest.Resource as Rest
 
@@ -36,61 +38,68 @@ testListing = checkRoute GET "resource" (Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
     resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
-    listHandler = mkListing id $ \_ -> return []
+    listHandler () = mkListing id $ \_ -> return []
 
 testListingTrailingSlash :: Assertion
 testListingTrailingSlash = checkRoute GET "resource/" (Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
     resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
-    listHandler = mkListing id $ \_ -> return []
+    listHandler () = mkListing id $ \_ -> return []
 
 testToplevelSingleton :: Assertion
-testToplevelSingleton = checkSingleRoute "resource" resource handler
+testToplevelSingleton = checkSingleRoute "resource" resource handler_
   where
     resource :: Resource IO IO () Void Void
     resource = mkResource { name = "resource", schema = Schema (Just (Single ())) (Named []) }
-    handler = mkGetter id $ \() -> return ()
+    handler_ = mkGetter id $ return ()
 
 testUnnamedSingle :: Assertion
-testUnnamedSingle = checkSingleRoute "resource/foo" resource handler
+testUnnamedSingle = checkSingleRoute "resource/foo" resource handler_
   where
-    resource = mkResource { name = "resource", schema = Schema Nothing (Unnamed (Single id)) }
-    handler = mkGetter stringO $ \(s :: String) -> return s
+    resource :: Resource IO (ReaderT String IO) String Void Void
+    resource = mkResource { name = "resource", schema = Schema Nothing (Unnamed (Single (Id StringId id))) }
+    handler_ = mkGetter stringO ask
 
 testUnnamedMulti :: Assertion
 testUnnamedMulti = checkRoute GET "resource/foo" (Rest.route resource)
   where
-    resource = mkResource { name = "resource", schema = Schema Nothing (Unnamed (Many id)), list = listHandler }
-    listHandler = mkListingBy stringO $ \(Env (s :: String) _ _ _) -> return [s]
+    resource :: Resource IO IO Void String Void
+    resource = mkResource { name = "resource", schema = Schema Nothing (Unnamed (Many (Id StringId id))), list = listHandler }
+    listHandler (s :: String) = mkListingBy stringO $ \(Env _ _ _) -> return [s]
 
 testNamedSingleton :: Assertion
-testNamedSingleton = checkSingleRoute "resource/foo" resource handler
+testNamedSingleton = checkSingleRoute "resource/foo" resource handler_
   where
+    resource :: Resource IO IO () Void Void
     resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (Singleton ())))]) }
-    handler = mkGetter id $ \() -> return ()
+    handler_ = mkGetter id $ return ()
 
 testNamedSingleBy :: Assertion
-testNamedSingleBy = checkSingleRoute "resource/foo/bar" resource handler
+testNamedSingleBy = checkSingleRoute "resource/foo/bar" resource handler_
   where
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (By id)))]) }
-    handler = mkGetter stringO $ \(s :: String) -> return s
+    resource :: Resource IO (ReaderT String IO) String Void Void
+    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))]) }
+    handler_ = mkGetter stringO ask
 
 testNamedListing :: Assertion
 testNamedListing = checkRoute GET "resource/foo" (Rest.route resource)
   where
+    resource :: Resource IO IO Void () Void
     resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (Singleton ())))]), list = listHandler }
-    listHandler = mkListingBy id $ \(Env () _ _ _) -> return []
+    listHandler () = mkListingBy id $ \(Env _ _ _) -> return []
 
 testNamedListingBy :: Assertion
 testNamedListingBy = checkRoute GET "resource/foo/bar" (Rest.route resource)
   where
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (By id)))]), list = listHandler }
-    listHandler = mkListingBy stringO $ \(Env (s :: String) _ _ _) -> return [s]
+    resource :: Resource IO IO Void String Void
+    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (By (Id StringId id))))]), list = listHandler }
+    listHandler (s :: String) = mkListingBy stringO $ \(Env _ _ _) -> return [s]
 
 testCreate :: Assertion
 testCreate = checkRoute POST "resource" (Rest.route resource)
   where
+    resource :: Resource IO IO Void Void Void
     resource = mkResource { name = "resource", schema = Schema Nothing (Named []), create = Just createHandler }
     createHandler = mkCreate id $ \() -> return ()
 
@@ -101,15 +110,17 @@ testCreate = checkRoute POST "resource" (Rest.route resource)
 testCreateWithListing :: Assertion
 testCreateWithListing = checkRoutes [(GET, "resource"), (POST, "resource")] (Rest.route resource)
   where
+    resource :: Resource IO IO Void () Void
     resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler, create = Just createHandler }
     createHandler = mkCreate id $ \() -> return ()
-    listHandler = mkListing id $ \_ -> return []
+    listHandler () = mkListing id $ \_ -> return []
 
 testStaticAction :: Assertion
 testStaticAction = checkRoute POST "resource/action" (Rest.route resource)
   where
+    resource :: Resource IO IO () Void ()
     resource = mkResource { name = "resource", schema = Schema Nothing (Named [("action", Left ())]), statics = staticHandler }
-    staticHandler = mkActionEnv id $ \(Env () _ _ _) -> return ()
+    staticHandler () = mkActionEnv id $ \(Env _ _ _) -> return ()
 
 testSubresource :: Assertion
 testSubresource = checkRoute GET "resource/single/subresource" (Rest.route resource -/ Rest.route subResource)
@@ -117,37 +128,37 @@ testSubresource = checkRoute GET "resource/single/subresource" (Rest.route resou
     resource = mkResource { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
     subResource :: Resource IO IO Void () Void
     subResource = mkResource { name = "subresource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
-    getHandler = mkGetter id $ \() -> return ()
-    listHandler = mkListing id $ \_ -> return []
+    getHandler = mkGetter id $ return ()
+    listHandler _ = mkListing id $ \_ -> return []
 
-checkSingleRoute :: Uri -> Resource IO IO sid mid aid -> Handler sid IO -> Assertion
-checkSingleRoute uri resource handler =
-  do checkRoute GET    uri (Rest.route resource { get = Just handler })
-     checkRoute PUT    uri (Rest.route resource { update = Just handler })
-     checkRoute DELETE uri (Rest.route resource { remove = Just handler })
-     checkRoute GET    (uri <> "/select") (Rest.route resource { selects = [("select", handler)] })
-     checkRoute POST   (uri <> "/action") (Rest.route resource { actions = [("action", handler)] })
+checkSingleRoute :: Monad s => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
+checkSingleRoute uri resource handler_ =
+  do checkRoute GET    uri (Rest.route resource { get = Just handler_ })
+     checkRoute PUT    uri (Rest.route resource { update = Just handler_ })
+     checkRoute DELETE uri (Rest.route resource { remove = Just handler_ })
+     checkRoute GET    (uri <> "/select") (Rest.route resource { selects = [("select", handler_)] })
+     checkRoute POST   (uri <> "/action") (Rest.route resource { actions = [("action", handler_)] })
 
-checkRoute :: Method -> Uri -> Rest.Router IO IO -> Assertion
+checkRoute :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRoute method uri router = checkRouteWithIgnoredMethods [method] router method uri
 
-checkRoutes :: [(Method, Uri)] -> Rest.Router IO IO -> Assertion
+checkRoutes :: [(Method, Uri)] -> Rest.Router m s -> Assertion
 checkRoutes reqs router =
   do forM_ reqs $ uncurry $ checkRouteWithIgnoredMethods (map fst reqs) router
 
-checkRouteWithIgnoredMethods :: [Method] -> Rest.Router IO IO -> Method -> Uri -> Assertion
+checkRouteWithIgnoredMethods :: [Method] -> Rest.Router m s -> Method -> Uri -> Assertion
 checkRouteWithIgnoredMethods ignoredMethods router method uri =
   do checkRouteSuccess method uri router
      forM_ (filter (not . (`elem` ignoredMethods)) enumAll) $ \badMethod -> checkRouteFailure badMethod uri router
      checkRouteFailure method (uri <> "/trailing") router
 
-checkRouteFailure :: Method -> Uri -> Rest.Router IO IO -> Assertion
+checkRouteFailure :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteFailure method uri router =
   case route method ("v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
     Left _  -> return ()
     Right _ -> assertFailure ("Should be no route to " ++ show method ++ " " ++ Char8.unpack uri ++ ".")
 
-checkRouteSuccess :: Method -> Uri -> Rest.Router IO IO -> Assertion
+checkRouteSuccess :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteSuccess method uri router =
   case route method ("v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
     Left e  -> assertFailure ("No route to " ++ show method ++ " " ++ Char8.unpack uri ++ ": " ++ show e)

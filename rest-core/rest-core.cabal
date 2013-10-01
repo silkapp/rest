@@ -51,6 +51,7 @@ Test-suite rest-tests
                      , test-framework-hunit == 0.3.*
                      , rest-core
                      , bytestring           >= 0.9 && < 0.11
+                     , mtl                  >= 2.0 && < 2.2
   hs-source-dirs:      tests
   main-is:             Runner.hs
   type:                exitcode-stdio-1.0
