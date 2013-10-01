@@ -51,8 +51,6 @@ singleton sid = Schema (Just (Single sid))
 named :: [(String, Either aid (Cardinality (Getter sid) (Getter mid)))] -> Step sid mid aid
 named = Named
 
--- TODO: name clash with action from Rest.Action
-
 action :: aid -> Either aid (Cardinality (Getter sid) (Getter mid))
 action = Left
 
