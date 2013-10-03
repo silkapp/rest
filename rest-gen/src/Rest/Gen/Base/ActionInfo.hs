@@ -82,6 +82,8 @@ resourceToActionInfo r =
     Schema mTopLevel step -> foldMap (topLevelActionInfo r) mTopLevel
                           ++ stepActionInfo r step
                           ++ foldMap (return . createActionInfo) (Rest.create r)
+                          ++ map (uncurry selectActionInfo) (Rest.selects r)
+                          ++ map (uncurry actionActionInfo) (Rest.actions r)
 
 topLevelActionInfo :: Resource m s sid mid aid -> Cardinality sid mid -> [ActionInfo]
 topLevelActionInfo r (Single _  ) = singleActionInfo r Nothing ""
@@ -115,8 +117,6 @@ singleActionInfo :: Resource m s sid mid aid -> Maybe Ident -> String -> [Action
 singleActionInfo r mIdent pth = foldMap (return . getActionInfo    mIdent pth) (Rest.get     r)
                              ++ foldMap (return . updateActionInfo mIdent pth) (Rest.update  r)
                              ++ foldMap (return . removeActionInfo mIdent    ) (Rest.remove  r)
-                             ++ map     (uncurry selectActionInfo)             (Rest.selects r)
-                             ++ map     (uncurry actionActionInfo)             (Rest.actions r)
 
 --------------------
 -- * Smart constructors for ActionInfo.
