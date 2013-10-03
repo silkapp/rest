@@ -166,10 +166,18 @@ handlerActionInfo mIdent postAct actType actTarget pth mth h = ActionInfo
 handlerParams :: GenHandler m f -> [String]
 handlerParams (GenHandler (_, p, _, _, _) _ _) = paramNames p
 
+-- | A `Param` can contain the same parameter multiple times. For
+-- example, 'offset' and 'count' are added in Rest.Handler.mkListing,
+-- and in Rest.Driver.Routing.mkListHandler. For that reason, we nub
+-- here.
+
 paramNames :: Param a -> [String]
-paramNames NoParam = []
-paramNames (Param s _) = s
-paramNames (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
+paramNames = nub . paramNames_
+
+paramNames_ :: Param a -> [String]
+paramNames_ NoParam = []
+paramNames_ (Param s _) = s
+paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 
 -- | Extract input description from handlers
 handlerInputs :: Handler m -> [DataDescription]
