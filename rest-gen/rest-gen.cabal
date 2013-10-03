@@ -28,7 +28,7 @@ Library
     , code-builder == 0.1.*
     , containers >= 0.4 && < 0.6
     , directory >= 1.1 && < 1.3
-    , fclabels >= 1.0.4 && < 1.2
+    , fclabels >= 1.0.4 && < 2.1
     , filepath >= 1.2 && < 1.4
     , hslogger == 1.1.*
     , HStringTemplate ==0.6.*

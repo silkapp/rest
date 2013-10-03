@@ -12,16 +12,17 @@ import Data.List.Split
 import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident))
 import Rest.Info
 import qualified Data.JSON.Schema   as J
+import qualified Data.Label.Total   as L
 import qualified Rest.Gen.Base.JSON as J
-import qualified Rest.Gen.Base.XML as X
+import qualified Rest.Gen.Base.XML  as X
 
-import Rest.Dictionary hiding (Ident)
+import Rest.Dictionary (Param (..), Input (..), Output (..), Error (..))
 import Rest.Driver.Routing (mkListHandler)
 import Rest.Handler
 import Rest.Resource
 import Rest.Schema
 
-import qualified Rest.Dictionary as Dictionary
+import qualified Rest.Dictionary as Dict
 import qualified Rest.Resource   as Rest
 
 --------------------
@@ -164,7 +165,7 @@ handlerActionInfo mIdent postAct actType actTarget pth mth h = ActionInfo
 -- * Utilities for extraction information from Handlers.
 
 handlerParams :: GenHandler m f -> [String]
-handlerParams (GenHandler (_, p, _, _, _) _ _) = paramNames p
+handlerParams (GenHandler dict _ _) = paramNames (L.get Dict.params dict)
 
 -- | A `Param` can contain the same parameter multiple times. For
 -- example, 'offset' and 'count' are added in Rest.Handler.mkListing,
@@ -181,7 +182,7 @@ paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 
 -- | Extract input description from handlers
 handlerInputs :: Handler m -> [DataDescription]
-handlerInputs (GenHandler (_, _, inps, _, _) _ _) = concatMap (handlerInput Proxy) inps
+handlerInputs (GenHandler dict _ _) = concatMap (handlerInput Proxy) (L.get Dict.inputs dict)
   where handlerInput :: Proxy a -> Input a -> [DataDescription]
         handlerInput _ NoI      = []
         handlerInput _ StringI  = [defaultDescription { dataTypeDesc = "String" }]
@@ -211,7 +212,7 @@ handlerInputs (GenHandler (_, _, inps, _, _) _ _) = concatMap (handlerInput Prox
 
 -- | Extract output description from handlers
 handlerOutputs :: Handler m -> [DataDescription]
-handlerOutputs (GenHandler (_, _, _, outps, _) _ _) = concatMap (handlerOutput Proxy) outps
+handlerOutputs (GenHandler dict _ _) = concatMap (handlerOutput Proxy) (L.get Dict.outputs dict)
   where handlerOutput :: Proxy a -> Output a -> [DataDescription]
         handlerOutput _ NoO      = []
         handlerOutput _ FileO    = [defaultDescription { dataType      = File
@@ -236,7 +237,7 @@ handlerOutputs (GenHandler (_, _, _, outps, _) _ _) = concatMap (handlerOutput P
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]
-handlerErrors (GenHandler (_, _, _, _, ers) _ _) = concatMap (handleError Proxy) ers
+handlerErrors (GenHandler dict _ _) = concatMap (handleError Proxy) (L.get Dict.errors dict)
   where handleError :: Proxy a -> Error a -> [DataDescription]
         handleError _ NoE      = []
         handleError d XmlE     = [defaultDescription { dataType      = XML
@@ -279,9 +280,9 @@ modString = filter (/= "") . modString' . typeOf
           in (intercalate "." . init . splitOn "." . tyConString $ tyCon) : concatMap modString' subs
 #endif
 
-actionIdent :: forall a. Dictionary.Ident a -> Ident
-actionIdent StringId = Ident "string" "String" []
-actionIdent ReadId   = Ident (describe proxy_) (typeString proxy_) (modString proxy_)
+actionIdent :: forall a. Dict.Ident a -> Ident
+actionIdent Dict.StringId = Ident "string" "String" []
+actionIdent Dict.ReadId   = Ident (describe proxy_) (typeString proxy_) (modString proxy_)
   where
     proxy_ :: Proxy a
     proxy_ = Proxy

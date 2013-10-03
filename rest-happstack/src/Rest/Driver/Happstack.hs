@@ -28,15 +28,20 @@ import Data.Text.Lazy.Encoding (decodeUtf8)
 
 import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
+import qualified Data.Label.Total          as L
 import qualified Data.Map                  as M
 
 import Rest.Handler
-import Rest.Dictionary
+import Rest.Dictionary ( Dict, Format (..)
+                       , Param (..), Header (..), Input (..), Output (..), Error (..)
+                       , Inputs, Outputs, Errors
+                       )
 import Rest.Error
 import Rest.Resource (Api)
 import Rest.Driver.Perform (runAction, HasInput, writeResponse, CanOutput)
 import Rest.Driver.Routing (route, ApiError (..))
 import Rest.Driver.Types
+import qualified Rest.Dictionary     as D
 import qualified Rest.Driver.Routing as Rest
 import qualified Rest.Driver.Perform as Rest
 
@@ -97,12 +102,13 @@ fetchValue run (Handler (idents, hs, params, inputs, _, es) _ act _) inp = mapE 
      -}
 
 fetchInputs :: (Alternative m, MonadIO m, HasRqData m, ServerMonad m) => Dict h p j o e -> ErrorT (Reason e) m (Env h p j)
-fetchInputs (hs, params, inputs, _, _) =
+fetchInputs dict =
   do bs <- lift requestBody
      ct <- parseContentType
 
-     h <- HeaderError `mapE` headers hs
-     p <- ParamError  `mapE` parameters params
+     h <- HeaderError `mapE` headers    (L.get D.headers dict)
+     p <- ParamError  `mapE` parameters (L.get D.params dict)
+     let inputs = L.get D.inputs dict
      j <- InputError  `mapE`
             case inputs of
               [NoI] -> return ()

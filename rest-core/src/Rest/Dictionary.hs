@@ -20,6 +20,7 @@ response body, and the `e` for a possible error.
   , TupleSections
   , DeriveDataTypeable
   , StandaloneDeriving
+  , TemplateHaskell
   #-}
 module Rest.Dictionary
 (
@@ -31,6 +32,11 @@ module Rest.Dictionary
 -- * The dictionary type.
 
 , Dict
+, headers
+, params
+, inputs
+, outputs
+, errors
 , Modifier
 
 -- * Dictionary aspects.
@@ -102,9 +108,11 @@ where
 
 import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
+import Data.Label.Derive
 import Data.Text.Lazy (Text)
 import Data.Typeable
 import Text.XML.HXT.Arrow.Pickle
+import qualified Data.Label.Total as L
 
 import Rest.Info
 import Rest.Error
@@ -202,27 +210,30 @@ data Error e where
 
 deriving instance Show (Error e)
 
+type Inputs  i = [Input  i]
+type Outputs o = [Output o]
+type Errors  e = [Error e]
+
 -- | The `Dict` datatype containing sub-dictionaries for translation of
 -- identifiers (i), headers (h), parameters (p), inputs (i), outputs (o), and
 -- errors (e). Inputs, outputs and errors can have multiple associated
 -- dictionaries.
 
-type Dict h p i o e =
-  ( Header  h
-  , Param   p
-  , Inputs  i
-  , Outputs o
-  , Errors  e
-  )
+fclabels [d|
+  data Dict h p i o e = Dict
+    { headers :: Header  h
+    , params  :: Param   p
+    , inputs  :: Inputs  i
+    , outputs :: Outputs o
+    , errors  :: Errors  e
+    }
+  |]
+
 
 -- | Custom existential packing an error together with a Reason.
 
 data SomeError where
   SomeError :: Errors e -> Reason e -> SomeError
-
-type Inputs  i = [Input  i]
-type Outputs o = [Output o]
-type Errors  e = [Error e]
 
 -- | Type synonym for dictionary modification.
 
@@ -233,108 +244,108 @@ type Modifier h p i o e = Dict () () () () () -> Dict h p i o e
 -- | The empty dictionary, recognizing no types.
 
 empty :: Dict () () () () ()
-empty = (NoHeader, NoParam, [NoI], [NoO], [NoE])
+empty = Dict NoHeader NoParam [NoI] [NoO] [NoE]
 
 -- | Add custom sub-dictionary for recognizing headers.
 
 mkHeader :: Header h -> Dict x p i o e -> Dict h p i o e
-mkHeader h (_, c, d, e, f) = (h, c, d, e, f)
+mkHeader = L.set headers
 
 -- | Set custom sub-dictionary for recognizing parameters.
 
 mkPar :: Param p -> Dict h x i o e -> Dict h p i o e
-mkPar p (b, _, d, e, f) = (b, p, d, e, f)
+mkPar = L.set params
 
 -- | Add custom sub-dictionary for recognizing parameters.
 
 addPar :: Param p -> Dict h p' i o e -> Dict h (p, p') i o e
-addPar p (b, p', d, e, f) = (b, TwoParams p p', d, e, f)
+addPar = L.modify params . TwoParams
 
 -- | Open up input type for extension with custom dictionaries.
 
 someI :: Dict h p () o e -> Dict h p i o e
-someI (b, c, _, e, f) = (b, c, [], e, f)
+someI = L.set inputs []
 
 -- | Allow direct usage of as input as `String`.
 
 stringI :: Dict h p i o e -> Dict h p String o e
-stringI (b, c, _, e, f) = (b, c, [StringI], e, f)
+stringI = L.set inputs [StringI]
 
 -- | Allow direct usage of as input as raw Xml `Text`.
 
 xmlTextI :: Dict h p i o e -> Dict h p Text o e
-xmlTextI (b, c, _, e, f) = (b, c, [XmlTextI], e, f)
+xmlTextI = L.set inputs [XmlTextI]
 
 -- | Allow usage of input as file contents, represented as a `ByteString`.
 
 fileI :: Dict h p i o e -> Dict h p ByteString o e
-fileI (b, c, _, e, f) = (b, c, [FileI], e, f)
+fileI = L.set inputs [FileI]
 
 -- | The input can be read into some instance of `Read`. For inspection reasons
 -- the type must also be an instance of both `Info` and `Show`.
 
 readI :: (Info i, Read i, Show i) => Dict h p i o e -> Dict h p i o e
-readI (b, c, d, e, f) = (b, c, ReadI : d, e, f)
+readI = L.modify inputs (ReadI:)
 
 -- | The input can be read into some instance of `XmlPickler`.
 
 xmlI :: (Typeable i, XmlPickler i) => Dict h p i o e -> Dict h p i o e
-xmlI (b, c, d, e, f) = (b, c, XmlI : d, e, f)
+xmlI = L.modify inputs (XmlI:)
 
 -- | The input can be used as an XML `ByteString`.
 
 rawXmlI :: Dict h p i o e -> Dict h p ByteString o e
-rawXmlI (b, c, _, e, f) = (b, c, [RawXmlI], e, f)
+rawXmlI = L.set inputs [RawXmlI]
 
 -- | The input can be read into some instance of `Json`.
 
 jsonI :: (Typeable i, Json i) => Dict h p i o e -> Dict h p i o e
-jsonI (b, c, d, e, f) = (b, c, JsonI : d, e, f)
+jsonI = L.modify inputs (JsonI:)
 
 -- | Open up output type for extension with custom dictionaries.
 
 someO :: Dict h p i () e -> Dict h p i o e
-someO (b, c, d, _, f) = (b, c, d, [], f)
+someO = L.set outputs []
 
 -- | Allow output as plain String.
 
 stringO :: Dict h p i () e -> Dict h p i String e
-stringO (b, c, d, _, f) = (b, c, d, [StringO], f)
+stringO = L.set outputs [StringO]
 
 -- | Allow file output using a combination of the raw data and a mime type.
 
 fileO :: Dict h p i o e -> Dict h p i (ByteString, String) e
-fileO (b, c, d, _, f) = (b, c, d, [FileO], f)
+fileO = L.set outputs [FileO]
 
 -- | Allow output as XML using the `XmlPickler` type class.
 
 xmlO :: (Typeable o, XmlPickler o) => Dict h p i o e -> Dict h p i o e
-xmlO (b, c, d, e, f) = (b, c, d, XmlO : e, f)
+xmlO = L.modify outputs (XmlO:)
 
 -- | Allow output as raw XML represented as a `ByteString`.
 
 rawXmlO :: Dict h p i () e -> Dict h p i ByteString e
-rawXmlO (b, c, d, _, f) = (b, c, d, [RawXmlO], f)
+rawXmlO = L.set outputs [RawXmlO]
 
 -- | Allow output as JSON using the `Json` type class.
 
 jsonO :: (Typeable o, Json o) => Dict h p i o e -> Dict h p i o e
-jsonO (b, c, d, e, f) = (b, c, d, JsonO : e, f)
+jsonO = L.modify outputs (JsonO:)
 
 -- | Open up error type for extension with custom dictionaries.
 
 someE :: (Typeable e, Json e) => Dict h p i o () -> Dict h p i o e
-someE (b, c, d, e, _) = (b, c, d, e, [])
+someE = L.set errors []
 
 -- | Allow error output as JSON using the `Json` type class.
 
 jsonE :: (Typeable e, Json e) => Dict h p i o e -> Dict h p i o e
-jsonE (b, c, d, e, f) = (b, c, d, e, JsonE : f)
+jsonE = L.modify errors (JsonE:)
 
 -- | Allow error output as XML using the `XmlPickler` type class.
 
 xmlE :: (Typeable e, XmlPickler e) => Dict h p i o e -> Dict h p i o e
-xmlE (b, c, d, e, f) = (b, c, d, e, XmlE : f)
+xmlE = L.modify errors (XmlE:)
 
 -- | The input can be read into some instance of both `Json` and `XmlPickler`.
 
@@ -359,4 +370,3 @@ xmlJsonE = xmlE . jsonE . someE
 
 xmlJson :: (Typeable i, Typeable o, Json i, Json o, XmlPickler i, XmlPickler o) => Dict h p () () e -> Dict h p i o e
 xmlJson = xmlJsonI . xmlJsonO
-

@@ -18,6 +18,7 @@ Library
     , containers >= 0.4 && < 0.6
     , happstack-server >= 7.0.5 && < 7.2
     , hxt >= 9.2 && < 9.4
+    , fclabels == 2.0.*
     , json >= 0.4 && < 0.8
     , json-schema == 0.3.*
     , mtl >= 2.0 && < 2.2

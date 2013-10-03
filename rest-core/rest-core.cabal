@@ -17,6 +17,7 @@ Library
     , containers                >= 0.4 && < 0.6
     , either                    == 3.4.*
     , errors                    == 1.4.*
+    , fclabels                  == 2.0.*
     , hxt                       >= 9.2 && < 9.4
     , json                      >= 0.4 && < 0.8
     , json-schema               == 0.3.*

@@ -21,6 +21,7 @@ import Safe
 import qualified Data.ByteString.Char8 as Char
 import qualified Data.ByteString.UTF8  as UTF8
 import qualified Control.Monad.State   as State
+import qualified Data.Label.Total      as L
 
 import Network.URI.Encode (decodeByteString)
 import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range)
@@ -199,7 +200,7 @@ guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)
 
 mkListHandler :: ListHandler m -> Handler m
-mkListHandler (GenHandler (h, p, i, o, e) act sec) = GenHandler (addPar range (h, p, i, listO o, e)) (mkListAction act) sec
+mkListHandler (GenHandler dict act sec) = GenHandler (addPar range . L.modify outputs listO $ dict) (mkListAction act) sec
 
 mkListAction :: Monad m => (Env h p i -> ErrorT (Reason e) m [a]) -> Env h ((Int, Int), p) i -> ErrorT (Reason e) m (List a)
 mkListAction act (Env h ((f, c), p) i) = do

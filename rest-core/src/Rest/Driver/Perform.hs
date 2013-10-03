@@ -2,6 +2,7 @@
 module Rest.Driver.Perform where
 
 import Control.Monad.Error
+import qualified Data.Label.Total as L
 
 import Rest.Handler
 import Rest.Dictionary
@@ -14,19 +15,19 @@ data Writable m = forall h p j o e. Writable (Dict h p j o e) (ErrorT (Reason e)
 -- TODO: secure flag is unused.
 runAction :: HasInput m => RunnableHandler m -> Writable m
 runAction (RunnableHandler run (GenHandler dict act _)) = Writable dict $ do
-  inputs <- fetchInputs dict
-  mapErrorT run (act inputs)
+  inp <- fetchInputs dict
+  mapErrorT run (act inp)
 
 class Monad m => HasInput m where
   fetchInputs :: Dict h p j o e -> ErrorT (Reason e) m (Env h p j)
 
 writeResponse :: CanOutput m => Writable m -> m (Response m)
-writeResponse (Writable (_, _, _, o, e) act) = do
+writeResponse (Writable dict act) = do
   res <- runErrorT $ do
     output <- act
-    writeOutput o output
+    writeOutput (L.get outputs dict) output
   case res of
-    Left  er -> writeFailure e er
+    Left  er -> writeFailure (L.get errors dict) er
     Right r  -> return r
 
 class Monad m => CanOutput m where
