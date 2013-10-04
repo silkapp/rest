@@ -118,7 +118,7 @@ routeListGetter getter list = hasMethod GET >>
     Rest.By        mBy -> popSegment >>= parseIdent mBy >>= \mid -> noRestPath  >> return (RunnableHandler id (mkListHandler (list mid)))
 
 withSubresource :: sid -> Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Router (RunnableHandler m)
-withSubresource sid resource@(Rest.Resource { Rest.enter, Rest.selects, Rest.actions }) subRouters =  withSegment (routeSingle sid resource) $ \seg ->
+withSubresource sid resource@(Rest.Resource { Rest.enter, Rest.selects, Rest.actions }) subRouters = withSegment (routeSingle sid resource) $ \seg ->
   case lookup seg selects of
     Just select -> noRestPath >> hasMethod GET >> return (RunnableHandler (enter sid) select)
     Nothing -> case lookup seg actions of
@@ -141,11 +141,10 @@ routeSingle sid (Rest.Resource { Rest.enter, Rest.get, Rest.update, Rest.remove 
     handleOrNotFound = maybe (apiError [NoE] UnsupportedRoute) (return . RunnableHandler (enter sid))
 
 routeName :: String -> Router ()
-routeName ident =
-  do when (not . null $ ident) $ do
-       identStr <- popSegment
-       when (identStr /= ident) $
-         apiError [NoE] UnsupportedRoute
+routeName ident = when (not . null $ ident) $
+  do identStr <- popSegment
+     when (identStr /= ident) $
+       apiError [NoE] UnsupportedRoute
 
 lookupRouter :: String -> [Some1 (Rest.Router s)] -> Maybe (Some1 (Rest.Router s))
 lookupRouter _    [] = Nothing
