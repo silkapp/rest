@@ -15,7 +15,7 @@ module Rest.Driver.Happstack (apiToHandler, apiToHandler') where
 import Control.Applicative
 import Control.Concurrent (readMVar)
 import Control.Monad.Error
-import Data.ByteString.Char8 (pack, unpack)
+import Data.ByteString.Char8 (unpack)
 import Data.Char (isSpace, toLower)
 import Data.List
 import Data.List.Split
@@ -73,7 +73,7 @@ apiToHandler = apiToHandler' id
 apiToHandler' :: (ServerMonad n, HasInput n, CanOutput n, Rest.Response n ~ Response) => Run m n -> Api m -> n Response
 apiToHandler' run api = do
   rq <- askRq
-  case route (toRestMethod $ rqMethod rq) (pack $ rqUri rq) api of
+  case route (toRestMethod $ rqMethod rq) (rqPaths rq) api of
     Left  (ApiError e r)  -> Rest.writeFailure e r
     Right (RunnableHandler run' h) ->
       let out = runAction (RunnableHandler (run . run') h)

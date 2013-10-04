@@ -47,10 +47,10 @@ apiError es r = throwError (ApiError es r)
 newtype Router a = Router { unRouter :: ReaderT Method (StateT UriParts (EitherT ApiError Identity)) a }
   deriving (Functor, Applicative, Monad, MonadReader Method, MonadState UriParts, MonadError ApiError)
 
-runRouter :: Method -> Uri -> Router (RunnableHandler m) -> Either ApiError (RunnableHandler m)
-runRouter method uri router = runIdentity . runEitherT $ evalStateT (runReaderT (unRouter router) method) (splitUri uri)
+runRouter :: Method -> UriParts -> Router (RunnableHandler m) -> Either ApiError (RunnableHandler m)
+runRouter method uri router = runIdentity . runEitherT $ evalStateT (runReaderT (unRouter router) method) uri
 
-route :: Method -> Uri -> Rest.Api m -> Either ApiError (RunnableHandler m)
+route :: Method -> UriParts -> Rest.Api m -> Either ApiError (RunnableHandler m)
 route method uri api = runRouter method uri $
   do versionStr <- popSegment
      case versionStr `Rest.lookupVersion` api of
@@ -160,7 +160,7 @@ parseIdent (Rest.Id ReadId   byF) seg =
     Nothing  -> apiError [NoE] (IdentError (ParseError $ "Failed to parse " ++ seg))
     Just sid -> return (byF sid)
 
-splitUri :: Uri -> [String]
+splitUri :: Uri -> UriParts
 splitUri = filter (/= "") . map (UTF8.toString . decodeByteString) . Char.split '/'
 
 popSegment :: Router String
