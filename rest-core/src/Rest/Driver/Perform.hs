@@ -23,8 +23,10 @@ class Monad m => HasInput m where
 writeResponse :: CanOutput m => Writable m -> m (Response m)
 writeResponse (Writable dict act) = do
   res <- runErrorT $ do
+    let os = L.get outputs dict
+    validator os
     output <- act
-    writeOutput (L.get outputs dict) output
+    writeOutput os output
   case res of
     Left  er -> writeFailure (L.get errors dict) er
     Right r  -> return r
@@ -33,3 +35,4 @@ class Monad m => CanOutput m where
   type Response m :: *
   writeOutput  :: Outputs o -> o        -> ErrorT (Reason e) m (Response m)
   writeFailure :: Errors  e -> Reason e ->                   m (Response m)
+  validator    :: Outputs o             -> ErrorT (Reason e) m ()

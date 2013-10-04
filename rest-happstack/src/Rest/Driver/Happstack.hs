@@ -77,7 +77,6 @@ apiToHandler' run api = do
     Left  (ApiError e r)  -> Rest.writeFailure e r
     Right (RunnableHandler run' h) ->
       let out = runAction (RunnableHandler (run . run') h)
-      -- TODO: validator
       in writeResponse out
 
 instance (Functor m, MonadPlus m, MonadIO m) => HasInput (ServerPartT m) where
@@ -87,6 +86,7 @@ instance (Functor m, MonadPlus m, MonadIO m) => CanOutput (ServerPartT m) where
   type Response (ServerPartT m) = Response
   writeOutput  = outputWriter
   writeFailure = failureWriter
+  validator    = validator
 
 -------------------------------------------------------------------------------
 -- Fetching the input resource.
@@ -239,6 +239,24 @@ contentType c = setHeaderM "Content-Type" $
     JsonFormat -> "application/json; charset=UTF-8"
     XmlFormat  -> "application/xml; charset=UTF-8"
     _          -> "text/plain; charset=UTF-8"
+
+validator :: forall v m e. (Alternative m, ServerMonad m, HasRqData m) => Outputs v -> ErrorT (Reason e) m ()
+validator outputs = lift accept >>= \formats -> OutputError `mapE`
+   (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
+
+  where
+    try :: Monad m => Outputs v -> Format -> ErrorT DataError m ()
+    try (XmlO    : _ ) XmlFormat    = return ()
+    try (RawXmlO : _ ) XmlFormat    = return ()
+    try (NoO     : _ ) NoFormat     = return ()
+    try (NoO     : _ ) XmlFormat    = return ()
+    try (NoO     : _ ) JsonFormat   = return ()
+    try (NoO     : _ ) StringFormat = return ()
+    try (JsonO   : _ ) JsonFormat   = return ()
+    try (StringO : _ ) StringFormat = return ()
+    try (FileO   : _ ) FileFormat   = return ()
+    try []             t            = throwError (UnsupportedFormat (show t))
+    try (_       : xs) t            = try xs t
 
 outputWriter :: forall v m e. (Alternative m, ServerMonad m, HasRqData m, FilterMonad Response m) => Outputs v -> v -> ErrorT (Reason e) m Response
 outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
