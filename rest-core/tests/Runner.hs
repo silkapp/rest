@@ -31,6 +31,7 @@ main = do
               , testCase "Create with listing." testCreateWithListing
               , testCase "Static action." testStaticAction
               , testCase "Simple subresource." testSubresource
+              , testCase "Root router is skipped." testRootRouter
               ]
 
 testListing :: Assertion
@@ -125,11 +126,19 @@ testStaticAction = checkRoute POST "resource/action" (Rest.route resource)
 testSubresource :: Assertion
 testSubresource = checkRoute GET "resource/single/subresource" (Rest.route resource -/ Rest.route subResource)
   where
+    resource :: Resource IO IO () Void Void
     resource = mkResource { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
     subResource :: Resource IO IO Void () Void
     subResource = mkResource { name = "subresource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     getHandler = mkGetter id $ return ()
     listHandler _ = mkListing id $ \_ -> return []
+
+testRootRouter :: Assertion
+testRootRouter = checkRoute GET "resource/single" (Rest.root -/ Rest.route resource)
+  where
+    resource :: Resource IO IO () Void Void
+    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
+    getHandler = mkGetter id $ return ()
 
 checkSingleRoute :: Monad s => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
 checkSingleRoute uri resource handler_ =

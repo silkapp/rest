@@ -18,7 +18,7 @@ import Data.List.Split
 import Data.Ord (comparing)
 
 import Rest.Handler
-import Rest.Schema (Schema (..), Step (..))
+import Rest.Schema (Schema (..), Step (..), singleton, named)
 
 import Safe
 
@@ -95,6 +95,9 @@ infixl 7 -/
 ( ---/) = compose
 (  --/) = compose
 (   -/) = compose
+
+root :: Monad m => Router m m
+root = route $ mkResource { enter = const id, schema = singleton () $ named [] }
 
 -------------------------------------------------------------------------------
 
