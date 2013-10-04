@@ -12,7 +12,6 @@ import Rest.Driver.Types
 
 data Writable m = forall h p j o e. Writable (Dict h p j o e) (ErrorT (Reason e) m o)
 
--- TODO: secure flag is unused.
 runAction :: HasInput m => RunnableHandler m -> Writable m
 runAction (RunnableHandler run (GenHandler dict act _)) = Writable dict $ do
   inp <- fetchInputs dict
