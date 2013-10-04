@@ -2,6 +2,7 @@
 module Rest.Driver.Perform where
 
 import Control.Monad.Error
+import Control.Monad.Reader
 import qualified Data.Label.Total as L
 
 import Rest.Handler
@@ -36,3 +37,12 @@ class Monad m => CanOutput m where
   writeOutput  :: Outputs o -> o        -> ErrorT (Reason e) m (Response m)
   writeFailure :: Errors  e -> Reason e ->                   m (Response m)
   validator    :: Outputs o             -> ErrorT (Reason e) m ()
+
+instance HasInput  m => HasInput  (ReaderT r m) where
+  fetchInputs = mapErrorT lift . fetchInputs
+
+instance CanOutput m => CanOutput (ReaderT r m) where
+  type Response (ReaderT r m) = Response m
+  writeOutput  os = mapErrorT lift . writeOutput  os
+  writeFailure es =           lift . writeFailure es
+  validator       = mapErrorT lift . validator
