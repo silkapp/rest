@@ -14,7 +14,6 @@ Library
   Build-Depends:
       base                      == 4.*
     , bytestring                >= 0.9 && < 0.11
-    , containers                >= 0.4 && < 0.6
     , either                    == 3.4.*
     , errors                    == 1.4.*
     , fclabels                  == 2.0.*
@@ -28,8 +27,6 @@ Library
     , split                     >= 0.1 && < 0.3
     , text                      == 0.11.*
     , transformers              >= 0.2 && < 0.4
-    , regular-json              == 0.3.*
-    , regular                   == 0.3.*
     , tostring                  == 0.2.*
     , uri-encode                == 1.4.*
     , utf8-string               == 0.3.*
@@ -51,8 +48,8 @@ Test-suite rest-tests
                      , test-framework       == 0.8.*
                      , test-framework-hunit == 0.3.*
                      , rest-core
-                     , bytestring           >= 0.9 && < 0.11
-                     , mtl                  >= 2.0 && < 2.2
+                     , bytestring           >= 0.9    && < 0.11
+                     , mtl                  >= 2.0    && < 2.2
   hs-source-dirs:      tests
   main-is:             Runner.hs
   type:                exitcode-stdio-1.0
