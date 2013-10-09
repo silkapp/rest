@@ -158,7 +158,7 @@ checkRoutes reqs router =
 checkRouteWithIgnoredMethods :: [Method] -> Rest.Router m s -> Method -> Uri -> Assertion
 checkRouteWithIgnoredMethods ignoredMethods router method uri =
   do checkRouteSuccess method uri router
-     forM_ (filter (not . (`elem` ignoredMethods)) enumAll) $ \badMethod -> checkRouteFailure badMethod uri router
+     forM_ (filter (not . (`elem` ignoredMethods)) allMethods) $ \badMethod -> checkRouteFailure badMethod uri router
      checkRouteFailure method (uri <> "/trailing") router
 
 checkRouteFailure :: Method -> Uri -> Rest.Router m s -> Assertion
@@ -173,5 +173,5 @@ checkRouteSuccess method uri router =
     Left e  -> assertFailure ("No route to " ++ show method ++ " " ++ Char8.unpack uri ++ ": " ++ show e)
     Right _ -> return ()
 
-enumAll :: (Bounded a, Enum a) => [a]
-enumAll = [minBound .. maxBound]
+allMethods :: [Method]
+allMethods = [GET, PUT, POST, DELETE]

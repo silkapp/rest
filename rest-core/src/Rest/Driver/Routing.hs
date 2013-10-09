@@ -34,8 +34,8 @@ import qualified Rest.Schema   as Rest
 
 import Rest.Driver.Types
 
-data Method = GET | PUT | POST | DELETE
-  deriving (Show, Eq, Bounded, Enum)
+data Method = GET | PUT | POST | DELETE | Unknown String
+  deriving (Show, Eq)
 type Uri = ByteString
 type UriParts = [String]
 data ApiError = forall e. Show e => ApiError (Errors e) (Reason e)
