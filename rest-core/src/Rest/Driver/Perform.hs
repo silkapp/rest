@@ -7,9 +7,14 @@ module Rest.Driver.Perform where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Error (ErrorT, throwError, mapErrorT, runErrorT)
+import Control.Monad.Cont
+import Control.Monad.Error
+import Control.Monad.RWS
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Writer
+import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
-import Control.Monad.Trans (lift)
 import Data.Char (isSpace, toLower)
 import Data.List
 import Data.List.Split
@@ -46,7 +51,67 @@ class (Applicative m, Monad m) => Rest m where
   setHeader       :: String -> String -> m ()
   setResponseCode :: Int -> m ()
 
+instance Rest m => Rest (ContT r m) where
+  getHeader       = lift . getHeader
+  getParameter    = lift . getParameter
+  getBody         = lift getBody
+  getMethod       = lift getMethod
+  getPaths        = lift getPaths
+  lookupMimeType  = lift . lookupMimeType
+  setHeader nm    = lift . setHeader nm
+  setResponseCode = lift . setResponseCode
+
 instance (E.Error e, Rest m) => Rest (ErrorT e m) where
+  getHeader       = lift . getHeader
+  getParameter    = lift . getParameter
+  getBody         = lift getBody
+  getMethod       = lift getMethod
+  getPaths        = lift getPaths
+  lookupMimeType  = lift . lookupMimeType
+  setHeader nm    = lift . setHeader nm
+  setResponseCode = lift . setResponseCode
+
+instance (Monoid w, Rest m) => Rest (RWST r w s m) where
+  getHeader       = lift . getHeader
+  getParameter    = lift . getParameter
+  getBody         = lift getBody
+  getMethod       = lift getMethod
+  getPaths        = lift getPaths
+  lookupMimeType  = lift . lookupMimeType
+  setHeader nm    = lift . setHeader nm
+  setResponseCode = lift . setResponseCode
+
+instance Rest m => Rest (ReaderT r m) where
+  getHeader       = lift . getHeader
+  getParameter    = lift . getParameter
+  getBody         = lift getBody
+  getMethod       = lift getMethod
+  getPaths        = lift getPaths
+  lookupMimeType  = lift . lookupMimeType
+  setHeader nm    = lift . setHeader nm
+  setResponseCode = lift . setResponseCode
+
+instance Rest m => Rest (StateT s m) where
+  getHeader       = lift . getHeader
+  getParameter    = lift . getParameter
+  getBody         = lift getBody
+  getMethod       = lift getMethod
+  getPaths        = lift getPaths
+  lookupMimeType  = lift . lookupMimeType
+  setHeader nm    = lift . setHeader nm
+  setResponseCode = lift . setResponseCode
+
+instance (Monoid w, Rest m) => Rest (WriterT w m) where
+  getHeader       = lift . getHeader
+  getParameter    = lift . getParameter
+  getBody         = lift getBody
+  getMethod       = lift getMethod
+  getPaths        = lift getPaths
+  lookupMimeType  = lift . lookupMimeType
+  setHeader nm    = lift . setHeader nm
+  setResponseCode = lift . setResponseCode
+
+instance Rest m => Rest (IdentityT m) where
   getHeader       = lift . getHeader
   getParameter    = lift . getParameter
   getBody         = lift getBody
