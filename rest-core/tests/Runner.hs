@@ -32,6 +32,7 @@ main = do
               , testCase "Static action." testStaticAction
               , testCase "Simple subresource." testSubresource
               , testCase "Root router is skipped." testRootRouter
+              , testCase "Multi-PUT." testMultiPut
               ]
 
 testListing :: Assertion
@@ -139,6 +140,16 @@ testRootRouter = checkRoute GET "resource/single" (Rest.root -/ Rest.route resou
     resource :: Resource IO IO () Void Void
     resource = mkResource { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
     getHandler = mkGetter id $ return ()
+
+testMultiPut :: Assertion
+testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
+  where
+    resource :: Resource IO (ReaderT String IO) String Void Void
+    resource = mkResource
+      { name   = "resource"
+      , schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))])
+      , update = Just (mkGetter stringO ask)
+      }
 
 checkSingleRoute :: Monad s => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
 checkSingleRoute uri resource handler_ =

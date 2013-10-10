@@ -105,9 +105,15 @@ routeGetter :: Rest.Getter sid -> Rest.Resource m s sid mid aid -> [Some1 (Rest.
 routeGetter getter resource subRouters =
   case getter of
     Rest.Singleton sid -> getOrDeep sid
-    Rest.By        sBy -> popSegment >>= parseIdent sBy >>= getOrDeep
+    Rest.By        sBy -> withSegment (multiPut resource sBy) $ \seg -> parseIdent sBy seg >>= getOrDeep
   where
     getOrDeep sid = withSubresource sid resource subRouters
+
+multiPut :: Rest.Resource m s sid mid aid -> Rest.Id sid -> Router (RunnableHandler m)
+multiPut (Rest.Resource { Rest.update, Rest.enter }) sBy = hasMethod PUT >>
+  case update of
+    Just updateH -> return (RunnableHandler id (mkMultiPutHandler sBy enter updateH))
+    Nothing      -> apiError UnsupportedRoute
 
 routeListGetter :: Monad m => Rest.Getter mid -> (mid -> ListHandler m) -> Router (RunnableHandler m)
 routeListGetter getter list = hasMethod GET >>
@@ -198,6 +204,19 @@ guardMethod method = ask >>= guard . (== method)
 
 mkListHandler :: Monad m => ListHandler m -> Handler m
 mkListHandler (GenHandler dict act sec) = GenHandler (addPar range . L.modify outputs listO $ dict) (mkListAction act) sec
+
+mkMultiPutHandler :: Monad m => Rest.Id id -> (id -> Run s m) -> Handler s -> Handler m
+mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler newDict newAct sec
+  where
+    newErrDict = L.modify errors reasonE dict
+    newDict = L.modify inputs mappingI
+            . L.modify outputs (mappingO . statusO (L.get errors newErrDict))
+            $ newErrDict
+    newAct (Env hs ps (StringMap vs)) =
+      do bs <- lift $ forM vs $ \(k, v) -> runErrorT $
+           do i <- parseIdent sBy k
+              mapErrorT (run i) (act (Env hs ps v))
+         return (StringMap (zipWith (\(k, _) b -> (k, eitherToStatus b)) vs bs))
 
 mkListAction :: Monad m => (Env h p i -> ErrorT (Reason e) m [a]) -> Env h ((Int, Int), p) i -> ErrorT (Reason e) m (List a)
 mkListAction act (Env h ((f, c), p) i) = do
