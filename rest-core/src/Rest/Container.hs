@@ -50,11 +50,11 @@ mappingI (XmlI  : r) = XmlI  : mappingI r
 mappingI (JsonI : r) = JsonI : mappingI r
 mappingI (_     : r) = mappingI r
 
-statusO :: Outputs o -> Errors e -> Outputs (Status e o)
-statusO []          _  = []
-statusO (XmlO  : r) es = concatMap (\v -> case v of { XmlE -> [XmlO]  ; NoE -> [XmlO] ; _ -> []}) es ++ statusO r es
-statusO (JsonO : r) es = concatMap (\v -> case v of { JsonE -> [JsonO]; NoE -> [JsonO]; _ -> []}) es ++ statusO r es
-statusO (_     : r) es = statusO r es
+statusO :: Errors e -> Outputs o -> Outputs (Status e o)
+statusO _  []          = []
+statusO es (XmlO  : r) = concatMap (\v -> case v of { XmlE -> [XmlO]  ; NoE -> [XmlO] ; _ -> []}) es ++ statusO es r
+statusO es (JsonO : r) = concatMap (\v -> case v of { JsonE -> [JsonO]; NoE -> [JsonO]; _ -> []}) es ++ statusO es r
+statusO es (_     : r) = statusO es r
 
 reasonE :: Errors a -> Errors (Reason a)
 reasonE []          = []
