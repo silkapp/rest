@@ -38,24 +38,22 @@ data Method = GET | PUT | POST | DELETE | Unknown String
   deriving (Show, Eq)
 type Uri = ByteString
 type UriParts = [String]
-data ApiError = forall e. Show e => ApiError (Errors e) (Reason e)
-deriving instance Show ApiError
 
-apiError :: (Show e, MonadError ApiError m) => Errors e -> Reason e -> m a
-apiError es r = throwError (ApiError es r)
+apiError :: (MonadError (Reason e) m) => Reason e -> m a
+apiError = throwError
 
-newtype Router a = Router { unRouter :: ReaderT Method (StateT UriParts (EitherT ApiError Identity)) a }
-  deriving (Functor, Applicative, Monad, MonadReader Method, MonadState UriParts, MonadError ApiError)
+newtype Router a = Router { unRouter :: ReaderT Method (StateT UriParts (EitherT Reason_ Identity)) a }
+  deriving (Functor, Applicative, Monad, MonadReader Method, MonadState UriParts, MonadError Reason_)
 
-runRouter :: Method -> UriParts -> Router (RunnableHandler m) -> Either ApiError (RunnableHandler m)
+runRouter :: Method -> UriParts -> Router (RunnableHandler m) -> Either Reason_ (RunnableHandler m)
 runRouter method uri router = runIdentity . runEitherT $ evalStateT (runReaderT (unRouter router) method) uri
 
-route :: Method -> UriParts -> Rest.Api m -> Either ApiError (RunnableHandler m)
+route :: Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
 route method uri api = runRouter method uri $
   do versionStr <- popSegment
      case versionStr `Rest.lookupVersion` api of
           Just (Some1 router) -> routeRoot router
-          _                   -> apiError [NoE] UnsupportedVersion
+          _                   -> apiError UnsupportedVersion
 
 routeRoot :: Rest.Router m s -> Router (RunnableHandler m)
 routeRoot router@(Rest.Embed resource _) = do
@@ -65,7 +63,7 @@ routeRoot router@(Rest.Embed resource _) = do
 routeRouter :: Rest.Router m s -> Router (RunnableHandler m)
 routeRouter (Rest.Embed resource@(Rest.Resource { Rest.schema }) subRouters) =
   case schema of
-    (Rest.Schema mToplevel step) -> maybe (apiError [NoE] UnsupportedRoute) return =<< runMaybeT
+    (Rest.Schema mToplevel step) -> maybe (apiError UnsupportedRoute) return =<< runMaybeT
        (  routeToplevel resource subRouters mToplevel
       <|> routeCreate resource
       <|> lift (routeStep resource subRouters step)
@@ -79,14 +77,14 @@ routeToplevel resource@(Rest.Resource { Rest.list }) subRouters mToplevel = hois
 
 routeCreate :: Rest.Resource m s sid mid aid -> MaybeT Router (RunnableHandler m)
 routeCreate (Rest.Resource { Rest.create }) = guardNullPath >> guardMethod POST >>
-  maybe (apiError [NoE] UnsupportedRoute) (return . RunnableHandler id) create
+  maybe (apiError UnsupportedRoute) (return . RunnableHandler id) create
 
 routeStep :: Rest.Resource m s sid mid aid -> [Some1 (Rest.Router s)] -> Rest.Step sid mid aid -> Router (RunnableHandler m)
 routeStep resource subRouters step =
   case step of
     Rest.Named ns -> popSegment >>= \seg ->
       case lookup seg ns of
-        Nothing -> apiError [NoE] UnsupportedRoute
+        Nothing -> apiError UnsupportedRoute
         Just h  -> routeNamed resource subRouters h
     Rest.Unnamed h -> routeUnnamed resource subRouters h
 
@@ -128,7 +126,7 @@ withSubresource sid resource@(Rest.Resource { Rest.enter, Rest.selects, Rest.act
           Just (Some1 subRouter) -> do
             (RunnableHandler subRun subHandler) <- routeRouter subRouter
             return (RunnableHandler (enter sid . subRun) subHandler)
-          Nothing -> apiError [NoE] UnsupportedRoute
+          Nothing -> apiError UnsupportedRoute
 
 routeSingle :: sid -> Rest.Resource m s sid mid aid -> Router (RunnableHandler m)
 routeSingle sid (Rest.Resource { Rest.enter, Rest.get, Rest.update, Rest.remove }) = ask >>= \method ->
@@ -136,15 +134,15 @@ routeSingle sid (Rest.Resource { Rest.enter, Rest.get, Rest.update, Rest.remove 
     GET    -> handleOrNotFound get
     PUT    -> handleOrNotFound update
     DELETE -> handleOrNotFound remove
-    _      -> apiError [NoE] UnsupportedMethod
+    _      -> apiError UnsupportedMethod
   where
-    handleOrNotFound = maybe (apiError [NoE] UnsupportedRoute) (return . RunnableHandler (enter sid))
+    handleOrNotFound = maybe (apiError UnsupportedRoute) (return . RunnableHandler (enter sid))
 
 routeName :: String -> Router ()
 routeName ident = when (not . null $ ident) $
   do identStr <- popSegment
      when (identStr /= ident) $
-       apiError [NoE] UnsupportedRoute
+       apiError UnsupportedRoute
 
 lookupRouter :: String -> [Some1 (Rest.Router s)] -> Maybe (Some1 (Rest.Router s))
 lookupRouter _    [] = Nothing
@@ -156,7 +154,7 @@ parseIdent :: Rest.Id id -> String -> Router id
 parseIdent (Rest.Id StringId byF) seg = return (byF seg)
 parseIdent (Rest.Id ReadId   byF) seg =
   case readMay seg of
-    Nothing  -> apiError [NoE] (IdentError (ParseError $ "Failed to parse " ++ seg))
+    Nothing  -> apiError (IdentError (ParseError $ "Failed to parse " ++ seg))
     Just sid -> return (byF sid)
 
 splitUri :: Uri -> UriParts
@@ -166,7 +164,7 @@ popSegment :: Router String
 popSegment =
   do uriParts <- State.get
      case uriParts of
-       []      -> apiError [NoE] UnsupportedRoute
+       []      -> apiError UnsupportedRoute
        (hd:tl) -> do
          State.put tl
          return hd
@@ -184,7 +182,7 @@ noRestPath :: Router ()
 noRestPath =
   do uriParts <- State.get
      unless (null uriParts) $
-       apiError [NoE] UnsupportedRoute
+       apiError UnsupportedRoute
 
 guardNullPath :: (MonadPlus m, MonadState UriParts m) => m ()
 guardNullPath = State.get >>= guard . null
@@ -193,7 +191,7 @@ hasMethod :: Method -> Router ()
 hasMethod wantedMethod = ask >>= \method ->
   if method == wantedMethod
   then return ()
-  else apiError [NoE] UnsupportedMethod
+  else apiError UnsupportedMethod
 
 guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)

@@ -36,7 +36,7 @@ import Rest.Dictionary ( Dict, Format (..)
                        )
 import Rest.Error
 import Rest.Resource (Api)
-import Rest.Driver.Routing (route, ApiError (..))
+import Rest.Driver.Routing (route)
 import Rest.Driver.Types
 import qualified Rest.Dictionary     as D
 import qualified Rest.Driver.Routing as Rest
@@ -140,7 +140,7 @@ apiToHandler' run api = do
   method <- getMethod
   paths  <- getPaths
   case route method paths api of
-    Left  (ApiError e r)  -> failureWriter e r
+    Left  e                        -> failureWriter [NoE] e
     Right (RunnableHandler run' h) -> writeResponse (RunnableHandler (run . run') h)
 
 writeResponse :: Rest m => RunnableHandler m -> m UTF8.ByteString
