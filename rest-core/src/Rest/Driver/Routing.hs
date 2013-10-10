@@ -150,11 +150,11 @@ lookupRouter name (Some1 router@(Rest.Embed resource _) : routers)
    =  (guard (Rest.name resource == name) >> return (Some1 router))
   <|> lookupRouter name routers
 
-parseIdent :: Rest.Id id -> String -> Router id
+parseIdent :: MonadError (Reason e) m => Rest.Id id -> String -> m id
 parseIdent (Rest.Id StringId byF) seg = return (byF seg)
 parseIdent (Rest.Id ReadId   byF) seg =
   case readMay seg of
-    Nothing  -> apiError (IdentError (ParseError $ "Failed to parse " ++ seg))
+    Nothing  -> throwError (IdentError (ParseError $ "Failed to parse " ++ seg))
     Just sid -> return (byF sid)
 
 splitUri :: Uri -> UriParts
