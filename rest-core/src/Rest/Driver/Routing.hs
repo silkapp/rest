@@ -111,7 +111,7 @@ routeGetter getter resource subRouters =
   where
     getOrDeep sid = withSubresource sid resource subRouters
 
-routeListGetter :: Rest.Getter mid -> (mid -> ListHandler m) -> Router (RunnableHandler m)
+routeListGetter :: Monad m => Rest.Getter mid -> (mid -> ListHandler m) -> Router (RunnableHandler m)
 routeListGetter getter list = hasMethod GET >>
   case getter of
     Rest.Singleton mid -> noRestPath >> return (RunnableHandler id (mkListHandler (list mid)))
@@ -198,7 +198,7 @@ hasMethod wantedMethod = ask >>= \method ->
 guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)
 
-mkListHandler :: ListHandler m -> Handler m
+mkListHandler :: Monad m => ListHandler m -> Handler m
 mkListHandler (GenHandler dict act sec) = GenHandler (addPar range . L.modify outputs listO $ dict) (mkListAction act) sec
 
 mkListAction :: Monad m => (Env h p i -> ErrorT (Reason e) m [a]) -> Env h ((Int, Int), p) i -> ErrorT (Reason e) m (List a)

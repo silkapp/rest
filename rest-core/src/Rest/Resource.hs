@@ -28,7 +28,7 @@ import Safe
 newtype Void = Void { magic :: forall a. a }
 
 data Resource m s sid mid aid where
-  Resource ::
+  Resource :: (Monad m, Monad s) =>
     { name           :: String                      -- ^ The name for this resource, used as a path segment in routing.
     , description    :: String                      -- ^ A description of the resource, used for documentation.
     , schema         :: Schema sid mid aid          -- ^ The schema for routing and identification.
@@ -47,7 +47,7 @@ data Resource m s sid mid aid where
     , selects        :: [(String, Handler s)]       -- ^ Properties of a single resource.
     } -> Resource m s sid mid aid
 
-mkResource :: Resource m s sid Void Void
+mkResource :: (Monad m, Monad s) => Resource m s sid Void Void
 mkResource = Resource
   { name           = ""
   , description    = ""

@@ -87,8 +87,8 @@ resourceToActionInfo r =
                           ++ map (uncurry actionActionInfo) (Rest.actions r)
 
 topLevelActionInfo :: Resource m s sid mid aid -> Cardinality sid mid -> [ActionInfo]
-topLevelActionInfo r (Single _  ) = singleActionInfo r Nothing ""
-topLevelActionInfo r (Many   mid) = return . listActionInfo Nothing "" . Rest.list r $ mid
+topLevelActionInfo r            (Single _  ) = singleActionInfo r Nothing ""
+topLevelActionInfo r@Resource{} (Many   mid) = return . listActionInfo Nothing "" . Rest.list r $ mid
 
 stepActionInfo :: Resource m s sid mid aid -> Step sid mid aid -> [ActionInfo]
 stepActionInfo r (Named hs) = concatMap (uncurry (namedActionInfo r)) hs
@@ -100,16 +100,16 @@ namedActionInfo r pth (Right (Single g)) = getterActionInfo     r pth g
 namedActionInfo r pth (Right (Many   l)) = listGetterActionInfo r pth l
 
 unnamedActionInfo :: Resource m s sid mid aid -> Cardinality (Id sid) (Id mid) -> [ActionInfo]
-unnamedActionInfo r (Single (Id idnt _   )) = singleActionInfo r (Just $ actionIdent idnt) ""
-unnamedActionInfo r (Many   (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) "" (Rest.list r (midF listIdErr))]
+unnamedActionInfo r            (Single (Id idnt _   )) = singleActionInfo r (Just $ actionIdent idnt) ""
+unnamedActionInfo r@Resource{} (Many   (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) "" (Rest.list r (midF listIdErr))]
 
 getterActionInfo :: Resource m s sid mid aid -> String -> Getter sid -> [ActionInfo]
 getterActionInfo r pth (Singleton _)    = singleActionInfo r Nothing                   pth
 getterActionInfo r pth (By (Id idnt _)) = singleActionInfo r (Just $ actionIdent idnt) pth
 
 listGetterActionInfo :: Resource m s sid mid aid -> String -> Getter mid -> [ActionInfo]
-listGetterActionInfo r pth (Singleton mid)     = [listActionInfo Nothing                   pth (Rest.list r mid)]
-listGetterActionInfo r pth (By (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))]
+listGetterActionInfo r@Resource{} pth (Singleton mid)     = [listActionInfo Nothing                   pth (Rest.list r mid)]
+listGetterActionInfo r@Resource{} pth (By (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))]
 
 listIdErr :: mid
 listIdErr = error "Don't evaluate the fields of a list identifier unless in the body of the handler. They are undefined during generation of documentation and code."
@@ -131,7 +131,7 @@ updateActionInfo mIdent pth = handlerActionInfo mIdent False Update Any pth PUT
 removeActionInfo :: Maybe Ident -> Handler m -> ActionInfo
 removeActionInfo mIdent = handlerActionInfo mIdent True Delete Self "" DELETE
 
-listActionInfo :: Maybe Ident -> String -> ListHandler m -> ActionInfo
+listActionInfo :: Monad m => Maybe Ident -> String -> ListHandler m -> ActionInfo
 listActionInfo mIdent pth = handlerActionInfo mIdent False List Self pth GET . mkListHandler
 
 staticActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
