@@ -117,7 +117,7 @@ listIdErr = error "Don't evaluate the fields of a list identifier unless in the 
 singleActionInfo :: Resource m s sid mid aid -> Maybe Ident -> String -> [ActionInfo]
 singleActionInfo r mIdent pth = foldMap (return . getActionInfo    mIdent pth) (Rest.get     r)
                              ++ foldMap (return . updateActionInfo mIdent pth) (Rest.update  r)
-                             ++ foldMap (return . removeActionInfo mIdent    ) (Rest.remove  r)
+                             ++ foldMap (return . removeActionInfo           ) (Rest.remove  r)
 
 --------------------
 -- * Smart constructors for ActionInfo.
@@ -128,8 +128,8 @@ getActionInfo mIdent pth = handlerActionInfo mIdent False Retrieve Self pth GET
 updateActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
 updateActionInfo mIdent pth = handlerActionInfo mIdent False Update Any pth PUT
 
-removeActionInfo :: Maybe Ident -> Handler m -> ActionInfo
-removeActionInfo mIdent = handlerActionInfo mIdent True Delete Self "" DELETE
+removeActionInfo :: Handler m -> ActionInfo
+removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
 
 listActionInfo :: Monad m => Maybe Ident -> String -> ListHandler m -> ActionInfo
 listActionInfo mIdent pth = handlerActionInfo mIdent False List Self pth GET . mkListHandler
