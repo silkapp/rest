@@ -83,6 +83,7 @@ resourceToActionInfo r =
     Schema mTopLevel step -> foldMap (topLevelActionInfo r) mTopLevel
                           ++ stepActionInfo r step
                           ++ foldMap (return . createActionInfo) (Rest.create r)
+                          ++ foldMap (return . removeActionInfo) (Rest.remove  r)
                           ++ map (uncurry selectActionInfo) (Rest.selects r)
                           ++ map (uncurry actionActionInfo) (Rest.actions r)
 
@@ -117,7 +118,6 @@ listIdErr = error "Don't evaluate the fields of a list identifier unless in the 
 singleActionInfo :: Resource m s sid mid aid -> Maybe Ident -> String -> [ActionInfo]
 singleActionInfo r mIdent pth = foldMap (return . getActionInfo    mIdent pth) (Rest.get     r)
                              ++ foldMap (return . updateActionInfo mIdent pth) (Rest.update  r)
-                             ++ foldMap (return . removeActionInfo           ) (Rest.remove  r)
 
 --------------------
 -- * Smart constructors for ActionInfo.

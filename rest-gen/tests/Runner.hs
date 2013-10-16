@@ -13,6 +13,7 @@ main :: IO ()
 main = do
   defaultMain [ testCase "Listing has right parameters." testListingParams
               , testCase "Selects should show up only once." testSingleSelect
+              , testCase "Removes should show up only once." testSingleRemove
               ]
 
 testListingParams :: Assertion
@@ -40,5 +41,22 @@ testSingleSelect = assertEqual "Number of select ActionInfos." 1 (length actionI
       }
     handler_ = mkConstHandler id $ return ()
     isSelect ai = actionTarget ai == Any && actionType ai == Retrieve && postAction ai
+
+testSingleRemove :: Assertion
+testSingleRemove = assertEqual "Number of remove ActionInfos." 1 (length actionInfos)
+  where
+    actionInfos = filter isRemove $ resourceToActionInfo resource
+    resource :: Resource IO IO ServerId Void Void
+    resource = mkResource
+      { name   = "resource"
+      , schema = noListing $
+                   named
+                     [ ("id", singleBy ById)
+                     , ("ip", singleBy ByIp)
+                     ]
+      , remove = Just handler_
+      }
+    handler_ = mkConstHandler id $ return ()
+    isRemove ai = actionTarget ai == Self && actionType ai == Delete && postAction ai
 
 data ServerId = ById String | ByIp String
