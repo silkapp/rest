@@ -5,6 +5,7 @@ import Control.Arrow
 import Control.Applicative hiding (empty)
 import Control.Monad.Error
 import Control.Monad.Identity
+import Control.Monad.Reader
 import Safe
 
 import Rest.Dictionary
@@ -34,8 +35,8 @@ data GenHandler m f where
     , secure     :: Bool
     } -> GenHandler m f
 
-mkHandler :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m (Apply f o)) -> GenHandler m f
-mkHandler d a = GenHandler (d empty) a False
+mkGenHandler :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m (Apply f o)) -> GenHandler m f
+mkGenHandler d a = GenHandler (d empty) a False
 
 type family Apply (f :: * -> *) a :: *
 type instance Apply Identity a = a
@@ -52,14 +53,7 @@ mkListing
   => Modifier () () () o e
   -> ((Int, Int) -> ErrorT (Reason e) m [o])
   -> ListHandler m
-mkListing d a = mkHandler (mkPar range . d) (a . param)
-
-mkListingBy
-  :: Monad m
-  => Modifier () () () o e
-  -> (Env () (Int, Int) () -> ErrorT (Reason e) m [o])
-  -> ListHandler m
-mkListingBy d a = mkHandler (mkPar range . d) a
+mkListing d a = mkGenHandler (mkPar range . d) (a . param)
 
 range :: Param (Int, Int)
 range = Param ["offset", "count"] $ \xs ->
@@ -77,14 +71,7 @@ mkOrderedListing
   => Modifier () () () o e
   -> ((Int, Int, Maybe String, Maybe String) -> ErrorT (Reason e) m [o])
   -> ListHandler m
-mkOrderedListing d a = mkHandler (mkPar orderedRange . d) (a . param)
-
-mkOrderedListingBy
-  :: Monad m
-  => Modifier () () () o e
-  -> (Env () (Int, Int, Maybe String, Maybe String) () -> ErrorT (Reason e) m [o])
-  -> ListHandler m
-mkOrderedListingBy d a = mkHandler (mkPar orderedRange . d) a
+mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
 
 orderedRange :: Param (Int, Int, Maybe String, Maybe String)
 orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
@@ -100,23 +87,14 @@ orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
     _ -> error "Internal error in orderedRange rest parameters"
   where normalize = (max 0 *** (min 1000 . max 0))
 
-mkCreate :: Monad m => Modifier () () i o e -> (i -> ErrorT (Reason e) m o) -> Handler m
-mkCreate d a = mkHandler d (a . input)
+mkHandler :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m o) -> Handler m
+mkHandler = mkGenHandler
 
-mkUpdate :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m o) -> Handler m
-mkUpdate d a = mkHandler d a
+mkInputHandler :: Monad m => Modifier () () i o e -> (i -> ErrorT (Reason e) m o) -> Handler m
+mkInputHandler d a = mkHandler d (a . input)
 
-mkGetter :: Monad m => Modifier () () () o e -> ErrorT (Reason e) m o -> Handler m
-mkGetter d a = mkHandler d (const a)
+mkConstHandler :: Monad m => Modifier () () () o e -> ErrorT (Reason e) m o -> Handler m
+mkConstHandler d a = mkHandler d (const a)
 
-mkGetterEnv :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m o) -> Handler m
-mkGetterEnv d a = mkHandler d a
-
-mkAction :: Monad m => Modifier () () i o e -> (i -> ErrorT (Reason e) m o) -> Handler m
-mkAction d a = mkHandler d (a . input)
-
-mkActionEnv :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m o) -> Handler m
-mkActionEnv d a = mkHandler d a
-
-constHandler :: Monad m => Modifier () () () o e -> ErrorT (Reason e) m o -> Handler m
-constHandler d a = mkHandler d (const a)
+mkIdHandler :: MonadReader id m => Modifier h p i o e -> (i -> id -> ErrorT (Reason e) m o) -> Handler m
+mkIdHandler d a = mkHandler d (\env -> ask >>= a (input env))
