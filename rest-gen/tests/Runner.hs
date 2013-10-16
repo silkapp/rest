@@ -38,7 +38,7 @@ testSingleSelect = assertEqual "Number of select ActionInfos." 1 (length actionI
       , get    = Just handler_
       , selects = [ ("resources", handler_) ]
       }
-    handler_ = mkGetter id $ return ()
+    handler_ = mkConstHandler id $ return ()
     isSelect ai = actionTarget ai == Any && actionType ai == Retrieve && postAction ai
 
 data ServerId = ById String | ByIp String
