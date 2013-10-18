@@ -254,8 +254,8 @@ handlerErrors (GenHandler dict _ _) = concatMap (handleError Proxy) (L.get Dict.
                                                      , haskellModule = modString d
                                                      }]
 #if __GLASGOW_HASKELL__ >= 704
-typeString :: Typeable a => a -> String
-typeString = typeString' . typeOf
+typeString :: forall a. Typeable a => Proxy a -> String
+typeString _ = typeString' . typeOf $ (undefined :: a)
   where typeString' tr =
           let (tyCon, subs) = splitTyConApp tr
               showTyCon _ "[]" r = "[" ++ r ++ "]"
@@ -264,8 +264,8 @@ typeString = typeString' . typeOf
                               | otherwise = m ++ "." ++ d ++ s
           in  showTyCon (tyConModule tyCon) (tyConName tyCon) (concatMap (\t -> " (" ++ typeString' t ++ ")") subs)
 
-modString :: Typeable a => a -> [String]
-modString = filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf
+modString :: forall a. Typeable a => Proxy a -> [String]
+modString _ = filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf $ (undefined :: a)
   where modString' tr =
           let (tyCon, subs) = splitTyConApp tr
           in  tyConModule tyCon : concatMap modString' subs

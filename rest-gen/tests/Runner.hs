@@ -2,9 +2,11 @@
 
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (Assertion, assertEqual, assertFailure)
+import Test.HUnit (Assertion, assertEqual)
 
 import Rest.Gen.Base.ActionInfo
+import Rest.Gen.Base.ApiTree
+import Rest.Dictionary (xmlJsonO)
 import Rest.Handler
 import Rest.Resource
 import Rest.Schema
@@ -14,6 +16,7 @@ main = do
   defaultMain [ testCase "Listing has right parameters." testListingParams
               , testCase "Selects should show up only once." testSingleSelect
               , testCase "Removes should show up only once." testSingleRemove
+              , testCase "Listing should have List type." testListingType
               ]
 
 testListingParams :: Assertion
@@ -60,3 +63,14 @@ testSingleRemove = assertEqual "Number of remove ActionInfos." 1 (length actionI
     isRemove ai = actionTarget ai == Self && actionType ai == Delete && postAction ai
 
 data ServerId = ById String | ByIp String
+
+testListingType :: Assertion
+testListingType =
+  assertEqual "Listing should have List type"
+    "Rest.Types.Container.List (())"
+    (haskellType . head . outputs . itemInfo . head . resItems $ api)
+  where
+    api = apiTree (route resource)
+    resource :: Resource IO IO Void () Void
+    resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
+    listHandler () = mkListing xmlJsonO $ \_ -> return [()]
