@@ -138,8 +138,21 @@ instance XmlPickler a => XmlStringToType a where
              ) v
   toXML = BS.fromString . P.toXML
 
-fromJSONlist :: Json a => BS.ByteString -> a
-fromJSONlist v = (items . either (error ("Error parsing json list in  api bindings, this should not happen: " ++ BS.toString v)) id . resultToEither . decode . BS.toString) v
+fromJSONlist :: Json a => BS.ByteString -> [a]
+fromJSONlist v = ( items
+                 . either err id
+                 . resultToEither
+                 . decode
+                 . BS.toString
+                 ) v
+  where
+    err = error ("Error parsing json list in  api bindings, this should not happen: " ++ BS.toString v)
 
-fromXMLlist :: XmlPickler a => BS.ByteString -> a
-fromXMLlist v = (items . either (error ("Error parsing xml list in  api bindings, this should not happen: " ++ BS.toString v)) id . P.eitherFromXML . BS.toString) v
+fromXMLlist :: XmlPickler a => BS.ByteString -> [a]
+fromXMLlist v = ( items
+                . either err id
+                . P.eitherFromXML
+                . BS.toString
+                ) v
+  where
+    err = error ("Error parsing xml list in  api bindings, this should not happen: " ++ BS.toString v)
