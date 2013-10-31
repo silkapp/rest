@@ -117,8 +117,11 @@ parseResult e c res = convertResponse
     200 -> fmap (Right . c . BS.concat . LB.toChunks) res
     _   -> fmap (Left . e . BS.concat . LB.toChunks) res
   )
+
 fromJSON :: Json a => BS.ByteString -> a
-fromJSON v = (either (error ("Error parsing json in  api binding, this should not happen: " ++ BS.toString v)) id . resultToEither . decode . BS.toString) v
+fromJSON v = (either err id . resultToEither . decode . BS.toString) v
+  where
+    err = error ("Error parsing json in  api binding, this should not happen: " ++ BS.toString v)
 
 toJSON :: Json a => a -> BS.ByteString
 toJSON = BS.fromString . encode
@@ -132,10 +135,10 @@ instance XmlStringToType String where
   toXML = BS.fromString
 
 instance XmlPickler a => XmlStringToType a where
-  fromXML v = (either (error ("Error parsing XML in  api binding, this should not happen: " ++ BS.toString v)) id
-             . P.eitherFromXML
-             . BS.toString
-             ) v
+  fromXML v = ( either (error ("Error parsing XML in  api binding, this should not happen: " ++ BS.toString v)) id
+              . P.eitherFromXML
+              . BS.toString
+              ) v
   toXML = BS.fromString . P.toXML
 
 fromJSONlist :: Json a => BS.ByteString -> [a]
