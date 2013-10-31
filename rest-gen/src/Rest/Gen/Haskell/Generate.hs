@@ -125,7 +125,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                                   <++> "$"
                                   <++> maybe "\"\"" ((++ " input") . (\(_,_,_,v) -> v)) mInp
               ]
-              $ "liftM (parseResult" <++> eFunc <++> (if actionType ai == List then oFunc ++ "list" else oFunc) <+> ") . doRequest $ request"
+              $ "liftM (parseResult" <++> eFunc <++> oFunc <+> ") . doRequest $ request"
         ]
      , eMod ++ oMod ++ identMod ++ maybe [] (\(m,_,_,_) -> m) mInp
      )
