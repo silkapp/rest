@@ -1,6 +1,15 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TypeSynonymInstances, OverlappingInstances, UndecidableInstances, GeneralizedNewtypeDeriving, FlexibleContexts, MultiParamTypeClasses, TypeFamilies, OverloadedStrings #-}
-{- This code was generated automagically, do not modify! -}
-module $apinamespace$.Internal
+{-# LANGUAGE DeriveDataTypeable
+           , FlexibleInstances
+           , TypeSynonymInstances
+           , OverlappingInstances
+           , UndecidableInstances
+           , GeneralizedNewtypeDeriving
+           , FlexibleContexts
+           , MultiParamTypeClasses
+           , TypeFamilies
+           , OverloadedStrings
+           #-}
+module Rest.Client.Internal
  ( module Control.Monad
  , BS.ByteString
  , Network.URI.Encode.encode
@@ -60,7 +69,7 @@ import Rest.Types.Container
 import Rest.Types.Error
 import Rest.Types.ShowUrl
 
-import $apinamespace$.Base
+import Rest.Client.Base
 
 data ApiRequest = ApiRequest
   { method         :: String
@@ -75,7 +84,7 @@ convertResponse r =
   ApiResponse
    { statusCode      = T.statusCode (responseStatus r)
    , statusMessage   = T.statusMessage (responseStatus r)
-   , httpVersion     = (\\v -> (httpMajor v, httpMinor v)) (responseVersion r)
+   , httpVersion     = (\v -> (httpMajor v, httpMinor v)) (responseVersion r)
    , responseHeaders = HTTP.responseHeaders r
    , responseBody    = HTTP.responseBody r
    }
@@ -102,7 +111,7 @@ doRequest (ApiRequest m ur ps rhds bd) =
                 , queryString = (renderQuery False . simpleQueryToQuery . Prelude.map (CH.pack *** CH.pack)) ps
                 , HTTP.requestHeaders = rhds ++ Prelude.map (fromString *** CH.pack) hds
                 , HTTP.requestBody = RequestBodyBS bd
-                , checkStatus = (\\_ _ _ -> Nothing)
+                , checkStatus = (\_ _ _ -> Nothing)
                 , redirectCount = 0
                 , responseTimeout = defaultTimeout
                 , cookieJar = Just jar

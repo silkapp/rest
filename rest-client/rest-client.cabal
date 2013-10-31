@@ -1,0 +1,34 @@
+Name:             rest-client
+Version:          0.1
+Description:      Utility library for use in generated API client libraries.
+Synopsis:         Utility library for use in generated API client libraries.
+Maintainer:       code@silkapp.com
+Category:         Web
+Build-Type:       Simple
+Cabal-Version:    >= 1.8
+License:          OtherLicense
+
+Library
+  GHC-Options:     -Wall
+  Hs-Source-Dirs:   src
+  Build-Depends:
+      base                      == 4.*
+    , bytestring                >= 0.9     &&  < 0.11
+    , case-insensitive          >= 0.4     &&  < 1.2
+    , exception-transformers    == 0.3.*
+    , http-conduit              >= 1.9.2.1 &&  < 1.10
+    , http-types                >= 0.7     &&  < 0.9
+    , hxt                       >= 9.2     &&  < 9.4
+    , json                      >= 0.4     &&  < 0.8
+    , json-schema               == 0.3.*
+    , monad-control             == 0.3.*
+    , mtl                       >= 2.0     &&  < 2.2
+    , regular-xmlpickler-typlab == 0.5.*
+    , resourcet                 >= 0.4     &&  < 0.5
+    , rest-types                == 1.5
+    , transformers-base         == 0.4.*
+    , uri-encode                == 1.4.*
+    , utf8-string               == 0.3.*
+
+  Exposed-Modules:  Rest.Client.Base
+                    Rest.Client.Internal

@@ -1,7 +1,16 @@
 {-# OPTIONS -fno-warn-orphans #-}
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TypeSynonymInstances, OverlappingInstances, UndecidableInstances, GeneralizedNewtypeDeriving, FlexibleContexts, MultiParamTypeClasses, TypeFamilies, OverloadedStrings #-}
-{- This code was generated automagically, do not modify! -}
-module $apinamespace$.Base
+{-# LANGUAGE DeriveDataTypeable
+           , FlexibleInstances
+           , TypeSynonymInstances
+           , OverlappingInstances
+           , UndecidableInstances
+           , GeneralizedNewtypeDeriving
+           , FlexibleContexts
+           , MultiParamTypeClasses
+           , TypeFamilies
+           , OverloadedStrings
+           #-}
+module Rest.Client.Base
  ( Api
  , ApiT(..)
  , ApiStateC(..)
@@ -75,7 +84,7 @@ instance MonadBase b m => MonadBase b (ApiT m) where
 
 instance MonadTransControl ApiT where
   newtype StT ApiT a = StTApiT { unStTApiT :: StT ResourceT (StT (ReaderT ApiInfo) (StT (StateT ApiState) a)) }
-  liftWith f = ApiT (liftWith (\\runs -> liftWith (\\runrr -> liftWith (\\runrs -> f (liftM StTApiT . runrs . runrr . runs . unApiT)))))
+  liftWith f = ApiT (liftWith (\runs -> liftWith (\runrr -> liftWith (\runrs -> f (liftM StTApiT . runrs . runrr . runs . unApiT)))))
   restoreT = ApiT . restoreT . restoreT . restoreT . liftM unStTApiT
 
 instance MonadBaseControl v m => MonadBaseControl v (ApiT m) where
@@ -96,12 +105,35 @@ instance MonadThrow m => MonadThrow (ApiT m) where monadThrow = ApiT . lift . li
 instance (MonadIO m, MonadThrow m, MonadUnsafeIO m, Functor m, Applicative m) => MonadResource (ApiT m) where
   liftResourceT = ApiT . lift . lift . transResourceT liftIO
 
-instance (Error e, ApiStateC m)   => ApiStateC (ErrorT e m)   where getApiState = lift getApiState ; askApiInfo = lift askApiInfo ; putApiState = lift . putApiState
-instance (Monoid w, ApiStateC m)  => ApiStateC (RWST r w s m) where getApiState = lift getApiState ; askApiInfo = lift askApiInfo ; putApiState = lift . putApiState
-instance (Monoid w, ApiStateC m)  => ApiStateC (WriterT w m)  where getApiState = lift getApiState ; askApiInfo = lift askApiInfo ; putApiState = lift . putApiState
-instance ApiStateC m              => ApiStateC (ListT m)      where getApiState = lift getApiState ; askApiInfo = lift askApiInfo ; putApiState = lift . putApiState
-instance ApiStateC m              => ApiStateC (ReaderT r m)  where getApiState = lift getApiState ; askApiInfo = lift askApiInfo ; putApiState = lift . putApiState
-instance ApiStateC m              => ApiStateC (StateT s m)   where getApiState = lift getApiState ; askApiInfo = lift askApiInfo ; putApiState = lift . putApiState
+instance (Error e, ApiStateC m) => ApiStateC (ErrorT e m) where
+ getApiState = lift getApiState
+ askApiInfo = lift askApiInfo
+ putApiState = lift . putApiState
+
+instance (Monoid w, ApiStateC m) => ApiStateC (RWST r w s m) where
+ getApiState = lift getApiState
+ askApiInfo = lift askApiInfo
+ putApiState = lift . putApiState
+
+instance (Monoid w, ApiStateC m) => ApiStateC (WriterT w m) where
+ getApiState = lift getApiState
+ askApiInfo = lift askApiInfo
+ putApiState = lift . putApiState
+
+instance ApiStateC m => ApiStateC (ListT m) where
+ getApiState = lift getApiState
+ askApiInfo = lift askApiInfo
+ putApiState = lift . putApiState
+
+instance ApiStateC m => ApiStateC (ReaderT r m) where
+ getApiState = lift getApiState
+ askApiInfo = lift askApiInfo
+ putApiState = lift . putApiState
+
+instance ApiStateC m => ApiStateC (StateT s m) where
+  getApiState = lift getApiState
+  askApiInfo  = lift askApiInfo
+  putApiState = lift . putApiState
 
 runT :: (MonadBaseControl IO m, Monad m) => ApiInfo -> ApiState -> ApiT m a -> m a
 runT inf st api = runResourceT (runReaderT (evalStateT (unApiT api) st) inf)
@@ -117,7 +149,7 @@ runWithPort hst prt api =
      return v
 
 withHeaders :: [(String, String)] -> ApiT m a -> ApiT m a
-withHeaders hds (ApiT (StateT sf)) = ApiT (StateT (\\s -> ReaderT (\\i -> runReaderT (sf s) (i { headers = hds ++ headers i}))))
+withHeaders hds (ApiT (StateT sf)) = ApiT (StateT (\s -> ReaderT (\i -> runReaderT (sf s) (i { headers = hds ++ headers i}))))
 
 data ApiResponse e a  =
   ApiResponse
