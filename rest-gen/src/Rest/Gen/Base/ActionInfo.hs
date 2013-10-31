@@ -95,25 +95,33 @@ stepActionInfo :: Resource m s sid mid aid -> Step sid mid aid -> [ActionInfo]
 stepActionInfo r (Named hs) = concatMap (uncurry (namedActionInfo r)) hs
 stepActionInfo r (Unnamed h) = unnamedActionInfo r h
 
-namedActionInfo :: Resource m s sid mid aid -> String -> Either aid (Cardinality (Getter sid) (Getter mid)) -> [ActionInfo]
+namedActionInfo :: Resource m s sid mid aid -> String -> Endpoint sid mid aid -> [ActionInfo]
 namedActionInfo r pth (Left aid) = [staticActionInfo Nothing pth (Rest.statics r aid)]
 namedActionInfo r pth (Right (Single g)) = getterActionInfo     r pth g
 namedActionInfo r pth (Right (Many   l)) = listGetterActionInfo r pth l
 
 unnamedActionInfo :: Resource m s sid mid aid -> Cardinality (Id sid) (Id mid) -> [ActionInfo]
-unnamedActionInfo r            (Single (Id idnt _   )) = singleActionInfo r (Just $ actionIdent idnt) ""
-unnamedActionInfo r@Resource{} (Many   (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) "" (Rest.list r (midF listIdErr))]
+unnamedActionInfo r@Resource{} unnamed =
+  case unnamed of
+    Single (Id idnt _   ) -> singleActionInfo r (Just $ actionIdent idnt) ""
+    Many   (Id idnt midF) -> [ listActionInfo (Just $ actionIdent idnt)
+                                              ""
+                                              (Rest.list r (midF listIdErr))
+                             ]
 
 getterActionInfo :: Resource m s sid mid aid -> String -> Getter sid -> [ActionInfo]
 getterActionInfo r pth (Singleton _)    = singleActionInfo r Nothing                   pth
 getterActionInfo r pth (By (Id idnt _)) = singleActionInfo r (Just $ actionIdent idnt) pth
 
 listGetterActionInfo :: Resource m s sid mid aid -> String -> Getter mid -> [ActionInfo]
-listGetterActionInfo r@Resource{} pth (Singleton mid)     = [listActionInfo Nothing                   pth (Rest.list r mid)]
-listGetterActionInfo r@Resource{} pth (By (Id idnt midF)) = [listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))]
+listGetterActionInfo r@Resource{} pth getter =
+  case getter of
+    Singleton mid     -> [listActionInfo Nothing                   pth (Rest.list r mid)]
+    By (Id idnt midF) -> [listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))]
 
 listIdErr :: mid
-listIdErr = error "Don't evaluate the fields of a list identifier unless in the body of the handler. They are undefined during generation of documentation and code."
+listIdErr = error $ "Don't evaluate the fields of a list identifier unless in the body of the handler. "
+                 ++ "They are undefined during generation of documentation and code."
 
 singleActionInfo :: Resource m s sid mid aid -> Maybe Ident -> String -> [ActionInfo]
 singleActionInfo r mIdent pth = foldMap (return . getActionInfo    mIdent pth) (Rest.get     r)
@@ -146,7 +154,14 @@ selectActionInfo pth = handlerActionInfo Nothing True Retrieve Any pth GET
 actionActionInfo :: String -> Handler m -> ActionInfo
 actionActionInfo pth = handlerActionInfo Nothing True Modify Any pth POST
 
-handlerActionInfo :: Maybe Ident -> Bool -> ActionType -> ActionTarget -> String -> RequestMethod -> Handler m -> ActionInfo
+handlerActionInfo :: Maybe Ident
+                  -> Bool
+                  -> ActionType
+                  -> ActionTarget
+                  -> String
+                  -> RequestMethod
+                  -> Handler m
+                  -> ActionInfo
 handlerActionInfo mIdent postAct actType actTarget pth mth h = ActionInfo
   { ident        = mIdent
   , postAction   = postAct
@@ -262,7 +277,9 @@ typeString _ = typeString' . typeOf $ (undefined :: a)
               showTyCon _ "()" _ = "()"
               showTyCon m d s | take 4 m == "GHC." = d ++ s
                               | otherwise = m ++ "." ++ d ++ s
-          in  showTyCon (tyConModule tyCon) (tyConName tyCon) (concatMap (\t -> " (" ++ typeString' t ++ ")") subs)
+          in  showTyCon (tyConModule tyCon)
+                        (tyConName tyCon)
+                        (concatMap (\t -> " (" ++ typeString' t ++ ")") subs)
 
 modString :: forall a. Typeable a => Proxy a -> [String]
 modString _ = filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf $ (undefined :: a)
