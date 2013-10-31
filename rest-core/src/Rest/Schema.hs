@@ -18,7 +18,7 @@ data Schema sid mid aid = Schema (Maybe (Cardinality sid mid)) (Step sid mid aid
 -- resources can be actions ('Left') or one or many singletons or
 -- by's.
 
-data Step sid mid aid = Named   [(String, Either aid (Cardinality (Getter sid) (Getter mid)))]
+data Step sid mid aid = Named   [(String, Endpoint sid mid aid)]
                       | Unnamed (Cardinality (Id sid) (Id mid))
 
 -- | Specifies if we're identifying a single resource, or many (a
@@ -37,6 +37,10 @@ data Getter id = Singleton id | By (Id id)
 
 data Id id = forall a. Id (Ident a) (a -> id)
 
+-- | A named endpoint: an action, a single item of many items.
+
+type Endpoint sid mid aid = Either aid (Cardinality (Getter sid) (Getter mid))
+
 -- * A set of combinators for creating schemas.
 
 withListing :: mid -> Step sid mid aid -> Schema sid mid aid
@@ -48,37 +52,37 @@ noListing = Schema Nothing
 singleton :: sid -> Step sid mid aid -> Schema sid mid aid
 singleton sid = Schema (Just (Single sid))
 
-named :: [(String, Either aid (Cardinality (Getter sid) (Getter mid)))] -> Step sid mid aid
+named :: [(String, Endpoint sid mid aid)] -> Step sid mid aid
 named = Named
 
-action :: aid -> Either aid (Cardinality (Getter sid) (Getter mid))
+action :: aid -> Endpoint sid mid aid
 action = Left
 
-single :: sid -> Either aid (Cardinality (Getter sid) (Getter mid))
+single :: sid -> Endpoint sid mid aid
 single = Right . Single . Singleton
 
-singleBy :: (String -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleBy :: (String -> sid) -> Endpoint sid mid aid
 singleBy = singleIdent StringId
 
-singleRead :: (Show a, Read a, Info a) => (a -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleRead :: (Show a, Read a, Info a) => (a -> sid) -> Endpoint sid mid aid
 singleRead = singleIdent ReadId
 
-singleIdent :: Ident a -> (a -> sid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+singleIdent :: Ident a -> (a -> sid) -> Endpoint sid mid aid
 singleIdent ident = Right . Single . By . Id ident
 
 -- TODO: name clash with listing from Resource, maybe rename back to
 -- many?
 
-listing :: mid -> Either aid (Cardinality (Getter sid) (Getter mid))
+listing :: mid -> Endpoint sid mid aid
 listing = Right . Many . Singleton
 
-listingBy :: (String -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingBy :: (String -> mid) -> Endpoint sid mid aid
 listingBy = listingIdent StringId
 
-listingRead :: (Show a, Read a, Info a) => (a -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingRead :: (Show a, Read a, Info a) => (a -> mid) -> Endpoint sid mid aid
 listingRead = listingIdent ReadId
 
-listingIdent :: Ident a -> (a -> mid) -> Either aid (Cardinality (Getter sid) (Getter mid))
+listingIdent :: Ident a -> (a -> mid) -> Endpoint sid mid aid
 listingIdent ident = Right . Many . By . Id ident
 
 unnamedSingle :: (String -> sid) -> Step sid mid aid
