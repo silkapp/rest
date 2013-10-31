@@ -12,8 +12,6 @@ Data-Dir:         files
 Data-Files:       Docs/*.st
                   Docs/*.js
                   Docs/*.css
-                  Haskell/Base.hs
-                  Haskell/Internal.hs
                   Javascript/base.js
                   Ruby/base.rb
 

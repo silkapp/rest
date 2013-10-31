@@ -38,10 +38,6 @@ mkHsApi ctx r =
   do let tree = sortTree . (if includePrivate ctx then id else noPrivate) . apiSubtrees $ r
      mkCabal ctx tree
      mapM_ (writeRes ctx) $ allSubTrees tree
-     let baseDir = targetPath ctx </> "src" </> modPath (namespace ctx)
-         ats = [("apinamespace", qualModName (namespace ctx))]
-     copyContent ats "Haskell/Internal.hs" baseDir
-     copyContent ats "Haskell/Base.hs" baseDir
 
 mkCabal :: HaskellContext -> ApiResource -> IO ()
 mkCabal ctx tree =
@@ -58,7 +54,7 @@ mkCabal ctx tree =
           )
 
 mkModNames :: [String] -> ApiResource -> String
-mkModNames ns = concat . map ("\n         " ++) . (qualModName (ns ++ ["Base"]) :) . (qualModName (ns ++ ["Internal"]) :) . map (qualModName . (ns ++)) . allSubResourceIds
+mkModNames ns = concat . map ("\n         " ++) . map (qualModName . (ns ++)) . allSubResourceIds
 
 writeRes :: HaskellContext -> ApiResource -> IO ()
 writeRes ctx node =
@@ -79,7 +75,7 @@ mkRes ctx node =
 mkImports :: [String] -> ApiResource -> [String] -> Code
 mkImports ns node datImp =
     mkStack
-      [ "import" <++> qualModName (ns ++ ["Internal"])
+      [ code "import Rest.Client.Internal"
       , parentImports
       , dataImports
       ]
