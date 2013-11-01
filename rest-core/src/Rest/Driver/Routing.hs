@@ -24,11 +24,12 @@ import qualified Data.ByteString.UTF8  as UTF8
 import qualified Data.Label.Total      as L
 
 import Network.URI.Encode (decodeByteString)
+import Rest.Api (Some1(..))
 import Rest.Container
 import Rest.Dictionary
 import Rest.Error
 import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range)
-import Rest.Resource (Some1(..))
+import qualified Rest.Api      as Rest
 import qualified Rest.Resource as Rest
 import qualified Rest.Schema   as Rest
 

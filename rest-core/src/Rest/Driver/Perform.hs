@@ -29,6 +29,7 @@ import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
+import Rest.Api (Api)
 import Rest.Dictionary ( Dict, Format (..)
                        , Param (..), Header (..), Input (..), Output (..), Error (..)
                        , Inputs, Outputs, Errors
@@ -37,7 +38,6 @@ import Rest.Driver.Routing (route)
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
-import Rest.Resource (Api)
 import qualified Rest.Dictionary     as D
 import qualified Rest.Driver.Routing as Rest
 

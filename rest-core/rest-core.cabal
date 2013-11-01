@@ -31,8 +31,12 @@ Library
     , uri-encode                == 1.4.*
     , utf8-string               == 0.3.*
 
-  Exposed-Modules:  Rest.Container
+  Exposed-Modules:  Rest
+                    Rest.Api
+                    Rest.Container
                     Rest.Dictionary
+                    Rest.Dictionary.Combinators
+                    Rest.Dictionary.Types
                     Rest.Driver.Perform
                     Rest.Driver.Routing
                     Rest.Driver.Types
