@@ -20,32 +20,32 @@ Library
   Hs-Source-Dirs:   src
   Build-Depends:
 
-      base == 4.*
-    , blaze-html >= 0.5 && < 0.6
-    , bytestring >= 0.9 && < 0.11
-    , code-builder == 0.1.*
-    , containers >= 0.4 && < 0.6
-    , directory >= 1.1 && < 1.3
-    , fclabels >= 1.0.4 && < 2.1
-    , filepath >= 1.2 && < 1.4
-    , hslogger == 1.1.*
-    , HStringTemplate ==0.6.*
-    , json >= 0.4 && < 0.8
-    , json-schema == 0.3.*
-    , regular == 0.3.*
-    , regular-json == 0.3.0.3
+      base                      == 4.*
+    , HStringTemplate           == 0.6.*
+    , blaze-html                >= 0.5     &&  < 0.6
+    , bytestring                >= 0.9     &&  < 0.11
+    , code-builder              == 0.1.*
+    , containers                >= 0.4     &&  < 0.6
+    , directory                 >= 1.1     &&  < 1.3
+    , fclabels                  >= 1.0.4   &&  < 2.1
+    , filepath                  >= 1.2     &&  < 1.4
+    , happstack-server          >= 7.0.5   &&  < 7.2
+    , hslogger                  == 1.1.*
+    , hxt                       >= 9.2     &&  < 9.4
+    , json                      >= 0.4     &&  < 0.8
+    , json-schema               == 0.3.*
+    , mtl                       >= 2.0     &&  < 2.2
+    , pretty                    >= 1.0     &&  < 1.2
+    , regular                   == 0.3.*
+    , regular-json              == 0.3.0.3
     , regular-xmlpickler-typlab == 0.5.*
-    , hxt >= 9.2 && < 9.4
-    , mtl >= 2.0 && < 2.2
-    , pretty >= 1.0 && < 1.2
-    , utf8-string == 0.3.*
-    , rest-types == 1.5
-    , safe >= 0.2 && < 0.4
-    , happstack-server >= 7.0.5 && < 7.2
-    , split >= 0.1 && < 0.3
-    , text == 0.11.*
-    , rest-core == 0.21.*
-    , tagged >= 0.2 && < 0.8
+    , rest-core                 == 0.21.*
+    , rest-types                == 1.5
+    , safe                      >= 0.2     &&  < 0.4
+    , split                     >= 0.1     &&  < 0.3
+    , tagged                    >= 0.2     &&  < 0.8
+    , text                      == 0.11.*
+    , utf8-string               == 0.3.*
 
   Exposed-Modules:  Rest.Gen.Base
                     Rest.Gen.Base.ActionInfo
@@ -67,10 +67,10 @@ Library
 Test-suite rest-gen-tests
   build-depends:       base                 >= 4.5    && < 4.7
                      , HUnit                == 1.2.*
-                     , test-framework       == 0.8.*
-                     , test-framework-hunit == 0.3.*
                      , rest-core            == 0.21.*
                      , rest-gen
+                     , test-framework       == 0.8.*
+                     , test-framework-hunit == 0.3.*
   hs-source-dirs:      tests
   main-is:             Runner.hs
   type:                exitcode-stdio-1.0
