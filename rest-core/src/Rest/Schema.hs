@@ -70,9 +70,6 @@ singleRead = singleIdent ReadId
 singleIdent :: Ident a -> (a -> sid) -> Endpoint sid mid aid
 singleIdent ident = Right . Single . By . Id ident
 
--- TODO: name clash with listing from Resource, maybe rename back to
--- many?
-
 listing :: mid -> Endpoint sid mid aid
 listing = Right . Many . Singleton
 
