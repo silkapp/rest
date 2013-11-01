@@ -11,9 +11,9 @@ import Text.StringTemplate
 
 import Prelude hiding (catch)
 
+import Rest.Api (Version, Router)
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import Rest.Resource (Version, Router)
 
 mkJsApi :: String -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =

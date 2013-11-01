@@ -12,9 +12,9 @@ import Data.Maybe
 
 import Prelude hiding (catch)
 
+import Rest.Api (Version, Router)
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import Rest.Resource (Version, Router)
 
 mkRbApi :: String -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =

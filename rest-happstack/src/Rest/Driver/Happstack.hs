@@ -12,9 +12,9 @@ import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.Map             as M
 import qualified Happstack.Server     as Happstack
 
+import Rest.Api (Api)
 import Rest.Driver.Perform (Rest (..))
 import Rest.Driver.Types (Run)
-import Rest.Resource (Api)
 
 import qualified Rest.Driver.Perform as Rest
 import qualified Rest.Driver.Routing as Rest

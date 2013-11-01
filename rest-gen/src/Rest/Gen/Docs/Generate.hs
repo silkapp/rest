@@ -25,9 +25,9 @@ import Text.Blaze.Html5 hiding (map)
 import Text.Blaze.Html5.Attributes hiding (title, method, span)
 import Text.StringTemplate
 
+import Rest.Api (Version, Router)
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import Rest.Resource (Version, Router)
 import System.Log.Logger
 
 -- | Information about the context in which a resource is contained

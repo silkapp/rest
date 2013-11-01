@@ -6,11 +6,11 @@ import Data.List
 import Data.Maybe
 import Data.Function
 
+import Rest.Api (Router (..), Some1 (..))
 import Rest.Gen.Base.ActionInfo
 import Rest.Gen.Base.ActionInfo.Ident (description)
 import Rest.Gen.Base.Link
 import Rest.Gen.Utils
-import Rest.Resource (Router (..), Some1 (..))
 import qualified Rest.Resource as Res
 
 data ApiAction =

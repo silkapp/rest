@@ -13,9 +13,9 @@ import qualified Data.HashMap.Strict   as M
 import qualified Network.URI.Encode    as URI
 import qualified Snap.Core             as Snap
 
+import Rest.Api (Api)
 import Rest.Driver.Perform (Rest (..))
 import Rest.Driver.Types (Run)
-import Rest.Resource (Api)
 
 import qualified Rest.Driver.Perform as Rest
 import qualified Rest.Driver.Routing as Rest

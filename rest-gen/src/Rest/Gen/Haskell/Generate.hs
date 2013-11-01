@@ -11,9 +11,9 @@ import Data.Maybe
 
 import Prelude hiding (catch)
 
+import Rest.Api (Version, Router)
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import Rest.Resource (Version, Router)
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 
 import Safe
