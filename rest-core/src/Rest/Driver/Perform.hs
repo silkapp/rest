@@ -12,32 +12,32 @@ import Control.Monad.Error
 import Control.Monad.RWS
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Monad.Writer
 import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
+import Control.Monad.Writer
 import Data.Char (isSpace, toLower)
 import Data.List
 import Data.List.Split
 import Data.Maybe
+import Data.Text.Lazy.Encoding (decodeUtf8)
 import Safe
 import Text.JSON
 import Text.Xml.Pickle
-import Data.Text.Lazy.Encoding (decodeUtf8)
 
 import qualified Control.Monad.Error       as E
 import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
-import Rest.Handler
 import Rest.Dictionary ( Dict, Format (..)
                        , Param (..), Header (..), Input (..), Output (..), Error (..)
                        , Inputs, Outputs, Errors
                        )
-import Rest.Error
-import Rest.Resource (Api)
 import Rest.Driver.Routing (route)
 import Rest.Driver.Types
+import Rest.Error
+import Rest.Handler
+import Rest.Resource (Api)
 import qualified Rest.Dictionary     as D
 import qualified Rest.Driver.Routing as Rest
 

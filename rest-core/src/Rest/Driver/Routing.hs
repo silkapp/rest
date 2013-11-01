@@ -12,22 +12,22 @@ import Control.Applicative
 import Control.Error.Util
 import Control.Monad.Error
 import Control.Monad.Identity
-import Control.Monad.Trans.Either
-import Control.Monad.Trans.Maybe
 import Control.Monad.Reader
 import Control.Monad.State (StateT, evalStateT, MonadState)
+import Control.Monad.Trans.Either
+import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
 import Safe
+import qualified Control.Monad.State   as State
 import qualified Data.ByteString.Char8 as Char
 import qualified Data.ByteString.UTF8  as UTF8
-import qualified Control.Monad.State   as State
 import qualified Data.Label.Total      as L
 
 import Network.URI.Encode (decodeByteString)
-import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range)
 import Rest.Container
 import Rest.Dictionary
 import Rest.Error
+import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range)
 import Rest.Resource (Some1(..))
 import qualified Rest.Resource as Rest
 import qualified Rest.Schema   as Rest
