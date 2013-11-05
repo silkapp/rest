@@ -1,5 +1,5 @@
 Name:             rest-client
-Version:          0.1
+Version:          0.1.1
 Description:      Utility library for use in generated API client libraries.
 Synopsis:         Utility library for use in generated API client libraries.
 Maintainer:       code@silkapp.com
@@ -25,7 +25,7 @@ Library
     , mtl                       >= 2.0     &&  < 2.2
     , regular-xmlpickler-typlab == 0.5.*
     , resourcet                 >= 0.4     &&  < 0.5
-    , rest-types                == 1.5
+    , rest-types                == 1.6
     , transformers-base         == 0.4.*
     , uri-encode                == 1.4.*
     , utf8-string               == 0.3.*
