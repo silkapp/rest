@@ -45,7 +45,7 @@ infixl 7 -/
 (   -/) = compose
 
 root :: Monad m => Router m m
-root = route $ mkResource { enter = const id, schema = singleton () $ named [] }
+root = route $ mkResourceId { schema = singleton () $ named [] }
 
 -------------------------------------------------------------------------------
 

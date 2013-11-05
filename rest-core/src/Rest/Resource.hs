@@ -11,6 +11,8 @@
   #-}
 module Rest.Resource where
 
+import Control.Monad.Reader
+
 import Rest.Handler
 import Rest.Schema (Schema (..), Step (..))
 
@@ -39,13 +41,13 @@ data Resource m s sid mid aid where
     , selects     :: [(String, Handler s)]       -- ^ Properties of a single resource.
     } -> Resource m s sid mid aid
 
-mkResource :: (Monad m, Monad s) => Resource m s sid Void Void
-mkResource = Resource
+mkResource :: (Monad m, Monad s) => (forall b. sid -> s b -> m b) -> Resource m s sid Void Void
+mkResource e = Resource
   { name           = ""
   , description    = ""
   , schema         = Schema Nothing (Named [])
   , private        = False
-  , enter          = error "'enter' not defined for this resource"
+  , enter          = e
 
   , list           = magic
 
@@ -58,3 +60,13 @@ mkResource = Resource
   , actions        = []
   , selects        = []
   }
+
+mkResourceId :: Monad m => Resource m m sid Void Void
+mkResourceId = mkResource (const id)
+
+mkResourceReaderWith :: (Monad m, Monad s) => (forall b. s b -> ReaderT sid m b) -> Resource m s sid Void Void
+mkResourceReaderWith f = mkResource (\a -> flip runReaderT a . f)
+
+mkResourceReader :: Monad m => Resource m (ReaderT sid m) sid Void Void
+mkResourceReader = mkResourceReaderWith id
+

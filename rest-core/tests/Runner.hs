@@ -39,70 +39,70 @@ testListing :: Assertion
 testListing = checkRoute GET "resource" (Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
-    resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
+    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     listHandler () = mkListing id $ \_ -> return []
 
 testListingTrailingSlash :: Assertion
 testListingTrailingSlash = checkRoute GET "resource/" (Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
-    resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
+    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     listHandler () = mkListing id $ \_ -> return []
 
 testToplevelSingleton :: Assertion
 testToplevelSingleton = checkSingleRoute "resource" resource handler_
   where
     resource :: Resource IO IO () Void Void
-    resource = mkResource { name = "resource", schema = Schema (Just (Single ())) (Named []) }
+    resource = mkResourceId { name = "resource", schema = Schema (Just (Single ())) (Named []) }
     handler_ = mkConstHandler id $ return ()
 
 testUnnamedSingle :: Assertion
 testUnnamedSingle = checkSingleRoute "resource/foo" resource handler_
   where
     resource :: Resource IO (ReaderT String IO) String Void Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Unnamed (Single (Id StringId id))) }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Unnamed (Single (Id StringId id))) }
     handler_ = mkConstHandler stringO ask
 
 testUnnamedMulti :: Assertion
 testUnnamedMulti = checkRoute GET "resource/foo" (Rest.route resource)
   where
     resource :: Resource IO IO Void String Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Unnamed (Many (Id StringId id))), list = listHandler }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Unnamed (Many (Id StringId id))), list = listHandler }
     listHandler (s :: String) = mkListing stringO $ \_rng -> return [s]
 
 testNamedSingleton :: Assertion
 testNamedSingleton = checkSingleRoute "resource/foo" resource handler_
   where
     resource :: Resource IO IO () Void Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (Singleton ())))]) }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (Singleton ())))]) }
     handler_ = mkConstHandler id $ return ()
 
 testNamedSingleBy :: Assertion
 testNamedSingleBy = checkSingleRoute "resource/foo/bar" resource handler_
   where
     resource :: Resource IO (ReaderT String IO) String Void Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))]) }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))]) }
     handler_ = mkConstHandler stringO ask
 
 testNamedListing :: Assertion
 testNamedListing = checkRoute GET "resource/foo" (Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (Singleton ())))]), list = listHandler }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (Singleton ())))]), list = listHandler }
     listHandler () = mkListing id $ \_rng -> return []
 
 testNamedListingBy :: Assertion
 testNamedListingBy = checkRoute GET "resource/foo/bar" (Rest.route resource)
   where
     resource :: Resource IO IO Void String Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (By (Id StringId id))))]), list = listHandler }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (By (Id StringId id))))]), list = listHandler }
     listHandler (s :: String) = mkListing stringO $ \_rng -> return [s]
 
 testCreate :: Assertion
 testCreate = checkRoute POST "resource" (Rest.route resource)
   where
     resource :: Resource IO IO Void Void Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named []), create = Just createHandler }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named []), create = Just createHandler }
     createHandler = mkConstHandler id $ return ()
 
 -- This one was added because the list handler didn't correctly fall
@@ -113,7 +113,7 @@ testCreateWithListing :: Assertion
 testCreateWithListing = checkRoutes [(GET, "resource"), (POST, "resource")] (Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
-    resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler, create = Just createHandler }
+    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler, create = Just createHandler }
     createHandler = mkConstHandler id $ return ()
     listHandler () = mkListing id $ \_rng -> return []
 
@@ -121,16 +121,16 @@ testStaticAction :: Assertion
 testStaticAction = checkRoute POST "resource/action" (Rest.route resource)
   where
     resource :: Resource IO IO () Void ()
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("action", Left ())]), statics = staticHandler }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("action", Left ())]), statics = staticHandler }
     staticHandler () = mkConstHandler id $ return ()
 
 testSubresource :: Assertion
 testSubresource = checkRoute GET "resource/single/subresource" (Rest.route resource -/ Rest.route subResource)
   where
     resource :: Resource IO IO () Void Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
     subResource :: Resource IO IO Void () Void
-    subResource = mkResource { name = "subresource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
+    subResource = mkResourceId { name = "subresource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     getHandler = mkConstHandler id $ return ()
     listHandler _ = mkListing id $ \_rng -> return []
 
@@ -138,14 +138,14 @@ testRootRouter :: Assertion
 testRootRouter = checkRoute GET "resource/single" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO () Void Void
-    resource = mkResource { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
+    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
     getHandler = mkConstHandler id $ return ()
 
 testMultiPut :: Assertion
 testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
   where
     resource :: Resource IO (ReaderT String IO) String Void Void
-    resource = mkResource
+    resource = mkResourceId
       { name   = "resource"
       , schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))])
       , update = Just (mkConstHandler stringO ask)
