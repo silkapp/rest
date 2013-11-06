@@ -15,7 +15,7 @@ Library
 
       base             == 4.*
     , containers       >= 0.4    && < 0.6
-    , happstack-server >= 7.0.5  && < 7.2
+    , happstack-server >= 7.0.5  && < 7.4
     , mtl              >= 2.0    && < 2.2
     , rest-types       == 1.6
     , transformers     == 0.3.*
