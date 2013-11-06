@@ -22,7 +22,7 @@ Library
     , regular-json == 0.3.*
     , regular-xmlpickler-typlab == 0.5.*
     , hxt >= 9.2 && < 9.4
-    , uuid == 1.2.*
+    , uuid >= 1.2 && < 1.4
     , text == 0.11.*
     , tostring == 0.2.*
     , utf8-string == 0.3.*
