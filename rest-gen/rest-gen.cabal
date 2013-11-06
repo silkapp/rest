@@ -21,7 +21,7 @@ Library
   Build-Depends:
 
       base                      == 4.*
-    , HStringTemplate           == 0.6.*
+    , HStringTemplate           >= 0.6     &&  < 0.8
     , blaze-html                >= 0.5     &&  < 0.6
     , bytestring                >= 0.9     &&  < 0.11
     , code-builder              == 0.1.*
