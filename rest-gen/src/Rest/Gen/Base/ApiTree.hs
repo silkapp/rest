@@ -117,18 +117,21 @@ mkFuncParts :: ApiAction -> [String]
 mkFuncParts (ApiAction _ _ ai) = concatMap cleanName parts
   where
       parts = case actionType ai of
-                Retrieve -> let nm = get ++ by ++ target
-                            in if null nm then ["access"] else nm
-                Create   -> ["create"] ++ by ++ target
+                Retrieve   -> let nm = get ++ by ++ target
+                              in if null nm then ["access"] else nm
+                Create     -> ["create"]     ++ by ++ target
                 -- Should be delete, but delete is a JS keyword and causes problems in collect.
-                Delete   -> ["remove"] ++ by ++ target
-                List     -> ["list"]   ++ by ++ target
-                Update   -> ["save"]   ++ by ++ target
-                Modify   -> if resDir ai == "" then ["do"] else [resDir ai]
+                Delete     -> ["remove"]     ++ by ++ target
+                List       -> ["list"]       ++ by ++ target
+                Update     -> ["save"]       ++ by ++ target
+                UpdateMany -> ["saveMany"]   ++ by ++ target
+                Modify     -> if resDir ai == "" then ["do"] else [resDir ai]
 
-      target = if resDir ai == "" then [] else [resDir ai]
-      by     = if target /= [] && isJust (ident ai) then ["by"] else []
-      get    = if isAccessor ai then [] else ["get"]
+      target = if resDir ai == ""                then [] else [resDir ai]
+      by     = if null target
+               ||    isNothing (ident ai)
+                  && actionType ai /= UpdateMany then [] else ["by"]
+      get    = if isAccessor ai                  then [] else ["get"]
 
 cleanName :: String -> [String]
 cleanName ""         = [""]

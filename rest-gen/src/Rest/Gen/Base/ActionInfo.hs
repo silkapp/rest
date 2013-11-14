@@ -22,7 +22,7 @@ import qualified Rest.Gen.Base.JSON as J
 import qualified Rest.Gen.Base.XML  as X
 
 import Rest.Dictionary (Param (..), Input (..), Output (..), Error (..))
-import Rest.Driver.Routing (mkListHandler)
+import Rest.Driver.Routing (mkListHandler, mkMultiPutHandler)
 import Rest.Handler
 import Rest.Resource
 import Rest.Schema
@@ -39,7 +39,8 @@ type ResourceId  = [String]
 -- | Intermediate data representation of Rest structure
 data RequestMethod = GET | POST | PUT | DELETE deriving (Show, Eq)
 
-data ActionType = Retrieve | Create | Delete | List | Update | Modify deriving (Show, Eq)
+data ActionType = Retrieve | Create | Delete | List | Update | UpdateMany | Modify
+  deriving (Show, Eq)
 
 data ActionTarget = Self | Any deriving (Show, Eq)
 
@@ -133,6 +134,7 @@ singleActionInfo :: Resource m s sid mid aid -> Maybe (Id sid) -> String -> [Act
 singleActionInfo r@Resource{} mId pth
    = foldMap (return . getActionInfo         mId pth) (Rest.get     r)
   ++ foldMap (return . updateActionInfo      mId pth) (Rest.update  r)
+  ++ maybeToList (join $ multiUpdateActionInfo <$> mId <*> pure pth <*> Rest.update r)
 
 --------------------
 -- * Smart constructors for ActionInfo.
@@ -142,6 +144,10 @@ getActionInfo mId pth = handlerActionInfo mId False Retrieve Self pth GET
 
 updateActionInfo :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
 updateActionInfo mId pth = handlerActionInfo mId False Update Any pth PUT
+
+multiUpdateActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
+multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany Any pth PUT
+                               <$> mkMultiPutHandler id_ (const id) h
 
 removeActionInfo :: Handler m -> ActionInfo
 removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
@@ -322,9 +328,10 @@ mkActionDescription res ai =
           Self -> res
           Any  -> "information"
   in case actionType ai of
-      Retrieve -> "Retrieve " ++ targetS ++ " data"
-      Create   -> "Create " ++ targetS
-      Delete   -> "Delete " ++ targetS
-      List     -> "List " ++ targetS ++ "s"
-      Update   -> "Update " ++ targetS
-      Modify   -> "Modify " ++ targetS
+      Retrieve   -> "Retrieve " ++ targetS ++ " data"
+      Create     -> "Create " ++ targetS
+      Delete     -> "Delete " ++ targetS
+      List       -> "List " ++ targetS ++ "s"
+      Update     -> "Update " ++ targetS
+      UpdateMany -> "Update many " ++ targetS
+      Modify     -> "Modify " ++ targetS
