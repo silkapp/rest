@@ -2,6 +2,7 @@
     GADTs
   , StandaloneDeriving
   , TemplateHaskell
+  , TypeOperators
   #-}
 module Rest.Dictionary.Types
   (
@@ -32,6 +33,8 @@ module Rest.Dictionary.Types
 
   -- * Plural dictionaries.
 
+  , Dicts (..)
+  , dicts
   , Inputs
   , Outputs
   , Errors
@@ -43,6 +46,7 @@ where
 
 import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
+import Data.Label ((:->), lens)
 import Data.Label.Derive
 import Data.Text.Lazy (Text)
 import Data.Typeable
@@ -110,7 +114,6 @@ data Param p where
 
 data Input i where
   JsonI    :: (Typeable i, Json i)       => Input i
-  NoI      ::                               Input ()
   ReadI    :: (Info i, Read i, Show i)   => Input i
   StringI  ::                               Input String
   FileI    ::                               Input ByteString
@@ -119,6 +122,7 @@ data Input i where
   RawXmlI  ::                               Input ByteString
 
 deriving instance Show (Input i)
+deriving instance Eq   (Input i)
 
 -- | The explicitly dictionary `Output` describes how to translate some Haskell
 -- value to a response body. We currently use a constructor for every
@@ -128,25 +132,38 @@ data Output o where
   FileO    ::                               Output (ByteString, String)
   RawXmlO  ::                               Output ByteString
   JsonO    :: (Typeable o, Json o)       => Output o
-  NoO      ::                               Output ()
   XmlO     :: (Typeable o, XmlPickler o) => Output o
   StringO  ::                               Output String
 
 deriving instance Show (Output o)
+deriving instance Eq   (Output o)
 
 -- | The explicitly dictionary `Error` describes how to translate some Haskell
 -- error value to a response body.
 
 data Error e where
-  NoE     ::                                Error ()
   JsonE   :: (Typeable e, Json e)        => Error e
   XmlE    :: (Typeable e, XmlPickler e)  => Error e
 
 deriving instance Show (Error e)
+deriving instance Eq   (Error e)
 
-type Inputs  i = [Input  i]
-type Outputs o = [Output o]
-type Errors  e = [Error e]
+type Inputs  i = Dicts Input  i
+type Outputs o = Dicts Output o
+type Errors  e = Dicts Error  e
+
+data Dicts f a where
+  None  :: Dicts f ()
+  Dicts :: [f a] -> Dicts f a
+
+dicts :: Dicts f a :-> [f a]
+dicts = lens getDicts modDicts
+  where
+    getDicts None       = []
+    getDicts (Dicts ds) = ds
+    modDicts :: ([f a] -> [f a]) -> Dicts f a -> Dicts f a
+    modDicts _ None       = None
+    modDicts f (Dicts ds) = Dicts (f ds)
 
 -- | The `Dict` datatype containing sub-dictionaries for translation of
 -- identifiers (i), headers (h), parameters (p), inputs (i), outputs (o), and
@@ -166,7 +183,7 @@ fclabels [d|
 -- | The empty dictionary, recognizing no types.
 
 empty :: Dict () () () () ()
-empty = Dict NoHeader NoParam [NoI] [NoO] [NoE]
+empty = Dict NoHeader NoParam None None None
 
 -- | Custom existential packing an error together with a Reason.
 

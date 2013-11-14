@@ -92,7 +92,7 @@ routeToplevel resource@(Rest.Resource { Rest.list }) subRouters mToplevel =
     Rest.Many   mid ->
       do guardNullPath
          guardMethod GET
-         return (RunnableHandler id (mkListHandler (list mid)))
+         lift $ routeListHandler (list mid)
 
 routeCreate :: Rest.Resource m s sid mid aid -> MaybeT Router (RunnableHandler m)
 routeCreate (Rest.Resource { Rest.create }) = guardNullPath >> guardMethod POST >>
@@ -130,7 +130,7 @@ routeUnnamed resource@(Rest.Resource { Rest.list }) subRouters cardinality = pop
     Rest.Many   mBy -> parseIdent mBy seg >>= \mid ->
       do noRestPath
          hasMethod GET
-         return (RunnableHandler id (mkListHandler (list mid)))
+         routeListHandler (list mid)
 
 routeGetter :: Rest.Getter sid
             -> Rest.Resource m s sid mid aid
@@ -145,10 +145,12 @@ routeGetter getter resource subRouters =
     getOrDeep sid = withSubresource sid resource subRouters
 
 multiPut :: Rest.Resource m s sid mid aid -> Rest.Id sid -> Router (RunnableHandler m)
-multiPut (Rest.Resource { Rest.update, Rest.enter }) sBy = hasMethod PUT >>
-  case update of
-    Just updateH -> return (RunnableHandler id (mkMultiPutHandler sBy enter updateH))
-    Nothing      -> apiError UnsupportedRoute
+multiPut (Rest.Resource { Rest.update, Rest.enter }) sBy =
+  do hasMethod PUT
+     maybe (apiError UnsupportedRoute) return $
+       do updateH    <- update
+          putHandler <- mkMultiPutHandler sBy enter updateH
+          return (RunnableHandler id putHandler)
 
 routeListGetter :: Monad m
                 => Rest.Getter mid
@@ -156,12 +158,12 @@ routeListGetter :: Monad m
                 -> Router (RunnableHandler m)
 routeListGetter getter list = hasMethod GET >>
   case getter of
-    Rest.Singleton mid -> noRestPath >> return (RunnableHandler id (mkListHandler (list mid)))
+    Rest.Singleton mid -> noRestPath >> routeListHandler (list mid)
     Rest.By        mBy ->
       do seg <- popSegment
          mid <- parseIdent mBy seg
          noRestPath
-         return (RunnableHandler id (mkListHandler (list mid)))
+         routeListHandler (list mid)
 
 withSubresource :: sid
                 -> Rest.Resource m s sid mid aid
@@ -196,6 +198,12 @@ routeName ident = when (not . null $ ident) $
   do identStr <- popSegment
      when (identStr /= ident) $
        apiError UnsupportedRoute
+
+routeListHandler :: Monad m => ListHandler m -> Router (RunnableHandler m)
+routeListHandler list =
+      maybe (apiError UnsupportedRoute)
+            (return . RunnableHandler id)
+            (mkListHandler list)
 
 lookupRouter :: String -> [Some1 (Rest.Router s)] -> Maybe (Some1 (Rest.Router s))
 lookupRouter _    [] = Nothing
@@ -249,17 +257,18 @@ hasMethod wantedMethod = ask >>= \method ->
 guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)
 
-mkListHandler :: Monad m => ListHandler m -> Handler m
+mkListHandler :: Monad m => ListHandler m -> Maybe (Handler m)
 mkListHandler (GenHandler dict act sec) =
-  GenHandler (addPar range . L.modify outputs listO $ dict) (mkListAction act) sec
+  do newDict <- L.traverse outputs listO . addPar range $ dict
+     return $ GenHandler newDict (mkListAction act) sec
 
-mkMultiPutHandler :: Monad m => Rest.Id id -> (id -> Run s m) -> Handler s -> Handler m
-mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler newDict newAct sec
+mkMultiPutHandler :: Monad m => Rest.Id id -> (id -> Run s m) -> Handler s -> Maybe (Handler m)
+mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> pure newAct <*> pure sec
   where
     newErrDict = L.modify errors reasonE dict
-    newDict = L.modify inputs mappingI
-            . L.modify outputs (mappingO . statusO (L.get errors newErrDict))
-            $ newErrDict
+    mNewDict =  L.traverse inputs mappingI
+            <=< L.traverse outputs (mappingO <=< statusO (L.get errors newErrDict))
+             $  newErrDict
     newAct (Env hs ps (StringMap vs)) =
       do bs <- lift $ forM vs $ \(k, v) -> runErrorT $
            do i <- parseIdent sBy k

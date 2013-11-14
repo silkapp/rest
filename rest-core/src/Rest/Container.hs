@@ -11,12 +11,13 @@ module Rest.Container
   ( module Rest.Types.Container
   , listI
   , listO
-  , mappingO
   , mappingI
+  , mappingO
   , statusO
   , reasonE
   ) where
 
+import Data.Maybe
 import Data.String
 import Data.String.ToString
 import Data.Typeable
@@ -25,40 +26,84 @@ import Rest.Dictionary
 import Rest.Error
 import Rest.Types.Container
 
+listI :: Inputs a -> Maybe (Inputs (List a))
+listI None       = Just (Dicts [XmlI, JsonI])
+listI (Dicts is) =
+  case mapMaybe listDictI is of
+    []  -> Nothing
+    lis -> Just (Dicts lis)
+  where
+    listDictI :: Input a -> Maybe (Input (List a))
+    listDictI XmlI  = Just XmlI
+    listDictI JsonI = Just JsonI
+    listDictI _     = Nothing
 
-listI :: Inputs a -> Inputs (List a)
-listI []          = []
-listI (XmlI  : r) = XmlI  : listI r
-listI (JsonI : r) = JsonI : listI r
-listI (_     : r) = listI r
+listO :: Outputs a -> Maybe (Outputs (List a))
+listO None       = Just (Dicts [XmlO, JsonO])
+listO (Dicts os) =
+  case mapMaybe listDictO os of
+    []  -> Nothing
+    los -> Just (Dicts los)
+  where
+    listDictO :: Output a -> Maybe (Output (List a))
+    listDictO XmlO  = Just XmlO
+    listDictO JsonO = Just JsonO
+    listDictO _     = Nothing
 
-listO :: Outputs a -> Outputs (List a)
-listO []          = []
-listO (XmlO  : r) = XmlO  : listO r
-listO (JsonO : r) = JsonO : listO r
-listO (_     : r) = listO r
+mappingI :: forall k i. (Typeable k, IsString k, ToString k) => Inputs i -> Maybe (Inputs (StringMap k i))
+mappingI None       = Just (Dicts [XmlI, JsonI])
+mappingI (Dicts is) =
+  case mapMaybe mappingDictI is of
+    []  -> Nothing
+    mis -> Just (Dicts mis)
+  where
+    mappingDictI :: Input i -> Maybe (Input (StringMap k i))
+    mappingDictI XmlI  = Just XmlI
+    mappingDictI JsonI = Just JsonI
+    mappingDictI _     = Nothing
 
-mappingO :: (Typeable k, IsString k, ToString k) => Outputs o -> Outputs (StringMap k o)
-mappingO []          = []
-mappingO (XmlO  : r) = XmlO  : mappingO r
-mappingO (JsonO : r) = JsonO : mappingO r
-mappingO (_     : r) = mappingO r
+mappingO :: forall k o. (Typeable k, IsString k, ToString k) => Outputs o -> Maybe (Outputs (StringMap k o))
+mappingO None       = Just (Dicts [XmlO, JsonO])
+mappingO (Dicts os) =
+  case mapMaybe mappingDictO os of
+    []  -> Nothing
+    mos -> Just (Dicts mos)
+  where
+    mappingDictO :: Output o -> Maybe (Output (StringMap k o))
+    mappingDictO XmlO  = Just XmlO
+    mappingDictO JsonO = Just JsonO
+    mappingDictO _     = Nothing
 
-mappingI :: (Typeable k, IsString k, ToString k) => Inputs i -> Inputs (StringMap k i)
-mappingI []          = []
-mappingI (XmlI  : r) = XmlI  : mappingI r
-mappingI (JsonI : r) = JsonI : mappingI r
-mappingI (_     : r) = mappingI r
+statusO :: Errors e -> Outputs o -> Maybe (Outputs (Status e o))
+statusO None       None       = Just (Dicts [XmlO, JsonO])
+statusO None       (Dicts os) = mkStatusDict [XmlE, JsonE] os
+statusO (Dicts es) None       = mkStatusDict es           [XmlO, JsonO]
+statusO (Dicts es) (Dicts os) = mkStatusDict es           os
 
-statusO :: Errors e -> Outputs o -> Outputs (Status e o)
-statusO _  []          = []
-statusO es (XmlO  : r) = concatMap (\v -> case v of { XmlE -> [XmlO]  ; NoE -> [XmlO] ; _ -> []}) es ++ statusO es r
-statusO es (JsonO : r) = concatMap (\v -> case v of { JsonE -> [JsonO]; NoE -> [JsonO]; _ -> []}) es ++ statusO es r
-statusO es (_     : r) = statusO es r
+mkStatusDict :: forall e o. [Error e] -> [Output o] -> Maybe (Outputs (Status e o))
+mkStatusDict es os =
+    case mapMaybe mappingDictO (intersect es os) of
+      []  -> Nothing
+      sos -> Just (Dicts sos)
+    where
+      mappingDictO :: (Error e, Output o) -> Maybe (Output (Status e o))
+      mappingDictO (XmlE , XmlO ) = Just XmlO
+      mappingDictO (JsonE, JsonO) = Just JsonO
+      mappingDictO _              = Nothing
+
+intersect :: [Error e] -> [Output o] -> [(Error e, Output o)]
+intersect [] _  = []
+intersect _  [] = []
+intersect es os = [ (e, o) | e <- es, o <- os, e `eq` o ]
+  where
+    XmlE  `eq` XmlO  = True
+    JsonE `eq` JsonO = True
+    _     `eq` _     = False
 
 reasonE :: Errors a -> Errors (Reason a)
-reasonE []          = []
-reasonE (XmlE  : r) = XmlE  : reasonE r
-reasonE (JsonE : r) = JsonE : reasonE r
-reasonE (NoE   : _) = [XmlE, JsonE]
-
+reasonE None       = Dicts [XmlE, JsonE]
+reasonE (Dicts es) = Dicts (map reasonDictE es)
+  where
+    reasonDictE :: Error a -> Error (Reason a)
+    reasonDictE XmlE  = XmlE
+    reasonDictE JsonE = JsonE

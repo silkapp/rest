@@ -32,7 +32,7 @@ import qualified Data.Label.Total          as L
 import Rest.Api (Api)
 import Rest.Dictionary ( Dict, Format (..)
                        , Param (..), Header (..), Input (..), Output (..), Error (..)
-                       , Inputs, Outputs, Errors
+                       , Dicts (..), Inputs, Outputs, Errors
                        )
 import Rest.Driver.Routing (route)
 import Rest.Driver.Types
@@ -140,7 +140,7 @@ apiToHandler' run api = do
   method <- getMethod
   paths  <- getPaths
   case route method paths api of
-    Left  e                        -> failureWriter [NoE] e
+    Left  e                        -> failureWriter None e
     Right (RunnableHandler run' h) -> writeResponse (RunnableHandler (run . run') h)
 
 writeResponse :: Rest m => RunnableHandler m -> m UTF8.ByteString
@@ -168,8 +168,8 @@ fetchInputs dict =
      let inputs = L.get D.inputs dict
      j <- InputError  `mapE`
             case inputs of
-              [NoI] -> return ()
-              _     ->
+              None -> return ()
+              _    ->
                 case ct of
                   Just XmlFormat      -> parser XmlFormat     inputs bs
                   Just JsonFormat     -> parser JsonFormat    inputs bs
@@ -207,20 +207,24 @@ parameters (Param xs p) = mapM (lift . getParameter) xs >>= either throwError re
 parameters (TwoParams p1 p2) = (,) <$> parameters p1 <*> parameters p2
 
 parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m j
-parser XmlFormat     (XmlI     : _ ) v = case eitherFromXML (UTF8.toString v) of
-                                           Left err -> throwError (ParseError err)
-                                           Right  r -> return r
-parser XmlFormat     (XmlTextI : _ ) v = return (decodeUtf8 v)
-parser NoFormat      (NoI      : _ ) _ = return ()
-parser StringFormat  (ReadI    : _ ) v = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
-parser JsonFormat    (JsonI    : _ ) v = case decode (UTF8.toString v) of
-                                           Ok a      -> return a
-                                           Error msg -> throwError (ParseError msg)
-parser StringFormat  (StringI  : _ ) v = return (UTF8.toString v)
-parser FileFormat    (FileI    : _ ) v = return v
-parser XmlFormat     (RawXmlI  : _ ) v = return v
-parser t             []              _ = throwError (UnsupportedFormat (show t))
-parser t             (_        : xs) v = parser t xs v
+parser NoFormat None       _ = return ()
+parser f        None       _ = throwError (UnsupportedFormat (show f))
+parser f        (Dicts ds) v = parserD f ds
+  where
+    parserD :: Monad m => Format -> [D.Input j] -> ErrorT DataError m j
+    parserD XmlFormat     (XmlI     : _ ) = case eitherFromXML (UTF8.toString v) of
+                                              Left err -> throwError (ParseError err)
+                                              Right  r -> return r
+    parserD XmlFormat     (XmlTextI : _ ) = return (decodeUtf8 v)
+    parserD StringFormat  (ReadI    : _ ) = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
+    parserD JsonFormat    (JsonI    : _ ) = case decode (UTF8.toString v) of
+                                              Ok a      -> return a
+                                              Error msg -> throwError (ParseError msg)
+    parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
+    parserD FileFormat    (FileI    : _ ) = return v
+    parserD XmlFormat     (RawXmlI  : _ ) = return v
+    parserD t             []              = throwError (UnsupportedFormat (show t))
+    parserD t             (_        : xs) = parserD t xs
 
 -------------------------------------------------------------------------------
 -- Failure responses.
@@ -229,17 +233,21 @@ failureWriter :: Rest m => Errors e -> Reason e -> m UTF8.ByteString
 failureWriter es err =
   do formats <- accept
      fromMaybeT (printFallback formats) $
-       msum (  (tryPrint err                     es    <$> (formats ++ [XmlFormat]))
-            ++ (tryPrint (fallbackError formats) [NoE] <$> formats                 )
+       msum (  (tryPrint err                     es   <$> (formats ++ [XmlFormat]))
+            ++ (tryPrint (fallbackError formats) None <$> formats                 )
             )
   where
-    tryPrint :: Rest m => Reason e -> Errors e -> Format -> MaybeT m UTF8.ByteString
-    tryPrint e (JsonE   : _ ) JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-    tryPrint e (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (toXML  e)
-    tryPrint e (NoE     : _ ) JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-    tryPrint e (NoE     : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (toXML  e)
-    tryPrint e (_       : xs) t          = tryPrint e xs t
-    tryPrint _ []             _          = mzero
+    tryPrint :: forall m e. Rest m => Reason e -> Errors e -> Format -> MaybeT m UTF8.ByteString
+    tryPrint e None JsonFormat = printError JsonFormat (toRespCode e) (encode e)
+    tryPrint e None XmlFormat  = printError XmlFormat  (toRespCode e) (toXML  e)
+    tryPrint _ None _          = mzero
+    tryPrint e (Dicts ds) f = tryPrintD ds f
+      where
+        tryPrintD :: Rest m => [D.Error e] -> Format -> MaybeT m UTF8.ByteString
+        tryPrintD (JsonE   : _ ) JsonFormat = printError JsonFormat (toRespCode e) (encode e)
+        tryPrintD (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (toXML  e)
+        tryPrintD (_       : xs) t          = tryPrintD xs t
+        tryPrintD []             _          = mzero
 
     printError f cd x =
       do contentType f
@@ -296,17 +304,20 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
 
   where
     try :: Outputs v -> Format -> ErrorT DataError m ()
-    try (XmlO    : _ ) XmlFormat    = return ()
-    try (RawXmlO : _ ) XmlFormat    = return ()
-    try (NoO     : _ ) NoFormat     = return ()
-    try (NoO     : _ ) XmlFormat    = return ()
-    try (NoO     : _ ) JsonFormat   = return ()
-    try (NoO     : _ ) StringFormat = return ()
-    try (JsonO   : _ ) JsonFormat   = return ()
-    try (StringO : _ ) StringFormat = return ()
-    try (FileO   : _ ) FileFormat   = return ()
-    try []             t            = throwError (UnsupportedFormat (show t))
-    try (_       : xs) t            = try xs t
+    try None NoFormat     = return ()
+    try None XmlFormat    = return ()
+    try None JsonFormat   = return ()
+    try None StringFormat = return ()
+    try None FileFormat   = throwError (UnsupportedFormat (show FileFormat))
+    try (Dicts ds) f = tryD ds f
+      where
+        tryD (XmlO    : _ ) XmlFormat    = return ()
+        tryD (RawXmlO : _ ) XmlFormat    = return ()
+        tryD (JsonO   : _ ) JsonFormat   = return ()
+        tryD (StringO : _ ) StringFormat = return ()
+        tryD (FileO   : _ ) FileFormat   = return ()
+        tryD []             t            = throwError (UnsupportedFormat (show t))
+        tryD (_       : xs) t            = tryD xs t
 
 outputWriter :: forall v m e. Rest m => Outputs v -> v -> ErrorT (Reason e) m UTF8.ByteString
 outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
@@ -314,20 +325,23 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
 
   where
     try :: Outputs v -> Format -> ErrorT DataError m UTF8.ByteString
-    try (XmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
-    try (RawXmlO : _ ) XmlFormat    = contentType XmlFormat    >> ok v
-    try (NoO     : _ ) NoFormat     = contentType NoFormat     >> ok ""
-    try (NoO     : _ ) XmlFormat    = contentType NoFormat     >> ok "<done/>"
-    try (NoO     : _ ) JsonFormat   = contentType NoFormat     >> ok "{}"
-    try (NoO     : _ ) StringFormat = contentType NoFormat     >> ok "done"
-    try (JsonO   : _ ) JsonFormat   = contentType JsonFormat   >> ok (UTF8.fromString (encode v))
-    try (StringO : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
-    try (FileO   : _ ) FileFormat   = do mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower (snd v))
-                                         setHeader "Content-Type" mime
-                                         setHeader "Cache-Control" "private, max-age=604800"
-                                         ok (fst v)
-    try []             t            = throwError (UnsupportedFormat (show t))
-    try (_       : xs) t            = try xs t
+    try None NoFormat     = contentType NoFormat >> ok ""
+    try None XmlFormat    = contentType NoFormat >> ok "<done/>"
+    try None JsonFormat   = contentType NoFormat >> ok "{}"
+    try None StringFormat = contentType NoFormat >> ok "done"
+    try None FileFormat   = throwError (UnsupportedFormat (show FileFormat))
+    try (Dicts ds) f = tryD ds f
+      where
+        tryD (XmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
+        tryD (RawXmlO : _ ) XmlFormat    = contentType XmlFormat    >> ok v
+        tryD (JsonO   : _ ) JsonFormat   = contentType JsonFormat   >> ok (UTF8.fromString (encode v))
+        tryD (StringO : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
+        tryD (FileO   : _ ) FileFormat   = do mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower (snd v))
+                                              setHeader "Content-Type" mime
+                                              setHeader "Cache-Control" "private, max-age=604800"
+                                              ok (fst v)
+        tryD []             t            = throwError (UnsupportedFormat (show t))
+        tryD (_       : xs) t            = tryD xs t
     ok r = setResponseCode 200 >> return r
 
 accept :: Rest m => m [Format]

@@ -43,6 +43,9 @@ module Rest.Dictionary.Combinators
   , xmlJson
   ) where
 
+import Prelude hiding (id, (.))
+
+import Control.Category
 import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
 import Data.Text.Lazy (Text)
@@ -71,88 +74,88 @@ addPar = L.modify params . TwoParams
 -- | Open up input type for extension with custom dictionaries.
 
 someI :: Dict h p () o e -> Dict h p i o e
-someI = L.set inputs []
+someI = L.set inputs (Dicts [])
 
 -- | Allow direct usage of as input as `String`.
 
 stringI :: Dict h p i o e -> Dict h p String o e
-stringI = L.set inputs [StringI]
+stringI = L.set inputs (Dicts [StringI])
 
 -- | Allow direct usage of as input as raw Xml `Text`.
 
 xmlTextI :: Dict h p i o e -> Dict h p Text o e
-xmlTextI = L.set inputs [XmlTextI]
+xmlTextI = L.set inputs (Dicts [XmlTextI])
 
 -- | Allow usage of input as file contents, represented as a `ByteString`.
 
 fileI :: Dict h p i o e -> Dict h p ByteString o e
-fileI = L.set inputs [FileI]
+fileI = L.set inputs (Dicts [FileI])
 
 -- | The input can be read into some instance of `Read`. For inspection reasons
 -- the type must also be an instance of both `Info` and `Show`.
 
 readI :: (Info i, Read i, Show i) => Dict h p i o e -> Dict h p i o e
-readI = L.modify inputs (ReadI:)
+readI = L.modify (dicts . inputs) (ReadI:)
 
 -- | The input can be read into some instance of `XmlPickler`.
 
 xmlI :: (Typeable i, XmlPickler i) => Dict h p i o e -> Dict h p i o e
-xmlI = L.modify inputs (XmlI:)
+xmlI = L.modify (dicts . inputs) (XmlI:)
 
 -- | The input can be used as an XML `ByteString`.
 
 rawXmlI :: Dict h p i o e -> Dict h p ByteString o e
-rawXmlI = L.set inputs [RawXmlI]
+rawXmlI = L.set inputs (Dicts [RawXmlI])
 
 -- | The input can be read into some instance of `Json`.
 
 jsonI :: (Typeable i, Json i) => Dict h p i o e -> Dict h p i o e
-jsonI = L.modify inputs (JsonI:)
+jsonI = L.modify (dicts . inputs) (JsonI:)
 
 -- | Open up output type for extension with custom dictionaries.
 
 someO :: Dict h p i () e -> Dict h p i o e
-someO = L.set outputs []
+someO = L.set outputs (Dicts [])
 
 -- | Allow output as plain String.
 
 stringO :: Dict h p i () e -> Dict h p i String e
-stringO = L.set outputs [StringO]
+stringO = L.set outputs (Dicts [StringO])
 
 -- | Allow file output using a combination of the raw data and a mime type.
 
 fileO :: Dict h p i o e -> Dict h p i (ByteString, String) e
-fileO = L.set outputs [FileO]
+fileO = L.set outputs (Dicts [FileO])
 
 -- | Allow output as XML using the `XmlPickler` type class.
 
 xmlO :: (Typeable o, XmlPickler o) => Dict h p i o e -> Dict h p i o e
-xmlO = L.modify outputs (XmlO:)
+xmlO = L.modify (dicts . outputs) (XmlO:)
 
 -- | Allow output as raw XML represented as a `ByteString`.
 
 rawXmlO :: Dict h p i () e -> Dict h p i ByteString e
-rawXmlO = L.set outputs [RawXmlO]
+rawXmlO = L.set outputs (Dicts [RawXmlO])
 
 -- | Allow output as JSON using the `Json` type class.
 
 jsonO :: (Typeable o, Json o) => Dict h p i o e -> Dict h p i o e
-jsonO = L.modify outputs (JsonO:)
+jsonO = L.modify (dicts . outputs) (JsonO:)
 
 -- | Open up error type for extension with custom dictionaries.
 
 someE :: (Typeable e, Json e) => Dict h p i o () -> Dict h p i o e
-someE = L.set errors []
+someE = L.set errors (Dicts [])
 
 -- | Allow error output as JSON using the `Json` type class.
 
 jsonE :: (Typeable e, Json e) => Dict h p i o e -> Dict h p i o e
-jsonE = L.modify errors (JsonE:)
+jsonE = L.modify (dicts . errors) (JsonE:)
 
 -- | Allow error output as XML using the `XmlPickler` type class.
 
 xmlE :: (Typeable e, XmlPickler e) => Dict h p i o e -> Dict h p i o e
-xmlE = L.modify errors (XmlE:)
+xmlE = L.modify (dicts . errors) (XmlE:)
 
 -- | The input can be read into some instance of both `Json` and `XmlPickler`.
 

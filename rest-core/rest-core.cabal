@@ -14,6 +14,7 @@ Library
   Build-Depends:
       base                      == 4.*
     , bytestring                >= 0.9    &&  < 0.11
+    , containers                >= 0.3    &&  < 0.6
     , either                    >= 3.4    &&  < 4.1
     , errors                    == 1.4.*
     , fclabels                  == 2.0.*
