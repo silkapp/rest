@@ -124,11 +124,14 @@ routeUnnamed :: Rest.Resource m s sid mid aid
              -> [Some1 (Rest.Router s)]
              -> Rest.Cardinality (Rest.Id sid) (Rest.Id mid)
              -> Router (RunnableHandler m)
-routeUnnamed resource@(Rest.Resource { Rest.list }) subRouters cardinality = popSegment >>= \seg ->
+routeUnnamed resource@(Rest.Resource { Rest.list }) subRouters cardinality =
   case cardinality of
-    Rest.Single sBy -> parseIdent sBy seg >>= \sid -> withSubresource sid resource subRouters
-    Rest.Many   mBy -> parseIdent mBy seg >>= \mid ->
-      do noRestPath
+    Rest.Single sBy -> withSegment (multiPut resource sBy) $ \seg ->
+      parseIdent sBy seg >>= \sid -> withSubresource sid resource subRouters
+    Rest.Many   mBy ->
+      do seg <- popSegment
+         mid <- parseIdent mBy seg
+         noRestPath
          hasMethod GET
          routeListHandler (list mid)
 
