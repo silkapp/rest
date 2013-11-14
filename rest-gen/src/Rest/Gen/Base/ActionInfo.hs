@@ -111,36 +111,37 @@ namedActionInfo r pth (Right (Many   l)) = listGetterActionInfo r pth l
 unnamedActionInfo :: Resource m s sid mid aid -> Cardinality (Id sid) (Id mid) -> [ActionInfo]
 unnamedActionInfo r@Resource{} unnamed =
   case unnamed of
-    Single (Id idnt _   ) -> singleActionInfo r (Just $ actionIdent idnt) ""
-    Many   (Id idnt midF) -> maybeToList $
-      listActionInfo (Just $ actionInfo idnt) "" (Rest.list r (midF listIdErr))
+    Single id_             -> singleActionInfo r (Just id_) ""
+    Many   id_@(Id _ midF) -> maybeToList $
+      listActionInfo (Just id_) "" (Rest.list r (midF listIdErr))
 
 getterActionInfo :: Resource m s sid mid aid -> String -> Getter sid -> [ActionInfo]
-getterActionInfo r pth (Singleton _)    = singleActionInfo r Nothing                   pth
-getterActionInfo r pth (By (Id idnt _)) = singleActionInfo r (Just $ actionIdent idnt) pth
+getterActionInfo r pth (Singleton _) = singleActionInfo r Nothing    pth
+getterActionInfo r pth (By id_     ) = singleActionInfo r (Just id_) pth
 
 listGetterActionInfo :: Resource m s sid mid aid -> String -> Getter mid -> [ActionInfo]
 listGetterActionInfo r@Resource{} pth getter = maybeToList $
   case getter of
-    Singleton mid     -> listActionInfo Nothing    pth (Rest.list r mid)
-    By (Id idnt midF) -> listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))
+    Singleton mid      -> listActionInfo Nothing    pth (Rest.list r mid)
+    By id_@(Id _ midF) -> listActionInfo (Just id_) pth (Rest.list r (midF listIdErr))
 
 listIdErr :: mid
 listIdErr = error $ "Don't evaluate the fields of a list identifier unless in the body of the handler. "
                  ++ "They are undefined during generation of documentation and code."
 
-singleActionInfo :: Resource m s sid mid aid -> Maybe Ident -> String -> [ActionInfo]
-singleActionInfo r mIdent pth = foldMap (return . getActionInfo    mIdent pth) (Rest.get     r)
-                             ++ foldMap (return . updateActionInfo mIdent pth) (Rest.update  r)
+singleActionInfo :: Resource m s sid mid aid -> Maybe (Id sid) -> String -> [ActionInfo]
+singleActionInfo r@Resource{} mId pth
+   = foldMap (return . getActionInfo         mId pth) (Rest.get     r)
+  ++ foldMap (return . updateActionInfo      mId pth) (Rest.update  r)
 
 --------------------
 -- * Smart constructors for ActionInfo.
 
-getActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
-getActionInfo mIdent pth = handlerActionInfo mIdent False Retrieve Self pth GET
+getActionInfo :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
+getActionInfo mId pth = handlerActionInfo mId False Retrieve Self pth GET
 
-updateActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
-updateActionInfo mIdent pth = handlerActionInfo mIdent False Update Any pth PUT
+updateActionInfo :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
+updateActionInfo mId pth = handlerActionInfo mId False Update Any pth PUT
 
 removeActionInfo :: Handler m -> ActionInfo
 removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
@@ -160,7 +161,7 @@ selectActionInfo pth = handlerActionInfo Nothing True Retrieve Any pth GET
 actionActionInfo :: String -> Handler m -> ActionInfo
 actionActionInfo pth = handlerActionInfo Nothing True Modify Any pth POST
 
-handlerActionInfo :: Maybe Ident
+handlerActionInfo :: Maybe (Id id)
                   -> Bool
                   -> ActionType
                   -> ActionTarget
@@ -168,8 +169,8 @@ handlerActionInfo :: Maybe Ident
                   -> RequestMethod
                   -> Handler m
                   -> ActionInfo
-handlerActionInfo mIdent postAct actType actTarget pth mth h = ActionInfo
-  { ident        = mIdent
+handlerActionInfo mId postAct actType actTarget pth mth h = ActionInfo
+  { ident        = idIdent <$> mId
   , postAction   = postAct
   , actionType   = actType
   , actionTarget = actTarget
@@ -303,6 +304,9 @@ modString = filter (/= "") . modString' . typeOf
           let (tyCon, subs) = splitTyConApp tr
           in (intercalate "." . init . splitOn "." . tyConString $ tyCon) : concatMap modString' subs
 #endif
+
+idIdent :: Id id -> Ident
+idIdent (Id idnt _) = actionIdent idnt
 
 actionIdent :: forall a. Dict.Ident a -> Ident
 actionIdent Dict.StringId = Ident "string" "String" []
