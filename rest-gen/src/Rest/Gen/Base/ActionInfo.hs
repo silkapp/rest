@@ -96,7 +96,7 @@ stepActionInfo r (Named hs) = concatMap (uncurry (namedActionInfo r)) hs
 stepActionInfo r (Unnamed h) = unnamedActionInfo r h
 
 namedActionInfo :: Resource m s sid mid aid -> String -> Endpoint sid mid aid -> [ActionInfo]
-namedActionInfo r pth (Left aid) = [staticActionInfo Nothing pth (Rest.statics r aid)]
+namedActionInfo r pth (Left aid) = [staticActionInfo pth (Rest.statics r aid)]
 namedActionInfo r pth (Right (Single g)) = getterActionInfo     r pth g
 namedActionInfo r pth (Right (Many   l)) = listGetterActionInfo r pth l
 
@@ -142,8 +142,8 @@ removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
 listActionInfo :: Monad m => Maybe Ident -> String -> ListHandler m -> ActionInfo
 listActionInfo mIdent pth = handlerActionInfo mIdent False List Self pth GET . mkListHandler
 
-staticActionInfo :: Maybe Ident -> String -> Handler m -> ActionInfo
-staticActionInfo mIdent pth = handlerActionInfo mIdent False Modify Any pth POST
+staticActionInfo :: String -> Handler m -> ActionInfo
+staticActionInfo pth = handlerActionInfo Nothing False Modify Any pth POST
 
 createActionInfo :: Handler m -> ActionInfo
 createActionInfo = handlerActionInfo Nothing False Create Self "" POST
