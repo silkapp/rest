@@ -1,5 +1,5 @@
 Name:             rest-gen
-Version:          0.2.1.1
+Version:          0.3
 Description:      Documentation and client generation from rest definition.
 Synopsis:         Documentation and client generation from rest definition.
 Maintainer:       code@silkapp.com
@@ -39,7 +39,7 @@ Library
     , regular                   == 0.3.*
     , regular-json              == 0.3.0.4
     , regular-xmlpickler-typlab == 0.5.*
-    , rest-core                 == 0.22.*
+    , rest-core                 == 0.23.*
     , rest-types                == 1.6.0.1
     , safe                      >= 0.2     &&  < 0.4
     , split                     >= 0.1     &&  < 0.3
@@ -67,7 +67,7 @@ Library
 Test-suite rest-gen-tests
   build-depends:       base                 >= 4.5    && < 4.7
                      , HUnit                == 1.2.*
-                     , rest-core            == 0.22.*
+                     , rest-core            == 0.23.*
                      , rest-gen
                      , test-framework       == 0.8.*
                      , test-framework-hunit == 0.3.*
