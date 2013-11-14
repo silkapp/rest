@@ -1,6 +1,11 @@
 {-# LANGUAGE GADTs, CPP, ScopedTypeVariables #-}
 module Rest.Gen.Base.ActionInfo where
 
+import Prelude hiding (id, (.))
+
+import Control.Applicative
+import Control.Category
+import Control.Monad
 import Data.Foldable (foldMap)
 import Data.List
 import Data.Maybe
@@ -89,7 +94,10 @@ resourceToActionInfo r =
 
 topLevelActionInfo :: Resource m s sid mid aid -> Cardinality sid mid -> [ActionInfo]
 topLevelActionInfo r            (Single _  ) = singleActionInfo r Nothing ""
-topLevelActionInfo r@Resource{} (Many   mid) = return . listActionInfo Nothing "" . Rest.list r $ mid
+topLevelActionInfo r@Resource{} (Many   mid) = maybeToList
+                                             . listActionInfo Nothing ""
+                                             . Rest.list r
+                                             $ mid
 
 stepActionInfo :: Resource m s sid mid aid -> Step sid mid aid -> [ActionInfo]
 stepActionInfo r (Named hs) = concatMap (uncurry (namedActionInfo r)) hs
@@ -104,20 +112,18 @@ unnamedActionInfo :: Resource m s sid mid aid -> Cardinality (Id sid) (Id mid) -
 unnamedActionInfo r@Resource{} unnamed =
   case unnamed of
     Single (Id idnt _   ) -> singleActionInfo r (Just $ actionIdent idnt) ""
-    Many   (Id idnt midF) -> [ listActionInfo (Just $ actionIdent idnt)
-                                              ""
-                                              (Rest.list r (midF listIdErr))
-                             ]
+    Many   (Id idnt midF) -> maybeToList $
+      listActionInfo (Just $ actionInfo idnt) "" (Rest.list r (midF listIdErr))
 
 getterActionInfo :: Resource m s sid mid aid -> String -> Getter sid -> [ActionInfo]
 getterActionInfo r pth (Singleton _)    = singleActionInfo r Nothing                   pth
 getterActionInfo r pth (By (Id idnt _)) = singleActionInfo r (Just $ actionIdent idnt) pth
 
 listGetterActionInfo :: Resource m s sid mid aid -> String -> Getter mid -> [ActionInfo]
-listGetterActionInfo r@Resource{} pth getter =
+listGetterActionInfo r@Resource{} pth getter = maybeToList $
   case getter of
-    Singleton mid     -> [listActionInfo Nothing                   pth (Rest.list r mid)]
-    By (Id idnt midF) -> [listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))]
+    Singleton mid     -> listActionInfo Nothing    pth (Rest.list r mid)
+    By (Id idnt midF) -> listActionInfo (Just $ actionIdent idnt) pth (Rest.list r (midF listIdErr))
 
 listIdErr :: mid
 listIdErr = error $ "Don't evaluate the fields of a list identifier unless in the body of the handler. "
@@ -139,8 +145,8 @@ updateActionInfo mIdent pth = handlerActionInfo mIdent False Update Any pth PUT
 removeActionInfo :: Handler m -> ActionInfo
 removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
 
-listActionInfo :: Monad m => Maybe Ident -> String -> ListHandler m -> ActionInfo
-listActionInfo mIdent pth = handlerActionInfo mIdent False List Self pth GET . mkListHandler
+listActionInfo :: Monad m => Maybe (Id mid) -> String -> ListHandler m -> Maybe ActionInfo
+listActionInfo mId pth h = handlerActionInfo mId False List Self pth GET <$> mkListHandler h
 
 staticActionInfo :: String -> Handler m -> ActionInfo
 staticActionInfo pth = handlerActionInfo Nothing False Modify Any pth POST
@@ -197,77 +203,78 @@ paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 
 -- | Extract input description from handlers
 handlerInputs :: Handler m -> [DataDescription]
-handlerInputs (GenHandler dict _ _) = concatMap (handlerInput Proxy) (L.get Dict.inputs dict)
-  where handlerInput :: Proxy a -> Input a -> [DataDescription]
-        handlerInput _ NoI      = []
-        handlerInput _ StringI  = [defaultDescription { dataTypeDesc = "String" }]
-        handlerInput _ FileI    = [defaultDescription { dataType     = File
-                                                      , dataTypeDesc = "File" }]
-        handlerInput d ReadI    = [defaultDescription { dataTypeDesc = describe d }]
-        handlerInput d XmlI     = [defaultDescription { dataType     = XML
-                                                      , dataTypeDesc = "XML"
-                                                      , dataSchema   = X.showSchema  . X.getXmlSchema $ d
-                                                      , dataExample  = X.showExample . X.getXmlSchema $ d
-                                                      , haskellType  = typeString d
-                                                      , haskellModule = modString d
-                                                      }]
-        handlerInput _ XmlTextI = [defaultDescription { dataType     = XML
-                                                      , dataTypeDesc = "XML"
-                                                      , haskellType  = "String" }]
-        handlerInput d JsonI    = [defaultDescription { dataType     = JSON
-                                                      , dataTypeDesc = "JSON"
-                                                      , dataExample  = J.showExample . J.schema $ d
-                                                      , haskellType  = typeString d
-                                                      , haskellModule = modString d
-                                                      }]
-        handlerInput _ RawXmlI  = [defaultDescription { dataType     = XML
-                                                      , dataTypeDesc = "XML"
-                                                      , haskellType  = "String"
-                                                      }]
+handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dicts . Dict.inputs) dict)
+  where handlerInput :: Proxy a -> Input a -> DataDescription
+        handlerInput _ StringI  = defaultDescription { dataTypeDesc = "String" }
+        handlerInput _ FileI    = defaultDescription { dataType     = File
+                                                     , dataTypeDesc = "File"
+                                                     }
+        handlerInput d ReadI    = defaultDescription { dataTypeDesc = describe d }
+        handlerInput d XmlI     = defaultDescription { dataType     = XML
+                                                     , dataTypeDesc = "XML"
+                                                     , dataSchema   = X.showSchema  . X.getXmlSchema $ d
+                                                     , dataExample  = X.showExample . X.getXmlSchema $ d
+                                                     , haskellType  = typeString d
+                                                     , haskellModule = modString d
+                                                     }
+        handlerInput _ XmlTextI = defaultDescription { dataType     = XML
+                                                     , dataTypeDesc = "XML"
+                                                     , haskellType  = "String"
+                                                     }
+        handlerInput d JsonI    = defaultDescription { dataType     = JSON
+                                                     , dataTypeDesc = "JSON"
+                                                     , dataExample  = J.showExample . J.schema $ d
+                                                     , haskellType  = typeString d
+                                                     , haskellModule = modString d
+                                                     }
+        handlerInput _ RawXmlI  = defaultDescription { dataType     = XML
+                                                     , dataTypeDesc = "XML"
+                                                     , haskellType  = "String"
+                                                     }
 
 -- | Extract output description from handlers
 handlerOutputs :: Handler m -> [DataDescription]
-handlerOutputs (GenHandler dict _ _) = concatMap (handlerOutput Proxy) (L.get Dict.outputs dict)
-  where handlerOutput :: Proxy a -> Output a -> [DataDescription]
-        handlerOutput _ NoO      = []
-        handlerOutput _ FileO    = [defaultDescription { dataType      = File
-                                                       , dataTypeDesc  = "File" }]
-        handlerOutput d XmlO     = [defaultDescription { dataType      = XML
-                                                       , dataTypeDesc  = "XML"
-                                                       , dataSchema    = X.showSchema  . X.getXmlSchema $ d
-                                                       , dataExample   = X.showExample . X.getXmlSchema $ d
-                                                       , haskellType   = typeString d
-                                                       , haskellModule = modString d
-                                                       }]
-        handlerOutput d JsonO    = [defaultDescription { dataType      = JSON
-                                                       , dataTypeDesc  = "JSON"
-                                                       , dataExample   = J.showExample . J.schema $ d
-                                                       , haskellType   = typeString d
-                                                       , haskellModule = modString d
-                                                       }]
-        handlerOutput _ RawXmlO  = [defaultDescription { dataType     = XML
-                                                       , dataTypeDesc = "XML"
-                                                       , haskellType  = "String" }]
-        handlerOutput _ StringO  = [defaultDescription { dataTypeDesc = "Text" }]
+handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.dicts . Dict.outputs) dict)
+  where handlerOutput :: Proxy a -> Output a -> DataDescription
+        handlerOutput _ FileO    = defaultDescription { dataType      = File
+                                                      , dataTypeDesc  = "File"
+                                                      }
+        handlerOutput d XmlO     = defaultDescription { dataType      = XML
+                                                      , dataTypeDesc  = "XML"
+                                                      , dataSchema    = X.showSchema  . X.getXmlSchema $ d
+                                                      , dataExample   = X.showExample . X.getXmlSchema $ d
+                                                      , haskellType   = typeString d
+                                                      , haskellModule = modString d
+                                                      }
+        handlerOutput d JsonO    = defaultDescription { dataType      = JSON
+                                                      , dataTypeDesc  = "JSON"
+                                                      , dataExample   = J.showExample . J.schema $ d
+                                                      , haskellType   = typeString d
+                                                      , haskellModule = modString d
+                                                      }
+        handlerOutput _ RawXmlO  = defaultDescription { dataType     = XML
+                                                      , dataTypeDesc = "XML"
+                                                      , haskellType  = "String"
+                                                      }
+        handlerOutput _ StringO  = defaultDescription { dataTypeDesc = "Text" }
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]
-handlerErrors (GenHandler dict _ _) = concatMap (handleError Proxy) (L.get Dict.errors dict)
-  where handleError :: Proxy a -> Error a -> [DataDescription]
-        handleError _ NoE      = []
-        handleError d XmlE     = [defaultDescription { dataType      = XML
-                                                     , dataTypeDesc  = "XML"
-                                                     , dataSchema    = X.showSchema  . X.getXmlSchema $ d
-                                                     , dataExample   = X.showExample . X.getXmlSchema $ d
-                                                     , haskellType   = typeString d
-                                                     , haskellModule = modString d
-                                                     }]
-        handleError d JsonE    = [defaultDescription { dataType      = JSON
-                                                     , dataTypeDesc  = "JSON"
-                                                     , dataExample   = J.showExample . J.schema $ d
-                                                     , haskellType   = typeString d
-                                                     , haskellModule = modString d
-                                                     }]
+handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (L.get (Dict.dicts . Dict.errors) dict)
+  where handleError :: Proxy a -> Error a -> DataDescription
+        handleError d XmlE     = defaultDescription { dataType      = XML
+                                                    , dataTypeDesc  = "XML"
+                                                    , dataSchema    = X.showSchema  . X.getXmlSchema $ d
+                                                    , dataExample   = X.showExample . X.getXmlSchema $ d
+                                                    , haskellType   = typeString d
+                                                    , haskellModule = modString d
+                                                    }
+        handleError d JsonE    = defaultDescription { dataType      = JSON
+                                                    , dataTypeDesc  = "JSON"
+                                                    , dataExample   = J.showExample . J.schema $ d
+                                                    , haskellType   = typeString d
+                                                    , haskellModule = modString d
+                                                    }
 #if __GLASGOW_HASKELL__ >= 704
 typeString :: forall a. Typeable a => Proxy a -> String
 typeString _ = typeString' . typeOf $ (undefined :: a)
