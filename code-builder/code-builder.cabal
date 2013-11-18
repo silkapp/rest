@@ -2,7 +2,7 @@ Name:                code-builder
 Version:             0.1.2.1
 Synopsis:            Simple system for generating code
 License:             OtherLicense
-Author:              typLAB
+Author:              Silk
 Maintainer:          code@silk.co
 Category:            Data
 Build-type:          Simple
