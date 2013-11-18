@@ -2,7 +2,7 @@ Name:             rest-core
 Version:          0.23
 Description:      Rest API library.
 Synopsis:         Rest API library.
-Maintainer:       code@silkapp.com
+Maintainer:       code@silk.co
 Category:         Web
 Build-Type:       Simple
 Cabal-Version:    >= 1.8

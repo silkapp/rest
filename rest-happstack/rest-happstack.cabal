@@ -2,7 +2,7 @@ Name:             rest-happstack
 Version:          0.2.2
 Description:      Rest driver for Happstack.
 Synopsis:         Rest driver for Happstack.
-Maintainer:       code@silkapp.com
+Maintainer:       code@silk.co
 Category:         Web
 Build-Type:       Simple
 Cabal-Version:    >= 1.8

@@ -2,7 +2,7 @@ Name:             rest-gen
 Version:          0.3
 Description:      Documentation and client generation from rest definition.
 Synopsis:         Documentation and client generation from rest definition.
-Maintainer:       code@silkapp.com
+Maintainer:       code@silk.co
 Category:         Web
 Build-Type:       Simple
 Cabal-Version:    >= 1.8
