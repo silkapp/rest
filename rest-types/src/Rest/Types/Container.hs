@@ -22,7 +22,7 @@ module Rest.Types.Container
 
 import Control.Arrow
 import Data.ByteString (ByteString)
-import Data.JSON.Schema hiding (key)
+import Data.JSON.Schema
 import Data.JSON.Schema.Combinators (field)
 import Data.Map (Map)
 import Data.String
