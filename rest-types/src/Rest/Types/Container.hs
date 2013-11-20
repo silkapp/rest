@@ -51,7 +51,7 @@ deriveAll ''List "PFList"
 type instance PF (List a) = PFList a
 
 instance XmlPickler a => XmlPickler (List a) where
-  xpickle = gxpickle `const` (offset, count, items)
+  xpickle = gxpickle
 
 instance JSON a => JSON (List a) where
  showJSON = gshowJSON
