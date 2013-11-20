@@ -123,6 +123,7 @@ data Input i where
 
 deriving instance Show (Input i)
 deriving instance Eq   (Input i)
+deriving instance Ord  (Input i)
 
 -- | The explicitly dictionary `Output` describes how to translate some Haskell
 -- value to a response body. We currently use a constructor for every
@@ -137,6 +138,7 @@ data Output o where
 
 deriving instance Show (Output o)
 deriving instance Eq   (Output o)
+deriving instance Ord  (Output o)
 
 -- | The explicitly dictionary `Error` describes how to translate some Haskell
 -- error value to a response body.
@@ -147,6 +149,7 @@ data Error e where
 
 deriving instance Show (Error e)
 deriving instance Eq   (Error e)
+deriving instance Ord  (Error e)
 
 type Inputs  i = Dicts Input  i
 type Outputs o = Dicts Output o
