@@ -11,8 +11,11 @@ module Rest.Types.Error
   ( DataError(..)
   , DomainReason(..)
   , Status(..)
+  , fromEither
+  , toEither
   , Reason_
   , Reason(..)
+  , SomeReason(..)
   ) where
 
 import Control.Monad.Error
@@ -23,6 +26,8 @@ import Generics.Regular.XmlPickler (gxpickle)
 import Generics.Regular.JSON
 import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
+import Text.XML.HXT.Arrow.Pickle.Schema
+import Text.XML.HXT.Arrow.Pickle.Xml
 
 -- Error utilities.
 
@@ -66,6 +71,13 @@ instance (JSONSchema a, JSONSchema b) => JSONSchema (Status a b) where
   schema = gSchema
 
 instance (Json a, Json b) => Json (Status a b)
+
+fromEither :: Either a b -> Status a b
+fromEither = either Failure Success
+
+toEither :: Status a b -> Either a b
+toEither (Success x) = Right x
+toEither (Failure y) = Left  y
 
 type Reason_ = Reason ()
 
@@ -115,3 +127,23 @@ instance JSONSchema e => JSONSchema (Reason e) where schema = gSchema
 
 instance Json DataError
 instance Json e => Json (Reason e)
+
+data SomeReason where
+  SomeReason :: (XmlPickler e, Json e) => Reason e -> SomeReason
+
+deriving instance Typeable SomeReason
+
+instance XmlPickler SomeReason where
+  xpickle = PU
+    (\(SomeReason e) st -> appPickle xpickle e st)
+    (throwMsg "Cannot unpickle SomeReason.")
+    Any
+
+instance JSON SomeReason where
+  showJSON (SomeReason r) = showJSON r
+  readJSON _ = Error "Cannot read SomeReason from JSON."
+
+instance JSONSchema SomeReason where
+  schema _ = Choice [] -- TODO: this should be something like Any
+
+instance Json SomeReason

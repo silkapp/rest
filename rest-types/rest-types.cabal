@@ -14,6 +14,7 @@ Library
   Build-Depends:
 
       base == 4.*
+    , bytestring >= 0.9 && < 0.11
     , containers >= 0.4 && < 0.6
     , json >= 0.4 && < 0.8
     , json-schema == 0.3.*

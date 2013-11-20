@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
-   DeriveDataTypeable
+    DeriveDataTypeable
   , EmptyDataDecls
   , FlexibleContexts
   , FlexibleInstances
@@ -9,15 +9,19 @@
   , TemplateHaskell
   , TypeFamilies
   , UndecidableInstances
+  , StandaloneDeriving
   #-}
 module Rest.Types.Container
   ( List(..)
   , StringMap(..)
   , fromStringMap
   , toStringMap
+  , SomeOutput(..)
+  , Uris(..)
   ) where
 
 import Control.Arrow
+import Data.ByteString (ByteString)
 import Data.JSON.Schema hiding (key)
 import Data.JSON.Schema.Combinators (field)
 import Data.Map (Map)
@@ -29,7 +33,11 @@ import Generics.Regular.JSON
 import Generics.Regular.XmlPickler (gxpickle)
 import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
-import qualified Data.Map as M
+import Text.XML.HXT.Arrow.Pickle.Schema
+import Text.XML.HXT.Arrow.Pickle.Xml
+import qualified Data.ByteString.UTF8 as UTF8
+import qualified Data.JSON.Schema     as Json
+import qualified Data.Map             as M
 
 -------------------------------------------------------------------------------
 
@@ -78,4 +86,45 @@ fromStringMap = M.fromList . unMap
 
 toStringMap :: (Ord a, IsString a, ToString a) => Map a b -> StringMap a b
 toStringMap = StringMap . M.toList
+
+-------------------------------------------------------------------------------
+
+data SomeOutput where
+  SomeOutput :: (XmlPickler o, Json o) => o -> SomeOutput
+
+deriving instance Typeable SomeOutput
+
+instance XmlPickler SomeOutput where
+  xpickle = PU
+    (\(SomeOutput e) st -> appPickle xpickle e st)
+    (throwMsg "Cannot unpickle SomeOutput.")
+    Any
+
+instance JSON SomeOutput where
+  showJSON (SomeOutput r) = showJSON r
+  readJSON _ = Error "Cannot read SomeOutput from JSON."
+
+instance JSONSchema SomeOutput where
+  schema _ = Choice []
+
+instance Json SomeOutput
+
+-------------------------------------------------------------------------------
+
+newtype Uris = Uris { unUris :: [ByteString] } deriving Typeable
+
+instance XmlPickler Uris where
+  xpickle = xpElem "uris" $ xpWrap (Uris, unUris) $ xpList
+            (  xpElem "uri" $ xpWrap (UTF8.fromString, UTF8.toString)
+                 xpText
+            )
+
+instance JSON Uris where
+  showJSON = showJSON  . unUris
+  readJSON = fmap Uris . readJSON
+
+instance JSONSchema Uris where
+  schema _ = Json.Array 0 (-1) False (Json.Value 0 (-1))
+
+instance Json Uris
 
