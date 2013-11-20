@@ -3,6 +3,7 @@
   , StandaloneDeriving
   , TemplateHaskell
   , TypeOperators
+  , FlexibleContexts
   #-}
 module Rest.Dictionary.Types
   (
@@ -158,6 +159,8 @@ type Errors  e = Dicts Error  e
 data Dicts f a where
   None  :: Dicts f ()
   Dicts :: [f a] -> Dicts f a
+
+deriving instance Show (f a) => Show (Dicts f a)
 
 dicts :: Dicts f a :-> [f a]
 dicts = lens getDicts modDicts
