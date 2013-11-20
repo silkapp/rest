@@ -265,6 +265,14 @@ mkListHandler (GenHandler dict act sec) =
   do newDict <- L.traverse outputs listO . addPar range $ dict
      return $ GenHandler newDict (mkListAction act) sec
 
+mkListAction :: Monad m
+            => (Env h p i -> ErrorT (Reason e) m [a])
+            -> Env h ((Int, Int), p) i
+            -> ErrorT (Reason e) m (List a)
+mkListAction act (Env h ((f, c), p) i) = do
+  xs <- act (Env h p i)
+  return (List f (min c (length xs)) (take c xs))
+
 mkMultiPutHandler :: Monad m => Rest.Id id -> (id -> Run s m) -> Handler s -> Maybe (Handler m)
 mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> pure newAct <*> pure sec
   where
@@ -278,10 +286,3 @@ mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*
               mapErrorT (run i) (act (Env hs ps v))
          return (StringMap (zipWith (\(k, _) b -> (k, eitherToStatus b)) vs bs))
 
-mkListAction :: Monad m
-            => (Env h p i -> ErrorT (Reason e) m [a])
-            -> Env h ((Int, Int), p) i
-            -> ErrorT (Reason e) m (List a)
-mkListAction act (Env h ((f, c), p) i) = do
-  xs <- act (Env h p i)
-  return (List f (min c (length xs)) (take c xs))
