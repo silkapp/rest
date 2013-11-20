@@ -9,12 +9,13 @@ import Test.HUnit (Assertion, assertFailure)
 
 import qualified Data.ByteString.Char8 as Char8
 
+import Rest.Api hiding (route)
 import Rest.Driver.Routing
 import Rest.Handler
-import Rest.Resource hiding (route)
+import Rest.Resource
 import Rest.Schema
 import Rest.Dictionary
-import qualified Rest.Resource as Rest
+import qualified Rest.Api as Rest
 
 main :: IO ()
 main = do
@@ -60,7 +61,7 @@ testUnnamedSingle :: Assertion
 testUnnamedSingle = checkSingleRoute "resource/foo" resource handler_
   where
     resource :: Resource IO (ReaderT String IO) String Void Void
-    resource = mkResourceId { name = "resource", schema = Schema Nothing (Unnamed (Single (Id StringId id))) }
+    resource = mkResourceReader { name = "resource", schema = Schema Nothing (Unnamed (Single (Id StringId id))) }
     handler_ = mkConstHandler stringO ask
 
 testUnnamedMulti :: Assertion
@@ -81,7 +82,7 @@ testNamedSingleBy :: Assertion
 testNamedSingleBy = checkSingleRoute "resource/foo/bar" resource handler_
   where
     resource :: Resource IO (ReaderT String IO) String Void Void
-    resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))]) }
+    resource = mkResourceReader { name = "resource", schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))]) }
     handler_ = mkConstHandler stringO ask
 
 testNamedListing :: Assertion
@@ -145,7 +146,7 @@ testMultiPut :: Assertion
 testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
   where
     resource :: Resource IO (ReaderT String IO) String Void Void
-    resource = mkResourceId
+    resource = mkResourceReader
       { name   = "resource"
       , schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))])
       , update = Just (mkConstHandler stringO ask)
