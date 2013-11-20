@@ -5,11 +5,18 @@
            , FlexibleContexts
            , StandaloneDeriving
            , GADTs
+           , ScopedTypeVariables
+           , DeriveDataTypeable
            #-}
 module Rest.Driver.Routing where
 
+import Prelude hiding (id, (.))
+
 import Control.Applicative
+import Control.Arrow
+import Control.Category
 import Control.Error.Util
+import Data.List
 import Control.Monad.Error
 import Control.Monad.Identity
 import Control.Monad.Reader
@@ -28,7 +35,7 @@ import Rest.Api (Some1(..))
 import Rest.Container
 import Rest.Dictionary
 import Rest.Error
-import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range)
+import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range, mkInputHandler)
 import qualified Rest.Api      as Rest
 import qualified Rest.Resource as Rest
 import qualified Rest.Schema   as Rest
@@ -70,7 +77,13 @@ route method uri api = runRouter method uri $
 routeRoot :: Rest.Router m s -> Router (RunnableHandler m)
 routeRoot router@(Rest.Embed resource _) = do
   routeName (Rest.name resource)
-  routeRouter router
+  fromMaybeT (routeRouter router) (routeMultiGet router)
+
+routeMultiGet :: Rest.Router m s -> MaybeT Router (RunnableHandler m)
+routeMultiGet root@(Rest.Embed Rest.Resource{} _) =
+  do guardNullPath
+     guardMethod GET
+     return (RunnableHandler id (mkMultiGetHandler root))
 
 routeRouter :: Rest.Router m s -> Router (RunnableHandler m)
 routeRouter (Rest.Embed resource@(Rest.Resource { Rest.schema }) subRouters) =
@@ -286,3 +299,46 @@ mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*
               mapErrorT (run i) (act (Env hs ps v))
          return (StringMap (zipWith (\(k, _) b -> (k, eitherToStatus b)) vs bs))
 
+mkMultiGetHandler :: forall m s. Monad m => Rest.Router m s -> Handler m
+mkMultiGetHandler root = mkInputHandler xmlJson $ \(Uris uris) -> multiGetHandler uris
+  where
+    routeUri :: Uri -> Either Reason_ (RunnableHandler m)
+    routeUri uri = runRouter GET (splitUri uri) (routeRoot root)
+    multiGetHandler uris = lift $
+      do let hs = map routeUri uris
+         ress <- mapM (either (return . Failure . SomeReason) f) hs
+         return $ StringMap (zip uris ress)
+    f :: RunnableHandler m -> m (Status SomeReason SomeOutput)
+    f (RunnableHandler run (GenHandler d h _)) =
+      case ( getHeaders (L.get headers d)
+           , getParams (L.get params d)
+           , L.get inputs d
+           , sort (L.get (dicts . errors) d)
+           , sort . filter isXmlJsonO . L.get (dicts . outputs) $ d
+           ) of
+        (Left e   , _      , _   , _            , _            ) -> dataError e
+        (_        , Left e , _   , _            , _            ) -> dataError e
+        (Right hdr, Right p, None, [JsonE, XmlE], [JsonO, XmlO]) ->
+            liftM (fromEither . (SomeReason +++ SomeOutput))
+          . run
+          . runErrorT
+          $ h (Env hdr p ())
+        _                                                        -> dataError . UnsupportedFormat $
+           "All endpoints in a multi-get must support both xml and json output, and have no required input."
+      where
+        isXmlJsonO XmlO  = True
+        isXmlJsonO JsonO = True
+        isXmlJsonO _     = False
+        getParams :: Param p -> Either DataError p
+        getParams NoParam           = return ()
+        getParams (Param _ p)       = p []
+        getParams (TwoParams p1 p2) = (,) <$> getParams p1 <*> getParams p2
+        getHeaders :: Header h -> Either DataError h
+        getHeaders NoHeader       = return ()
+        getHeaders (Header _ hdr) = hdr []
+        dataError = return . Failure . SomeReason . (OutputError :: DataError -> Reason_)
+
+-- * Utilities
+
+fromMaybeT :: Monad m => m a -> MaybeT m a -> m a
+fromMaybeT def act = runMaybeT act >>= maybe def return
