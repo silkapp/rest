@@ -34,6 +34,7 @@ main = do
               , testCase "Simple subresource." testSubresource
               , testCase "Root router is skipped." testRootRouter
               , testCase "Multi-PUT." testMultiPut
+              , testCase "Multi-GET." testMultiGet
               ]
 
 testListing :: Assertion
@@ -100,7 +101,7 @@ testNamedListingBy = checkRoute GET "resource/foo/bar" (Rest.route resource)
     listHandler (s :: String) = mkListing xmlJsonO $ \_rng -> return (void s)
 
 testCreate :: Assertion
-testCreate = checkRoute POST "resource" (Rest.route resource)
+testCreate = checkRoute POST "resource" (root -/ Rest.route resource)
   where
     resource :: Resource IO IO Void Void Void
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Named []), create = Just createHandler }
@@ -152,13 +153,16 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
       , update = Just (mkConstHandler xmlJsonO (liftM void ask))
       }
 
-checkSingleRoute :: Monad s => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
+testMultiGet :: Assertion
+testMultiGet = checkRouteSuccess GET "" (Rest.root :: Rest.Router IO IO)
+
+checkSingleRoute :: (Monad m, Monad s) => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
 checkSingleRoute uri resource handler_ =
-  do checkRoute GET    uri (Rest.route resource { get = Just handler_ })
-     checkRoute PUT    uri (Rest.route resource { update = Just handler_ })
-     checkRoute DELETE uri (Rest.route resource { remove = Just handler_ })
-     checkRoute GET    (uri <> "/select") (Rest.route resource { selects = [("select", handler_)] })
-     checkRoute POST   (uri <> "/action") (Rest.route resource { actions = [("action", handler_)] })
+  do checkRoute GET    uri (root -/ Rest.route resource { get = Just handler_ })
+     checkRoute PUT    uri (root -/ Rest.route resource { update = Just handler_ })
+     checkRoute DELETE uri (root -/ Rest.route resource { remove = Just handler_ })
+     checkRoute GET    (uri <> "/select") (root -/ Rest.route resource { selects = [("select", handler_)] })
+     checkRoute POST   (uri <> "/action") (root -/ Rest.route resource { actions = [("action", handler_)] })
 
 checkRoute :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRoute method uri router = checkRouteWithIgnoredMethods [method] router method uri
