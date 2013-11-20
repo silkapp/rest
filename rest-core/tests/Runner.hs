@@ -69,7 +69,7 @@ testUnnamedMulti = checkRoute GET "resource/foo" (Rest.route resource)
   where
     resource :: Resource IO IO Void String Void
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Unnamed (Many (Id StringId id))), list = listHandler }
-    listHandler (s :: String) = mkListing stringO $ \_rng -> return [s]
+    listHandler (s :: String) = mkListing xmlJsonO $ \_rng -> return (void s)
 
 testNamedSingleton :: Assertion
 testNamedSingleton = checkSingleRoute "resource/foo" resource handler_
@@ -97,7 +97,7 @@ testNamedListingBy = checkRoute GET "resource/foo/bar" (Rest.route resource)
   where
     resource :: Resource IO IO Void String Void
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (By (Id StringId id))))]), list = listHandler }
-    listHandler (s :: String) = mkListing stringO $ \_rng -> return [s]
+    listHandler (s :: String) = mkListing xmlJsonO $ \_rng -> return (void s)
 
 testCreate :: Assertion
 testCreate = checkRoute POST "resource" (Rest.route resource)
@@ -149,7 +149,7 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
     resource = mkResourceReader
       { name   = "resource"
       , schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))])
-      , update = Just (mkConstHandler stringO ask)
+      , update = Just (mkConstHandler xmlJsonO (liftM void ask))
       }
 
 checkSingleRoute :: Monad s => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
