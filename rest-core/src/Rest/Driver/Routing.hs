@@ -313,8 +313,8 @@ mkMultiGetHandler root = mkInputHandler xmlJson $ \(Uris uris) -> multiGetHandle
       case ( getHeaders (L.get headers d)
            , getParams (L.get params d)
            , L.get inputs d
-           , sort (L.get (dicts . errors) d)
-           , sort . filter isXmlJsonO . L.get (dicts . outputs) $ d
+           , sort . getDictsE . L.get errors $ d
+           , sort . filter isXmlJsonO . getDictsO . L.get outputs $ d
            ) of
         (Left e   , _      , _   , _            , _            ) -> dataError e
         (_        , Left e , _   , _            , _            ) -> dataError e
@@ -326,6 +326,10 @@ mkMultiGetHandler root = mkInputHandler xmlJson $ \(Uris uris) -> multiGetHandle
         _                                                        -> dataError . UnsupportedFormat $
            "All endpoints in a multi-get must support both xml and json output, and have no required input."
       where
+        getDictsE None       = [JsonE, XmlE]
+        getDictsE (Dicts ds) = ds
+        getDictsO None       = [JsonO, XmlO]
+        getDictsO (Dicts ds) = ds
         isXmlJsonO XmlO  = True
         isXmlJsonO JsonO = True
         isXmlJsonO _     = False
