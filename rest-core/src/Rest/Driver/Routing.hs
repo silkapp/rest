@@ -335,11 +335,11 @@ mkMultiGetHandler root = mkInputHandler xmlJson $ \(Uris uris) -> multiGetHandle
         isXmlJsonO _     = False
         getParams :: Param p -> Either DataError p
         getParams NoParam           = return ()
-        getParams (Param _ p)       = p []
+        getParams (Param ns p)      = p (replicate (length ns) Nothing)
         getParams (TwoParams p1 p2) = (,) <$> getParams p1 <*> getParams p2
         getHeaders :: Header h -> Either DataError h
-        getHeaders NoHeader       = return ()
-        getHeaders (Header _ hdr) = hdr []
+        getHeaders NoHeader        = return ()
+        getHeaders (Header ns hdr) = hdr (replicate (length ns) Nothing)
         dataError = return . Failure . SomeReason . (OutputError :: DataError -> Reason_)
 
 -- * Utilities
