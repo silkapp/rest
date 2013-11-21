@@ -17,11 +17,9 @@ module Rest.Types.Container
   , fromStringMap
   , toStringMap
   , SomeOutput(..)
-  , Uris(..)
   ) where
 
 import Control.Arrow
-import Data.ByteString (ByteString)
 import Data.JSON.Schema
 import Data.JSON.Schema.Combinators (field)
 import Data.Map (Map)
@@ -35,8 +33,6 @@ import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
-import qualified Data.ByteString.UTF8 as UTF8
-import qualified Data.JSON.Schema     as Json
 import qualified Data.Map             as M
 
 -------------------------------------------------------------------------------
@@ -105,26 +101,6 @@ instance JSON SomeOutput where
   readJSON _ = Error "Cannot read SomeOutput from JSON."
 
 instance JSONSchema SomeOutput where
-  schema _ = Choice []
+  schema _ = Choice [] -- TODO: should be something like Any
 
 instance Json SomeOutput
-
--------------------------------------------------------------------------------
-
-newtype Uris = Uris { unUris :: [ByteString] } deriving Typeable
-
-instance XmlPickler Uris where
-  xpickle = xpElem "uris" $ xpWrap (Uris, unUris) $ xpList
-            (  xpElem "uri" $ xpWrap (UTF8.fromString, UTF8.toString)
-                 xpText
-            )
-
-instance JSON Uris where
-  showJSON = showJSON  . unUris
-  readJSON = fmap Uris . readJSON
-
-instance JSONSchema Uris where
-  schema _ = Json.Array 0 (-1) False (Json.Value 0 (-1))
-
-instance Json Uris
-

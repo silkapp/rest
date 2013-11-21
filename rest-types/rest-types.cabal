@@ -29,6 +29,7 @@ Library
     , utf8-string == 0.3.*
 
   Exposed-Modules: Rest.Types.Container
+                   Rest.Types.Container.Resource
                    Rest.Types.Error
                    Rest.Types.ShowUrl
 
