@@ -38,8 +38,8 @@ import Rest.Driver.Routing (route)
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
-import qualified Rest.Dictionary     as D
-import qualified Rest.Driver.Routing as Rest
+import qualified Rest.Dictionary   as D
+import qualified Rest.Driver.Types as Rest
 
 class (Applicative m, Monad m) => Rest m where
   getHeader       :: String -> m (Maybe String)
