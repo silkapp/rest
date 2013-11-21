@@ -131,6 +131,8 @@ instance Json e => Json (Reason e)
 data SomeReason where
   SomeReason :: (XmlPickler e, Json e) => Reason e -> SomeReason
 
+instance Error SomeReason
+
 deriving instance Typeable SomeReason
 
 instance XmlPickler SomeReason where
