@@ -3,6 +3,7 @@
            #-}
 module Rest.Api where
 
+import Control.Applicative (Applicative)
 import Data.Char
 import Data.Function (on)
 import Data.List (sortBy)
@@ -44,7 +45,7 @@ infixl 7 -/
 (  --/) = compose
 (   -/) = compose
 
-root :: Monad m => Router m m
+root :: (Applicative m, Monad m) => Router m m
 root = route $ mkResourceId { schema = singleton () $ named [] }
 
 -------------------------------------------------------------------------------

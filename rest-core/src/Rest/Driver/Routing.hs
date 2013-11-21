@@ -299,7 +299,7 @@ mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*
               mapErrorT (run i) (act (Env hs ps v))
          return (StringMap (zipWith (\(k, _) b -> (k, eitherToStatus b)) vs bs))
 
-mkMultiGetHandler :: forall m s. Monad m => Rest.Router m s -> Handler m
+mkMultiGetHandler :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Handler m
 mkMultiGetHandler root = mkInputHandler xmlJson $ \(Uris uris) -> multiGetHandler uris
   where
     routeUri :: Uri -> Either Reason_ (RunnableHandler m)
