@@ -45,6 +45,7 @@ Library
                     Rest.Handler
                     Rest.Info
                     Rest.Resource
+                    Rest.Run
                     Rest.Schema
 
 Test-suite rest-tests

@@ -16,8 +16,8 @@ import Rest.Api (Api)
 import Rest.Driver.Perform (Rest (..))
 import Rest.Driver.Types (Run)
 
-import qualified Rest.Driver.Perform as Rest
-import qualified Rest.Driver.Routing as Rest
+import qualified Rest.Run          as Rest
+import qualified Rest.Driver.Types as Rest
 
 apiToHandler :: (Functor m, MonadPlus m, MonadIO m) => Api (ServerPartT m) -> ServerPartT m Response
 apiToHandler = apiToHandler' id

@@ -29,12 +29,10 @@ import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
-import Rest.Api (Api)
 import Rest.Dictionary ( Dict, Format (..)
                        , Param (..), Header (..), Input (..), Output (..), Error (..)
                        , Dicts (..), Inputs, Outputs, Errors
                        )
-import Rest.Driver.Routing (route)
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
@@ -130,18 +128,6 @@ instance Rest m => Rest (MaybeT m) where
   lookupMimeType  = lift . lookupMimeType
   setHeader nm    = lift . setHeader nm
   setResponseCode = lift . setResponseCode
-
-
-apiToHandler :: Rest m => Api m -> m UTF8.ByteString
-apiToHandler = apiToHandler' id
-
-apiToHandler' :: Rest n => Run m n -> Api m -> n UTF8.ByteString
-apiToHandler' run api = do
-  method <- getMethod
-  paths  <- getPaths
-  case route method paths api of
-    Left  e                        -> failureWriter None e
-    Right (RunnableHandler run' h) -> writeResponse (RunnableHandler (run . run') h)
 
 writeResponse :: Rest m => RunnableHandler m -> m UTF8.ByteString
 writeResponse (RunnableHandler run (GenHandler dict act _)) = do
