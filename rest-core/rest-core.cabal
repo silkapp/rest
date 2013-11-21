@@ -39,6 +39,7 @@ Library
                     Rest.Dictionary.Combinators
                     Rest.Dictionary.Types
                     Rest.Driver.Perform
+                    Rest.Driver.RestM
                     Rest.Driver.Routing
                     Rest.Driver.Types
                     Rest.Error
