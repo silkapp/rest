@@ -42,7 +42,7 @@ emptyInput = RestInput
 data RestOutput = RestOutput
   { headersSet   :: Map String String
   , responseCode :: Maybe Int
-  }
+  } deriving Show
 
 instance Monoid RestOutput where
   mempty = RestOutput { headersSet = Map.empty, responseCode = Nothing }
@@ -59,6 +59,9 @@ outputCode cd = mempty { responseCode = Just cd }
 
 newtype RestM m a = RestM { unRestM :: ReaderT RestInput (WriterT RestOutput m) a }
   deriving (Functor, Applicative, Monad)
+
+instance MonadTrans RestM where
+  lift = RestM . lift . lift
 
 runRestM :: RestInput -> RestM m a -> m (a, RestOutput)
 runRestM i = runWriterT . flip runReaderT i . unRestM
