@@ -52,6 +52,7 @@ import Data.Label.Derive
 import Data.Text.Lazy (Text)
 import Data.Typeable
 import Text.XML.HXT.Arrow.Pickle
+import Network.CGI.Multipart (BodyPart)
 
 import Rest.Error
 import Rest.Info
@@ -63,6 +64,7 @@ data Format
   | JsonFormat
   | StringFormat
   | FileFormat
+  | MultipartFormat
   | NoFormat
   deriving (Eq, Ord, Enum, Bounded, Show)
 
@@ -131,11 +133,12 @@ deriving instance Ord  (Input i)
 -- combination of input type to output type.
 
 data Output o where
-  FileO    ::                               Output (ByteString, String)
-  RawXmlO  ::                               Output ByteString
-  JsonO    :: (Typeable o, Json o)       => Output o
-  XmlO     :: (Typeable o, XmlPickler o) => Output o
-  StringO  ::                               Output String
+  FileO      ::                               Output (ByteString, String)
+  RawXmlO    ::                               Output ByteString
+  JsonO      :: (Typeable o, Json o)       => Output o
+  XmlO       :: (Typeable o, XmlPickler o) => Output o
+  StringO    ::                               Output String
+  MultipartO ::                               Output [BodyPart]
 
 deriving instance Show (Output o)
 deriving instance Eq   (Output o)

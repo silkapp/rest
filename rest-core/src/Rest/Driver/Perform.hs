@@ -20,7 +20,11 @@ import Data.List
 import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)
+import Data.UUID (UUID)
+import Network.CGI.Multipart (showMultipartBody, MultiPart(..), BodyPart (..))
 import Safe
+import System.Random (randomIO)
+import System.IO.Unsafe
 import Text.JSON
 import Text.Xml.Pickle
 
@@ -247,11 +251,12 @@ failureWriter es err =
 
     formatCT v =
       case v of
-        XmlFormat    -> "xml"
-        JsonFormat   -> "json"
-        StringFormat -> "text/plain"
-        FileFormat   -> "application/octet-stream"
-        NoFormat     -> "any"
+        XmlFormat       -> "xml"
+        JsonFormat      -> "json"
+        StringFormat    -> "text/plain"
+        FileFormat      -> "application/octet-stream"
+        MultipartFormat -> "multipart/mixed"
+        NoFormat        -> "any"
 
     fromMaybeT def = runMaybeT >=> maybe def return
 
@@ -290,20 +295,22 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
 
   where
     try :: Outputs v -> Format -> ErrorT DataError m ()
-    try None NoFormat     = return ()
-    try None XmlFormat    = return ()
-    try None JsonFormat   = return ()
-    try None StringFormat = return ()
-    try None FileFormat   = throwError (UnsupportedFormat (show FileFormat))
+    try None NoFormat        = return ()
+    try None XmlFormat       = return ()
+    try None JsonFormat      = return ()
+    try None StringFormat    = return ()
+    try None MultipartFormat = return ()
+    try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
     try (Dicts ds) f = tryD ds f
       where
-        tryD (XmlO    : _ ) XmlFormat    = return ()
-        tryD (RawXmlO : _ ) XmlFormat    = return ()
-        tryD (JsonO   : _ ) JsonFormat   = return ()
-        tryD (StringO : _ ) StringFormat = return ()
-        tryD (FileO   : _ ) FileFormat   = return ()
-        tryD []             t            = throwError (UnsupportedFormat (show t))
-        tryD (_       : xs) t            = tryD xs t
+        tryD (XmlO       : _ ) XmlFormat    = return ()
+        tryD (RawXmlO    : _ ) XmlFormat    = return ()
+        tryD (JsonO      : _ ) JsonFormat   = return ()
+        tryD (StringO    : _ ) StringFormat = return ()
+        tryD (FileO      : _ ) FileFormat   = return ()
+        tryD (MultipartO : _ ) _            = return () -- Multipart is always ok, subparts can fail.
+        tryD []                t            = throwError (UnsupportedFormat (show t))
+        tryD (_          : xs) t            = tryD xs t
 
 outputWriter :: forall v m e. Rest m => Outputs v -> v -> ErrorT (Reason e) m UTF8.ByteString
 outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
@@ -311,24 +318,32 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
 
   where
     try :: Outputs v -> Format -> ErrorT DataError m UTF8.ByteString
-    try None NoFormat     = contentType NoFormat >> ok ""
-    try None XmlFormat    = contentType NoFormat >> ok "<done/>"
-    try None JsonFormat   = contentType NoFormat >> ok "{}"
-    try None StringFormat = contentType NoFormat >> ok "done"
-    try None FileFormat   = throwError (UnsupportedFormat (show FileFormat))
+    try None NoFormat        = contentType NoFormat >> ok ""
+    try None XmlFormat       = contentType NoFormat >> ok "<done/>"
+    try None JsonFormat      = contentType NoFormat >> ok "{}"
+    try None StringFormat    = contentType NoFormat >> ok "done"
+    try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
+    try None MultipartFormat = contentType NoFormat >> ok ""
     try (Dicts ds) f = tryD ds f
       where
-        tryD (XmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
-        tryD (RawXmlO : _ ) XmlFormat    = contentType XmlFormat    >> ok v
-        tryD (JsonO   : _ ) JsonFormat   = contentType JsonFormat   >> ok (UTF8.fromString (encode v))
-        tryD (StringO : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
-        tryD (FileO   : _ ) FileFormat   = do mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower (snd v))
-                                              setHeader "Content-Type" mime
-                                              setHeader "Cache-Control" "private, max-age=604800"
-                                              ok (fst v)
-        tryD []             t            = throwError (UnsupportedFormat (show t))
-        tryD (_       : xs) t            = tryD xs t
+        tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
+        tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
+        tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (UTF8.fromString (encode v))
+        tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
+        tryD (MultipartO : _ ) _            = outputMultipart v
+        tryD (FileO      : _ ) FileFormat   = do mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower (snd v))
+                                                 setHeader "Content-Type" mime
+                                                 setHeader "Cache-Control" "private, max-age=604800"
+                                                 ok (fst v)
+        tryD []                t            = throwError (UnsupportedFormat (show t))
+        tryD (_          : xs) t            = tryD xs t
     ok r = setResponseCode 200 >> return r
+
+outputMultipart :: Rest m => [BodyPart] -> m UTF8.ByteString
+outputMultipart vs =
+  do let boundary = show $ unsafePerformIO (randomIO :: IO UUID)
+     setHeader "Content-Type" ("multipart/mixed; boundary=" ++ boundary)
+     return $ showMultipartBody boundary (MultiPart vs)
 
 accept :: Rest m => m [Format]
 accept =

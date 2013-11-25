@@ -14,6 +14,7 @@ Library
   Build-Depends:
       base                      == 4.*
     , bytestring                >= 0.9    &&  < 0.11
+    , cgi                       == 3001.1.8.100
     , containers                >= 0.3    &&  < 0.6
     , either                    >= 3.4    &&  < 4.1
     , errors                    == 1.4.*
@@ -22,6 +23,7 @@ Library
     , json                      >= 0.4    &&  < 0.8
     , json-schema               == 0.3.*
     , mtl                       >= 2.0    &&  < 2.2
+    , random                    == 1.0.*
     , regular-xmlpickler-typlab == 0.5.*
     , rest-types                == 1.6.0.1
     , safe                      >= 0.2    &&  < 0.4
@@ -31,6 +33,7 @@ Library
     , transformers              >= 0.2    &&  < 0.4
     , uri-encode                == 1.4.*
     , utf8-string               == 0.3.*
+    , uuid                      >= 1.2    &&  < 1.4
 
   Exposed-Modules:  Rest
                     Rest.Api

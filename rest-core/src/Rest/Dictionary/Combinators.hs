@@ -28,6 +28,7 @@ module Rest.Dictionary.Combinators
   , xmlO
   , rawXmlO
   , jsonO
+  , multipartO
 
   -- ** Error dictionaries
 
@@ -50,6 +51,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
 import Data.Text.Lazy (Text)
 import Data.Typeable
+import Network.CGI.Multipart (BodyPart)
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.Label.Total as L
 
@@ -141,6 +143,12 @@ rawXmlO = L.set outputs (Dicts [RawXmlO])
 
 jsonO :: (Typeable o, Json o) => Dict h p i o e -> Dict h p i o e
 jsonO = L.modify (dicts . outputs) (JsonO:)
+
+-- | Allow output as multipart. Writes out the ByteStrings separated
+-- by boundaries, with content type 'multipart/mixed'.
+
+multipartO :: Dict h p i () e -> Dict h p i [BodyPart] e
+multipartO = L.set outputs (Dicts [MultipartO])
 
 -- | Open up error type for extension with custom dictionaries.
 
