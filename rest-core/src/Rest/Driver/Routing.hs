@@ -17,7 +17,6 @@ import Control.Applicative
 import Control.Arrow
 import Control.Category
 import Control.Error.Util
-import Data.List
 import Data.List.Split
 import Control.Monad.Error
 import Control.Monad.Identity
@@ -26,6 +25,9 @@ import Control.Monad.State (StateT, evalStateT, MonadState)
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
+import Data.Tuple
+import Network.CGI.Multipart (BodyPart (..))
+import Network.CGI.Protocol  (HeaderName (..))
 import Safe
 import qualified Control.Monad.State       as State
 import qualified Data.ByteString.UTF8      as UTF8
@@ -46,7 +48,7 @@ import qualified Rest.Resource                 as Rest
 import qualified Rest.Schema                   as Rest
 
 import Rest.Driver.Types
-import Rest.Driver.Perform (fetchInputs)
+import Rest.Driver.Perform (writeResponse, failureWriter)
 import Rest.Driver.RestM (runRestM)
 
 import qualified Rest.Driver.RestM as Rest
@@ -310,28 +312,18 @@ mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*
          return (StringMap (zipWith (\(k, _) b -> (k, eitherToStatus b)) vs bs))
 
 mkMultiGetHandler :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Handler m
-mkMultiGetHandler root = mkInputHandler xmlJson $ \(Resources rs) -> multiGetHandler rs
+mkMultiGetHandler root = mkInputHandler (xmlJsonI . someI . multipartO) $ \(Resources rs) -> multiGetHandler rs
   where
     multiGetHandler rs = lift $
-      do ress <- mapM (liftM fromEither . runResource root) rs
-         return $ StringMap (zip (map R.uri rs) ress)
+      do mapM (runResource root) rs
 
-runResource :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Resource -> m (Either SomeReason SomeOutput)
-runResource root res = runErrorT $
-  do (RunnableHandler run (GenHandler d h _)) <-
-       either throwReason return $ routeResource (R.uri res)
-     let input = toRestInput res
-         frobble (e, o) = SomeReason +++ (,o) $ e
-     case ( sort . getDictsE . L.get errors $ d
-          , sort . filter isXmlJsonO . getDictsO . L.get outputs $ d
-          ) of
-       ([JsonE, XmlE], [JsonO, XmlO]) -> do
-         (env, output) <- mapErrorT (liftM frobble . runRestM input) (fetchInputs d)
-         o <- SomeReason `mapE` mapErrorT run (h env)
-         return (SomeOutput o)
-       _                                                        -> dataError . UnsupportedFormat $
-          "All endpoints in a multi-get must support both xml and json output, and have no required input."
-
+runResource :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Resource -> m BodyPart
+runResource root res
+  = fmap (uncurry BodyPart . swap . second (mkHeaders . Rest.headersSet))
+  . runRestM (toRestInput res)
+  . either (failureWriter None) (writeResponse . mapHandler lift)
+  . routeResource
+  $ R.uri res
   where
     routeResource :: String -> Either Reason_ (RunnableHandler m)
     routeResource uri = runRouter GET (splitUriString uri) (routeRoot root)
@@ -343,16 +335,7 @@ runResource root res = runErrorT $
       , Rest.paths      = splitUriString (R.uri r)
       }
 
-    throwReason = throwError . SomeReason
-
-    getDictsE None       = [JsonE, XmlE]
-    getDictsE (Dicts ds) = ds
-    getDictsO None       = [JsonO, XmlO]
-    getDictsO (Dicts ds) = ds
-    isXmlJsonO XmlO  = True
-    isXmlJsonO JsonO = True
-    isXmlJsonO _     = False
-    dataError = throwError . SomeReason . (OutputError :: DataError -> Reason_)
+    mkHeaders = map (first HeaderName) . Map.toList
 
 -- * Utilities
 
