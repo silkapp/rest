@@ -20,5 +20,5 @@ apiToHandler' run api = do
   method <- getMethod
   paths  <- getPaths
   case route method paths api of
-    Left  e                        -> failureWriter None e
-    Right (RunnableHandler run' h) -> writeResponse (RunnableHandler (run . run') h)
+    Left  e -> failureWriter None e
+    Right h -> writeResponse (mapHandler run h)
