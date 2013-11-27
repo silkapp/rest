@@ -25,7 +25,6 @@ import Control.Monad.State (StateT, evalStateT, MonadState)
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
-import Data.Tuple
 import Network.CGI.Multipart (BodyPart (..))
 import Network.CGI.Protocol  (HeaderName (..))
 import Safe
@@ -319,7 +318,7 @@ mkMultiGetHandler root = mkInputHandler (xmlJsonI . someI . multipartO) $ \(Reso
 
 runResource :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Resource -> m BodyPart
 runResource root res
-  = fmap (uncurry BodyPart . swap . second (mkHeaders . Rest.headersSet))
+  = fmap (uncurry mkBodyPart)
   . runRestM (toRestInput res)
   . either (failureWriter None) (writeResponse . mapHandler lift)
   . routeResource
@@ -336,6 +335,11 @@ runResource root res
       }
 
     mkHeaders = map (first HeaderName) . Map.toList
+
+    mkBodyPart bdy restOutput =
+      let hdrs = (HeaderName "X-Response-Code", maybe "200" show (Rest.responseCode restOutput))
+               : mkHeaders (Rest.headersSet restOutput)
+      in BodyPart hdrs bdy
 
 -- * Utilities
 
