@@ -28,7 +28,7 @@ type KeyValues = StringMap String Value
 newtype Value = Value { unValue :: String } deriving (Show, Typeable)
 
 instance XmlPickler Value where
-  xpickle = xpWrap (Value, unValue) xpText0
+  xpickle = xpElem "value" $ xpWrap (Value, unValue) xpText0
 
 instance JSON Value where
   showJSON = showJSON . unValue
