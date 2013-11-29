@@ -1,5 +1,5 @@
 Name:             rest-core
-Version:          0.24
+Version:          0.24.1
 Description:      Rest API library.
 Synopsis:         Rest API library.
 Maintainer:       code@silk.co
@@ -25,7 +25,7 @@ Library
     , mtl                       >= 2.0    &&  < 2.2
     , random                    == 1.0.*
     , regular-xmlpickler-typlab == 0.5.*
-    , rest-types                == 1.6.1
+    , rest-types                == 1.7
     , safe                      >= 0.2    &&  < 0.4
     , split                     >= 0.1    &&  < 0.3
     , text                      == 0.11.*
