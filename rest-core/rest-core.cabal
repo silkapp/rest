@@ -1,5 +1,5 @@
 Name:             rest-core
-Version:          0.24.1
+Version:          0.24.1.1
 Description:      Rest API library.
 Synopsis:         Rest API library.
 Maintainer:       code@silk.co
@@ -14,7 +14,7 @@ Library
   Build-Depends:
       base                      == 4.*
     , bytestring                >= 0.9    &&  < 0.11
-    , cgi                       == 3001.1.8.100
+    , cgi                       == 3001.1.8.101
     , containers                >= 0.3    &&  < 0.6
     , either                    >= 3.4    &&  < 4.1
     , errors                    == 1.4.*
