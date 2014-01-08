@@ -1,5 +1,5 @@
 Name:             rest-snap
-Version:          0.1.12
+Version:          0.1.13
 Description:      Rest driver for Snap.
 Synopsis:         Rest driver for Snap.
 Maintainer:       code@silk.co
@@ -30,7 +30,7 @@ Library
     , text                      == 0.11.*
     , transformers              == 0.3.*
     , unordered-containers      == 0.2.*
-    , uri-encode                == 1.4.*
+    , uri-encode                == 1.5.*
     , utf8-string               == 0.3.*
     , rest-core                 == 0.24.*
 
