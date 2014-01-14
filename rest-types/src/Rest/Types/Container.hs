@@ -27,6 +27,7 @@ import Data.JSON.Schema.Combinators (field)
 import Data.Map (Map)
 import Data.String
 import Data.String.ToString
+import Data.Text (pack)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
@@ -35,10 +36,8 @@ import Generics.Regular.XmlPickler (gxpickle)
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
-import qualified Data.Map             as M
-
-import Data.Text (pack)
 import qualified Data.HashMap.Strict as H
+import qualified Data.Map            as M
 
 -------------------------------------------------------------------------------
 
