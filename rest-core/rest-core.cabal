@@ -20,7 +20,7 @@ Library
     , errors                    == 1.4.*
     , fclabels                  == 2.0.*
     , hxt                       >= 9.2    &&  < 9.4
-    , aeson                     == 0.7.*
+    , aeson                     >= 0.6    &&  < 0.8
     , json-schema               == 0.3.*
     , mtl                       >= 2.0    &&  < 2.2
     , random                    == 1.0.*
