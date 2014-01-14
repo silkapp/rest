@@ -1,15 +1,16 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     DeriveDataTypeable
+  , DeriveGeneric
   , EmptyDataDecls
   , FlexibleContexts
   , FlexibleInstances
   , GADTs
   , ScopedTypeVariables
+  , StandaloneDeriving
   , TemplateHaskell
   , TypeFamilies
   , UndecidableInstances
-  , StandaloneDeriving
   #-}
 module Rest.Types.Container
   ( List(..)
@@ -20,20 +21,24 @@ module Rest.Types.Container
   ) where
 
 import Control.Arrow
-import Data.JSON.Schema
+import Data.Aeson
+import Data.JSON.Schema hiding (Object, Value)
 import Data.JSON.Schema.Combinators (field)
 import Data.Map (Map)
 import Data.String
 import Data.String.ToString
 import Data.Typeable
-import Generics.Regular (deriveAll, PF)
-import Generics.Regular.JSON
+import GHC.Generics
+import Generics.Generic.Aeson
+import Generics.Regular (PF, deriveAll)
 import Generics.Regular.XmlPickler (gxpickle)
-import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
 import qualified Data.Map             as M
+
+import Data.Text (pack)
+import qualified Data.HashMap.Strict as H
 
 -------------------------------------------------------------------------------
 
@@ -41,7 +46,7 @@ data List a = List
   { offset :: Int
   , count  :: Int
   , items  :: [a]
-  } deriving (Show, Typeable)
+  } deriving (Generic, Show, Typeable)
 
 deriveAll ''List "PFList"
 type instance PF (List a) = PFList a
@@ -49,14 +54,9 @@ type instance PF (List a) = PFList a
 instance XmlPickler a => XmlPickler (List a) where
   xpickle = gxpickle
 
-instance JSON a => JSON (List a) where
- showJSON = gshowJSON
- readJSON = greadJSON
-
-instance JSONSchema a => JSONSchema (List a)  where
-  schema = gSchema
-
-instance Json a => Json (List a)
+instance ToJSON     a => ToJSON     (List a) where toJSON    = gtoJson
+instance FromJSON   a => FromJSON   (List a) where parseJSON = gparseJson
+instance JSONSchema a => JSONSchema (List a) where schema    = gSchema
 
 -------------------------------------------------------------------------------
 
@@ -68,14 +68,18 @@ type instance PF (StringMap a b) = PFStringMap a b
 instance (IsString a, ToString a, XmlPickler b) => XmlPickler (StringMap a b) where
   xpickle = xpElem "map" (xpWrap (StringMap, unMap) (xpList (xpPair (xpElem "key" (xpWrap (fromString,toString) xpText)) xpickle)))
 
-instance (ToString a, IsString a, JSON b) => JSON (StringMap a b) where
-  showJSON = showJSON . toJSObject . map (first toString) . unMap
-  readJSON = fmap (StringMap . map (first fromString) . fromJSObject) . readJSON
+instance (ToString a, ToJSON b) => ToJSON (StringMap a b) where
+  toJSON = toJSON . Object . H.fromList . map (\(a,b) -> pack (toString a) .= b) . unMap
+
+instance IsString a => FromJSON (StringMap a b) where
+  parseJSON = fmap (StringMap . map (first fromString) . fromJSObject) . parseJSON
+    where
+      fromJSObject :: () -> [(String, b)]
+      fromJSObject = undefined
+
 
 instance (IsString a, ToString a, JSONSchema b) => JSONSchema (StringMap a b) where
   schema _ = field "key" False (schema (Proxy :: Proxy b))
-
-instance (IsString a, ToString a, Json b) => Json (StringMap a b)
 
 fromStringMap :: (Ord a, IsString a, ToString a) => StringMap a b -> Map a b
 fromStringMap = M.fromList . unMap
@@ -86,7 +90,7 @@ toStringMap = StringMap . M.toList
 -------------------------------------------------------------------------------
 
 data SomeOutput where
-  SomeOutput :: (XmlPickler o, Json o) => o -> SomeOutput
+  SomeOutput :: (XmlPickler o, ToJSON o, JSONSchema o) => o -> SomeOutput
 
 deriving instance Typeable SomeOutput
 
@@ -96,11 +100,8 @@ instance XmlPickler SomeOutput where
     (throwMsg "Cannot unpickle SomeOutput.")
     Any
 
-instance JSON SomeOutput where
-  showJSON (SomeOutput r) = showJSON r
-  readJSON _ = Error "Cannot read SomeOutput from JSON."
+instance ToJSON SomeOutput where toJSON (SomeOutput r) = toJSON r
+--  readJSON _ = Error "Cannot read SomeOutput from JSON."
 
 instance JSONSchema SomeOutput where
   schema _ = Choice [] -- TODO: should be something like Any
-
-instance Json SomeOutput

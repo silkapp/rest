@@ -1,5 +1,6 @@
 {-# LANGUAGE
     DeriveDataTypeable
+  , DeriveGeneric
   , TemplateHaskell
   , TypeFamilies
   , EmptyDataDecls
@@ -12,14 +13,15 @@ module Rest.Types.Container.Resource
   , Value (..)
   ) where
 
+import Data.Aeson hiding (Value)
+import Data.JSON.Schema (JSONSchema (..), gSchema)
 import Data.Typeable
-import Data.JSON.Schema (JSONSchema (..), Json, gSchema)
-import Generics.Regular (deriveAll, PF)
-import Generics.Regular.JSON
+import GHC.Generics
+import Generics.Generic.Aeson
+import Generics.Regular (PF, deriveAll)
 import Generics.Regular.XmlPickler (gxpickle)
-import Text.JSON
 import Text.XML.HXT.Arrow.Pickle
-import qualified Data.JSON.Schema     as Json
+import qualified Data.JSON.Schema as Json
 
 import Rest.Types.Container
 
@@ -30,9 +32,8 @@ newtype Value = Value { unValue :: String } deriving (Show, Typeable)
 instance XmlPickler Value where
   xpickle = xpElem "value" $ xpWrap (Value, unValue) xpText0
 
-instance JSON Value where
-  showJSON = showJSON . unValue
-  readJSON = fmap Value . readJSON
+instance ToJSON   Value where toJSON    = toJSON . unValue
+instance FromJSON Value where parseJSON = fmap Value . parseJSON
 
 instance JSONSchema Value where
   schema _ = Json.Value 0 (-1)
@@ -42,7 +43,7 @@ data Resource = Resource
   , headers    :: KeyValues
   , parameters :: KeyValues
   , input      :: String
-  } deriving (Show, Typeable)
+  } deriving (Generic, Show, Typeable)
 
 deriveAll ''Resource "PFResource"
 type instance PF Resource = PFResource
@@ -50,18 +51,13 @@ type instance PF Resource = PFResource
 instance XmlPickler Resource where
   xpickle = gxpickle
 
-instance JSON Resource where
- showJSON = gshowJSON
- readJSON = greadJSON
-
-instance JSONSchema Resource  where
-  schema = gSchema
-
-instance Json Resource
+instance ToJSON     Resource where toJSON    = gtoJson
+instance FromJSON   Resource where parseJSON = gparseJson
+instance JSONSchema Resource where schema    = gSchema
 
 -------------------------------------------------------------------------------
 
-newtype Resources = Resources [Resource] deriving Typeable
+newtype Resources = Resources [Resource] deriving (Generic, Typeable)
 
 deriveAll ''Resources "PFResources"
 type instance PF Resources = PFResources
@@ -69,11 +65,6 @@ type instance PF Resources = PFResources
 instance XmlPickler Resources where
   xpickle = gxpickle
 
-instance JSON Resources where
- showJSON = gshowJSON
- readJSON = greadJSON
-
-instance JSONSchema Resources  where
-  schema = gSchema
-
-instance Json Resources
+instance ToJSON     Resources where toJSON    = gtoJson
+instance FromJSON   Resources where parseJSON = gparseJson
+instance JSONSchema Resources where schema    = gSchema
