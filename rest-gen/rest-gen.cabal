@@ -22,6 +22,8 @@ Library
 
       base                      == 4.*
     , HStringTemplate           >= 0.6     &&  < 0.8
+    , attoparsec                >= 0.10    &&  < 0.12
+    , aeson                     >= 0.6     &&  < 0.7
     , blaze-html                >= 0.5     &&  < 0.6
     , bytestring                >= 0.9     &&  < 0.11
     , code-builder              == 0.1.*
@@ -29,15 +31,14 @@ Library
     , directory                 >= 1.1     &&  < 1.3
     , fclabels                  >= 1.0.4   &&  < 2.1
     , filepath                  >= 1.2     &&  < 1.4
+    , generic-aeson             == 0.1.*
     , happstack-server          >= 7.0.5   &&  < 7.4
     , hslogger                  >= 1.1     &&  < 1.3
     , hxt                       >= 9.2     &&  < 9.4
-    , json                      >= 0.4     &&  < 0.8
     , json-schema               == 0.3.*
     , mtl                       >= 2.0     &&  < 2.2
     , pretty                    >= 1.0     &&  < 1.2
     , regular                   == 0.3.*
-    , regular-json              == 0.3.0.4
     , regular-xmlpickler-typlab == 0.6.*
     , rest-core                 == 0.24.*
     , rest-types                == 1.7.1.1
@@ -45,7 +46,9 @@ Library
     , split                     >= 0.1     &&  < 0.3
     , tagged                    >= 0.2     &&  < 0.8
     , text                      == 0.11.*
+    , unordered-containers      == 0.2.*
     , utf8-string               == 0.3.*
+    , vector                    == 0.10.*
 
   Exposed-Modules:  Rest.Gen.Base
                     Rest.Gen.Base.ActionInfo
