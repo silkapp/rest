@@ -15,6 +15,7 @@ import Control.Monad.State
 import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Writer
+import Data.Aeson
 import Data.Char (isSpace, toLower)
 import Data.List
 import Data.List.Split
@@ -23,9 +24,8 @@ import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.UUID (UUID)
 import Network.CGI.Multipart (showMultipartBody, MultiPart(..), BodyPart (..))
 import Safe
-import System.Random (randomIO)
 import System.IO.Unsafe
-import Text.JSON
+import System.Random (randomIO)
 import Text.Xml.Pickle
 
 import qualified Control.Monad.Error       as E
@@ -207,9 +207,9 @@ parser f        (Dicts ds) v = parserD f ds
                                               Right  r -> return r
     parserD XmlFormat     (XmlTextI : _ ) = return (decodeUtf8 v)
     parserD StringFormat  (ReadI    : _ ) = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
-    parserD JsonFormat    (JsonI    : _ ) = case decode (UTF8.toString v) of
-                                              Ok a      -> return a
-                                              Error msg -> throwError (ParseError msg)
+    parserD JsonFormat    (JsonI    : _ ) = case eitherDecode v of
+                                              Right a -> return a
+                                              Left  e -> throwError (ParseError e)
     parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
     parserD FileFormat    (FileI    : _ ) = return v
     parserD XmlFormat     (RawXmlI  : _ ) = return v
@@ -229,22 +229,22 @@ failureWriter es err =
   where
     tryPrint :: forall m e. Rest m => Reason e -> Errors e -> Format -> MaybeT m UTF8.ByteString
     tryPrint e None JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-    tryPrint e None XmlFormat  = printError XmlFormat  (toRespCode e) (toXML  e)
+    tryPrint e None XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
     tryPrint _ None _          = mzero
     tryPrint e (Dicts ds) f = tryPrintD ds f
       where
         tryPrintD :: Rest m => [D.Error e] -> Format -> MaybeT m UTF8.ByteString
         tryPrintD (JsonE   : _ ) JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-        tryPrintD (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (toXML  e)
+        tryPrintD (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
         tryPrintD (_       : xs) t          = tryPrintD xs t
         tryPrintD []             _          = mzero
 
     printError f cd x =
       do contentType f
          setResponseCode cd
-         return (UTF8.fromString x)
+         return x
 
-    printFallback fs = printError XmlFormat (toRespCode (fallbackError fs)) (toXML $ fallbackError fs)
+    printFallback fs = printError XmlFormat (toRespCode (fallbackError fs)) (UTF8.fromString (toXML $ fallbackError fs))
 
     fallbackError :: [Format] -> Reason_
     fallbackError fs = OutputError (UnsupportedFormat $ intercalate "," $ map formatCT fs)
@@ -328,7 +328,7 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
       where
         tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
         tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
-        tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (UTF8.fromString (encode v))
+        tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
         tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
         tryD (MultipartO : _ ) _            = outputMultipart v
         tryD (FileO      : _ ) FileFormat   = do mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower (snd v))

@@ -45,14 +45,15 @@ module Rest.Dictionary.Types
 
 where
 
+import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
 import Data.Label ((:->), lens)
 import Data.Label.Derive
 import Data.Text.Lazy (Text)
 import Data.Typeable
-import Text.XML.HXT.Arrow.Pickle
 import Network.CGI.Multipart (BodyPart)
+import Text.XML.HXT.Arrow.Pickle
 
 import Rest.Error
 import Rest.Info
@@ -116,13 +117,13 @@ data Param p where
 -- needs of the backend resource.
 
 data Input i where
-  JsonI    :: (Typeable i, Json i)       => Input i
-  ReadI    :: (Info i, Read i, Show i)   => Input i
-  StringI  ::                               Input String
-  FileI    ::                               Input ByteString
-  XmlI     :: (Typeable i, XmlPickler i) => Input i
-  XmlTextI ::                               Input Text
-  RawXmlI  ::                               Input ByteString
+  JsonI    :: (Typeable i, FromJSON i, JSONSchema i) => Input i
+  ReadI    :: (Info i, Read i, Show i)               => Input i
+  StringI  ::                                           Input String
+  FileI    ::                                           Input ByteString
+  XmlI     :: (Typeable i, XmlPickler i)             => Input i
+  XmlTextI ::                                           Input Text
+  RawXmlI  ::                                           Input ByteString
 
 deriving instance Show (Input i)
 deriving instance Eq   (Input i)
@@ -133,12 +134,12 @@ deriving instance Ord  (Input i)
 -- combination of input type to output type.
 
 data Output o where
-  FileO      ::                               Output (ByteString, String)
-  RawXmlO    ::                               Output ByteString
-  JsonO      :: (Typeable o, Json o)       => Output o
-  XmlO       :: (Typeable o, XmlPickler o) => Output o
-  StringO    ::                               Output String
-  MultipartO ::                               Output [BodyPart]
+  FileO      ::                                         Output (ByteString, String)
+  RawXmlO    ::                                         Output ByteString
+  JsonO      :: (Typeable o, ToJSON o, JSONSchema o) => Output o
+  XmlO       :: (Typeable o, XmlPickler o)           => Output o
+  StringO    ::                                         Output String
+  MultipartO ::                                         Output [BodyPart]
 
 deriving instance Show (Output o)
 deriving instance Eq   (Output o)
@@ -148,8 +149,8 @@ deriving instance Ord  (Output o)
 -- error value to a response body.
 
 data Error e where
-  JsonE   :: (Typeable e, Json e)        => Error e
-  XmlE    :: (Typeable e, XmlPickler e)  => Error e
+  JsonE   :: (Typeable e, ToJSON e, JSONSchema e) => Error e
+  XmlE    :: (Typeable e, XmlPickler e)           => Error e
 
 deriving instance Show (Error e)
 deriving instance Eq   (Error e)
