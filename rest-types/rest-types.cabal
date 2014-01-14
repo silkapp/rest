@@ -24,7 +24,7 @@ Library
     , regular-xmlpickler-typlab == 0.6.*
     , hxt >= 9.2 && < 9.4
     , uuid >= 1.2 && < 1.4
-    , text == 0.11.*
+    , text >= 0.11 && < 1.2
     , tostring == 0.2.*
     , utf8-string == 0.3.*
 
