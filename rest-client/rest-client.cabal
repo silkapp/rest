@@ -20,7 +20,6 @@ Library
     , http-conduit              >= 1.9.2.1 &&  < 1.10
     , http-types                >= 0.7     &&  < 0.9
     , hxt                       >= 9.2     &&  < 9.4
-    , json-schema               == 0.3.*
     , monad-control             == 0.3.*
     , mtl                       >= 2.0     &&  < 2.2
     , regular-xmlpickler-typlab == 0.6.*
