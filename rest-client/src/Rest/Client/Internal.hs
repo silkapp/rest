@@ -39,8 +39,6 @@ module Rest.Client.Internal
  , ShowUrl (..)
  ) where
 
-import Prelude hiding (catch)
-
 import Control.Arrow
 import Control.Monad
 import Control.Monad.Cont   hiding (mapM)
@@ -51,6 +49,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as LB
 
 import Data.List
+import Data.Maybe
 import Data.Monoid
 import Data.String
 
@@ -60,10 +59,9 @@ import qualified Network.HTTP.Types as T
 import Network.HTTP.Types hiding (statusCode, statusMessage)
 import qualified Network.URI.Encode
 
-import Data.JSON.Schema
-import qualified Text.Xml.Pickle as P
-import Text.JSON
+import Data.Aeson (FromJSON, ToJSON, decode, encode)
 import Text.XML.HXT.Arrow.Pickle
+import qualified Text.Xml.Pickle as P
 
 import Rest.Types.Container
 import Rest.Types.Error
@@ -127,13 +125,13 @@ parseResult e c res = convertResponse
     _   -> fmap (Left . e . BS.concat . LB.toChunks) res
   )
 
-fromJSON :: Json a => BS.ByteString -> a
-fromJSON v = (either err id . resultToEither . decode . BS.toString) v
+fromJSON :: FromJSON a => BS.ByteString -> a
+fromJSON v = (fromMaybe err . decode . LB.fromStrict) v
   where
     err = error ("Error parsing json in  api binding, this should not happen: " ++ BS.toString v)
 
-toJSON :: Json a => a -> BS.ByteString
-toJSON = BS.fromString . encode
+toJSON :: ToJSON a => a -> BS.ByteString
+toJSON = LB.toStrict . encode
 
 class XmlStringToType a where
   fromXML :: BS.ByteString -> a
@@ -150,12 +148,11 @@ instance XmlPickler a => XmlStringToType a where
               ) v
   toXML = BS.fromString . P.toXML
 
-fromJSONlist :: Json a => BS.ByteString -> [a]
+fromJSONlist :: FromJSON a => BS.ByteString -> [a]
 fromJSONlist v = ( items
-                 . either err id
-                 . resultToEither
+                 . fromMaybe err
                  . decode
-                 . BS.toString
+                 . LB.fromStrict
                  ) v
   where
     err = error ("Error parsing json list in  api bindings, this should not happen: " ++ BS.toString v)
