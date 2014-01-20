@@ -9,6 +9,7 @@
   , ScopedTypeVariables
   , StandaloneDeriving
   , TemplateHaskell
+  , TupleSections
   , TypeFamilies
   , UndecidableInstances
   #-}
@@ -20,14 +21,14 @@ module Rest.Types.Container
   , SomeOutput(..)
   ) where
 
-import Control.Arrow
+import Control.Applicative
 import Data.Aeson
 import Data.JSON.Schema hiding (Object, Value)
 import Data.JSON.Schema.Combinators (field)
 import Data.Map (Map)
 import Data.String
 import Data.String.ToString
-import Data.Text (pack)
+import Data.Text (pack, unpack)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
@@ -50,9 +51,7 @@ data List a = List
 deriveAll ''List "PFList"
 type instance PF (List a) = PFList a
 
-instance XmlPickler a => XmlPickler (List a) where
-  xpickle = gxpickle
-
+instance XmlPickler a => XmlPickler (List a) where xpickle = gxpickle
 instance ToJSON     a => ToJSON     (List a) where toJSON    = gtoJson
 instance FromJSON   a => FromJSON   (List a) where parseJSON = gparseJson
 instance JSONSchema a => JSONSchema (List a) where schema    = gSchema
@@ -70,12 +69,8 @@ instance (IsString a, ToString a, XmlPickler b) => XmlPickler (StringMap a b) wh
 instance (ToString a, ToJSON b) => ToJSON (StringMap a b) where
   toJSON = toJSON . Object . H.fromList . map (\(a,b) -> pack (toString a) .= b) . unMap
 
-instance IsString a => FromJSON (StringMap a b) where
-  parseJSON = fmap (StringMap . map (first fromString) . fromJSObject) . parseJSON
-    where
-      fromJSObject :: () -> [(String, b)]
-      fromJSObject = undefined
-
+instance (IsString a, FromJSON b) => FromJSON (StringMap a b) where
+  parseJSON = withObject "StringMap" (fmap StringMap . mapM (\(k,v) -> (fromString . unpack $ k,) <$> parseJSON v) . H.toList)
 
 instance (IsString a, ToString a, JSONSchema b) => JSONSchema (StringMap a b) where
   schema _ = field "key" False (schema (Proxy :: Proxy b))
