@@ -1,5 +1,5 @@
 Name:             rest-gen
-Version:          0.3.4
+Version:          0.4
 Description:      Documentation and client generation from rest definition.
 Synopsis:         Documentation and client generation from rest definition.
 Maintainer:       code@silk.co
@@ -35,13 +35,13 @@ Library
     , happstack-server          >= 7.0.5   &&  < 7.4
     , hslogger                  >= 1.1     &&  < 1.3
     , hxt                       >= 9.2     &&  < 9.4
-    , json-schema               == 0.3.*
+    , json-schema               == 0.4.*
     , mtl                       >= 2.0     &&  < 2.2
     , pretty                    >= 1.0     &&  < 1.2
     , regular                   == 0.3.*
     , regular-xmlpickler-typlab == 0.6.*
-    , rest-core                 == 0.24.*
-    , rest-types                == 1.7.1.1
+    , rest-core                 == 0.25.*
+    , rest-types                == 1.8
     , safe                      >= 0.2     &&  < 0.4
     , split                     >= 0.1     &&  < 0.3
     , tagged                    >= 0.2     &&  < 0.8
@@ -70,7 +70,7 @@ Library
 Test-suite rest-gen-tests
   build-depends:       base                 >= 4.5    && < 4.7
                      , HUnit                == 1.2.*
-                     , rest-core            == 0.24.*
+                     , rest-core            == 0.25.*
                      , rest-gen
                      , test-framework       == 0.8.*
                      , test-framework-hunit == 0.3.*
