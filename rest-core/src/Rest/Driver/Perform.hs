@@ -15,7 +15,7 @@ import Control.Monad.State
 import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Writer
-import Data.Aeson
+import Data.Aeson.Utils
 import Data.Char (isSpace, toLower)
 import Data.List
 import Data.List.Split
@@ -207,7 +207,7 @@ parser f        (Dicts ds) v = parserD f ds
                                               Right  r -> return r
     parserD XmlFormat     (XmlTextI : _ ) = return (decodeUtf8 v)
     parserD StringFormat  (ReadI    : _ ) = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
-    parserD JsonFormat    (JsonI    : _ ) = case eitherDecode v of
+    parserD JsonFormat    (JsonI    : _ ) = case eitherDecodeV v of
                                               Right a -> return a
                                               Left  e -> throwError (ParseError e)
     parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
