@@ -2,12 +2,12 @@ module Rest.Gen.Base.JSON.Pretty where
 
 import Control.Arrow (first)
 import Data.Aeson.Types
+import Data.Aeson.Utils (parseNumber)
 import Data.Char
 import Data.HashMap.Strict (HashMap)
 import Data.Text (Text, unpack)
 import Numeric
 import Text.PrettyPrint.HughesPJ hiding (first)
-import qualified Data.Attoparsec.Number as Attoparsec
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
 
@@ -15,7 +15,7 @@ pp_value         :: Value -> Doc
 pp_value v        = case v of
     Null      -> pp_null
     Bool x    -> pp_boolean x
-    Number x  -> pp_number x
+    Number x  -> pp_number (parseNumber x)
     String x  -> pp_js_string (unpack x)
     Array vs  -> pp_array $ V.toList vs
     Object xs -> pp_js_object xs
@@ -27,9 +27,8 @@ pp_boolean       :: Bool -> Doc
 pp_boolean True   = text "true"
 pp_boolean False  = text "false"
 
-pp_number        :: Attoparsec.Number -> Doc
-pp_number (Attoparsec.I n) = integer n
-pp_number (Attoparsec.D d) = double d
+pp_number        :: Either Integer Double -> Doc
+pp_number        = either integer double
 
 pp_array         :: [Value] -> Doc
 pp_array xs       = vlist "[" "]" $ map pp_value xs
