@@ -87,7 +87,6 @@ data Reason a
   | UnsupportedVersion
 
   -- Thrown during generic IO.
-  | UnacceptedFormat
   | IdentError   DataError
   | HeaderError  DataError
   | ParamError   DataError

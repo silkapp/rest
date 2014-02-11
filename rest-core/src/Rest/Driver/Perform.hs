@@ -266,7 +266,6 @@ failureWriter es err =
         UnsupportedRoute                       -> 404
         UnsupportedMethod                      -> 404
         UnsupportedVersion                     -> 404
-        UnacceptedFormat                       -> 422
         NotAllowed                             -> 403
         AuthenticationFailed                   -> 401
         Busy                                   -> 503
