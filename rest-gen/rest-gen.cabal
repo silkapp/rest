@@ -39,6 +39,7 @@ Library
     , json-schema               == 0.4.*
     , mtl                       >= 2.0     &&  < 2.2
     , pretty                    >= 1.0     &&  < 1.2
+    , process                   >= 1.0     &&  < 1.2
     , regular                   == 0.3.*
     , regular-xmlpickler-typlab == 0.6.*
     , rest-core                 == 0.26.*
@@ -51,7 +52,8 @@ Library
     , utf8-string               == 0.3.*
     , vector                    == 0.10.*
 
-  Exposed-Modules:  Rest.Gen.Base
+  Exposed-Modules:  Rest.Gen
+                    Rest.Gen.Base
                     Rest.Gen.Base.ActionInfo
                     Rest.Gen.Base.ActionInfo.Ident
                     Rest.Gen.Base.ApiTree
@@ -59,6 +61,7 @@ Library
                     Rest.Gen.Base.JSON.Pretty
                     Rest.Gen.Base.Link
                     Rest.Gen.Base.XML
+                    Rest.Gen.Config
                     Rest.Gen.Docs.Generate
                     Rest.Gen.Docs.Happstack
                     Rest.Gen.Haskell.Generate
