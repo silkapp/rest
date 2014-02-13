@@ -24,13 +24,13 @@ import Text.StringTemplate
 
 data HaskellContext =
   HaskellContext
-    { apiVersion  :: Version
-    , targetPath  :: String
-    , cabalSource :: String
-    , wrapperName :: String
+    { apiVersion     :: Version
+    , targetPath     :: String
+    , cabalSource    :: String
+    , wrapperName    :: String
     , includePrivate :: Bool
-    , rewrites    :: [(String, String)]
-    , namespace   :: [String]
+    , rewrites       :: [(String, String)]
+    , namespace      :: [String]
     }
 
 mkHsApi :: HaskellContext -> Router m s -> IO ()

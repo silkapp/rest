@@ -43,9 +43,9 @@ generate name config api moduleRewrites =
 getTargetDir :: Config -> String -> IO String
 getTargetDir config str =
   case get target config of
-     Stream     -> putStrLn ("Cannot generate documentation to stdOut, generating to " ++ str) >> return str
-     Default    -> putStrLn ("Generating to " ++ str) >> return str
-     Location d -> putStrLn ("Generating to " ++ d) >> return d
+    Stream     -> putStrLn ("Cannot generate documentation to stdOut, generating to " ++ str) >> return str
+    Default    -> putStrLn ("Generating to " ++ str) >> return str
+    Location d -> putStrLn ("Generating to " ++ d) >> return d
 
 setupTargetDir :: Config -> String -> IO ()
 setupTargetDir config t =
@@ -55,10 +55,10 @@ setupTargetDir config t =
 toTarget :: Config -> String -> IO ()
 toTarget config code =
   do let outf =
-          case get target config of
-              Stream         -> putStrLn
-              Default        -> putStrLn
-              Location l     -> writeFile l
+           case get target config of
+             Stream     -> putStrLn
+             Default    -> putStrLn
+             Location l -> writeFile l
      outf code
      exitSuccess
 
