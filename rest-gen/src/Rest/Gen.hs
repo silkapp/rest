@@ -17,25 +17,25 @@ import Rest.Gen.Haskell.Generate (mkHsApi, HaskellContext (HaskellContext))
 import Rest.Gen.Ruby.Generate (mkRbApi)
 import Rest.Gen.Utils
 
-generate :: Config -> String -> Api m -> [(String, String)] -> IO ()
-generate config name api rewrites =
+generate :: Config -> String -> Api m -> [[String]] -> [(String, String)] -> IO ()
+generate config name api sources rewrites =
   withVersion (get apiVersion config) api (putStrLn "Could not find api version" >> exitFailure) $ \ver (Some1 r) ->
      case get action config of
-       Just (MakeDocs root)        ->
+       Just (MakeDocs root) ->
          do loc <- getTargetDir config "./docs"
             setupTargetDir config loc
             let context = DocsContext root ver (fromMaybe "./templates" (getSourceLocation config))
             writeDocs context r loc
             exitSuccess
-       Just MakeJS                 -> mkJsApi (moduleName ++ "Api") (get apiPrivate config) ver r >>= toTarget config
-       Just MakeRb                 -> mkRbApi (moduleName ++ "Api") (get apiPrivate config) ver r >>= toTarget config
-       Just (MakeHS cabalTemplate) ->
+       Just MakeJS          -> mkJsApi (moduleName ++ "Api") (get apiPrivate config) ver r >>= toTarget config
+       Just MakeRb          -> mkRbApi (moduleName ++ "Api") (get apiPrivate config) ver r >>= toTarget config
+       Just MakeHS          ->
          do loc <- getTargetDir config "./client"
             setupTargetDir config loc
-            let context = HaskellContext ver loc cabalTemplate (packageName ++ "-client") (get apiPrivate config) rewrites [moduleName, "Client"]
+            let context = HaskellContext ver loc (packageName ++ "-client") (get apiPrivate config) sources rewrites [moduleName, "Client"]
             mkHsApi context r
             exitSuccess
-       Nothing                     -> return ()
+       Nothing              -> return ()
   where
     packageName = map toLower name
     moduleName  = upFirst packageName

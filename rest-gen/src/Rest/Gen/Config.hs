@@ -7,7 +7,7 @@ import Control.Category
 import Data.Label
 import System.Console.GetOpt
 
-data Action   = MakeDocs String | MakeJS | MakeRb | MakeHS String
+data Action   = MakeDocs String | MakeJS | MakeRb | MakeHS
 data Location = Default | Stream | Location String
 
 data Config = Config
@@ -38,7 +38,7 @@ options parent =
   [ Option ['d'] ["documentation"] (ReqArg (set (action        . parent) . Just . MakeDocs) "URLROOT") "Generate API documentation, available under the provided URL root."
   , Option ['j'] ["javascript"]    (NoArg  (set (action        . parent) (Just MakeJS))) "Generate Javascript bindings."
   , Option ['r'] ["ruby"]          (NoArg  (set (action        . parent) (Just MakeRb))) "Generate Ruby bindings."
-  , Option ['h'] ["haskell"]       (ReqArg (set (action        . parent) . Just . MakeHS) "CABAL.ST") "Generate Haskell bindings, using the provided cabal template."
+  , Option ['h'] ["haskell"]       (NoArg  (set (action        . parent) (Just MakeHS))) "Generate Haskell bindings."
   , Option ['s'] ["source"]        (ReqArg (set (source        . parent) . parseLocation) "LOCATION") "The location of additional sources."
   , Option ['t'] ["target"]        (ReqArg (set (target        . parent) . parseLocation) "LOCATION") "The target location for generation."
   , Option ['v'] ["version"]       (ReqArg (set (apiVersion    . parent)) "VERSION") "The version of the API under generation. Default latest."

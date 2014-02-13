@@ -1,15 +1,24 @@
+{-# LANGUAGE DoAndIfThenElse, TemplateHaskell #-}
 module Rest.Gen.Haskell.Generate where
 
-import Control.Applicative
 import Control.Arrow (first)
+import Control.Category
 import Control.Monad
+import Data.Label (mkLabels, modify, set)
 import Data.List
 import Data.Maybe
-import Prelude hiding (catch)
+import Prelude hiding ((.), id, catch)
 import Safe
 import System.Directory
 import System.FilePath
-import Text.StringTemplate
+
+import qualified Distribution.ModuleName                     as Cabal
+import qualified Distribution.Package                        as Cabal
+import qualified Distribution.PackageDescription             as Cabal
+import qualified Distribution.PackageDescription.Parse       as Cabal
+import qualified Distribution.Verbosity                      as Cabal
+import qualified Distribution.Version                        as Cabal
+import qualified Distribution.PackageDescription.PrettyPrint as Cabal
 
 import Code.Build
 import Code.Build.Haskell
@@ -20,13 +29,15 @@ import Rest.Gen.Utils
 
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 
+$(mkLabels[''Cabal.GenericPackageDescription, ''Cabal.CondTree, ''Cabal.Library])
+
 data HaskellContext =
   HaskellContext
     { apiVersion     :: Version
     , targetPath     :: String
-    , cabalSource    :: String
     , wrapperName    :: String
     , includePrivate :: Bool
+    , sources        :: [[String]]
     , rewrites       :: [(String, String)]
     , namespace      :: [String]
     }
@@ -34,25 +45,39 @@ data HaskellContext =
 mkHsApi :: HaskellContext -> Router m s -> IO ()
 mkHsApi ctx r =
   do let tree = sortTree . (if includePrivate ctx then id else noPrivate) . apiSubtrees $ r
-     mkCabal ctx tree
+     mkCabalFile ctx tree
      mapM_ (writeRes ctx) $ allSubTrees tree
 
-mkCabal :: HaskellContext -> ApiResource -> IO ()
-mkCabal ctx tree =
-  do tmpl  <- newSTMP <$> readFile (cabalSource ctx)
-     writeFile (targetPath ctx </> wrapperName ctx ++ ".cabal") $
-         "-- This cabal file is automatically generated, do not modify!\n"
-      ++ render
-          (setManyAttrib
-                 [ ("modules", mkModNames (namespace ctx) tree)
-                 , ("version", show $ apiVersion ctx)
-                 , ("name"   , wrapperName ctx)
-                 ]
-                 tmpl
-          )
+mkCabalFile :: HaskellContext -> ApiResource -> IO ()
+mkCabalFile ctx tree =
+  do cabalExists <- doesFileExist cabalFile
+     if cabalExists
+     then Cabal.readPackageDescription Cabal.normal cabalFile >>=
+          Cabal.writeGenericPackageDescription cabalFile . updateExposedModules modules
+     else Cabal.writeGenericPackageDescription cabalFile (mkGenericPackageDescription (wrapperName ctx) modules)
+  where
+    cabalFile = targetPath ctx </> wrapperName ctx ++ ".cabal"
+    modules   = map (Cabal.fromString . intercalate ".") (sources ctx)
+             ++ map (Cabal.fromString . qualModName . (namespace ctx ++)) (allSubResourceIds tree)
 
-mkModNames :: [String] -> ApiResource -> String
-mkModNames ns = concat . map ("\n         " ++) . map (qualModName . (ns ++)) . allSubResourceIds
+updateExposedModules :: [Cabal.ModuleName] -> Cabal.GenericPackageDescription -> Cabal.GenericPackageDescription
+updateExposedModules modules = modify lCondLibrary (Just . maybe (mkCondLibrary modules) (set (lExposedModules . lCondTreeData) modules))
+
+mkGenericPackageDescription :: String -> [Cabal.ModuleName] -> Cabal.GenericPackageDescription
+mkGenericPackageDescription name modules = Cabal.GenericPackageDescription pkg [] (Just (mkCondLibrary modules)) [] [] []
+  where
+    pkg = Cabal.emptyPackageDescription
+      { Cabal.package        = Cabal.PackageIdentifier (Cabal.PackageName name) (Cabal.Version [0, 1] [])
+      , Cabal.buildType      = Just Cabal.Simple
+      , Cabal.specVersionRaw = Right (Cabal.orLaterVersion (Cabal.Version [1, 8] []))
+      }
+
+mkCondLibrary :: [Cabal.ModuleName] -> Cabal.CondTree Cabal.ConfVar [Cabal.Dependency] Cabal.Library
+mkCondLibrary modules = Cabal.CondNode
+  { Cabal.condTreeData        = Cabal.Library modules True Cabal.emptyBuildInfo
+  , Cabal.condTreeConstraints = []
+  , Cabal.condTreeComponents  = []
+  }
 
 writeRes :: HaskellContext -> ApiResource -> IO ()
 writeRes ctx node =
