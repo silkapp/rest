@@ -6,11 +6,14 @@ import Control.Monad.Reader
 import Data.Monoid
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (Assertion, assertFailure)
+import Test.HUnit (Assertion, assertFailure, assertEqual)
 
 import qualified Data.ByteString.Char8 as Char8
+import qualified Data.Map as Map
 
 import Rest.Api hiding (route)
+import Rest.Driver.Perform (accept)
+import Rest.Driver.RestM (runRestM_)
 import Rest.Driver.Routing
 import Rest.Driver.Types
 import Rest.Handler
@@ -18,6 +21,7 @@ import Rest.Resource
 import Rest.Schema
 import Rest.Dictionary
 import qualified Rest.Api as Rest
+import qualified Rest.Driver.RestM as RestM
 
 main :: IO ()
 main = do
@@ -37,6 +41,7 @@ main = do
               , testCase "Root router is skipped." testRootRouter
               , testCase "Multi-PUT." testMultiPut
               , testCase "Multi-GET." testMultiGet
+              , testCase "Accept headers." testAcceptHeaders
               ]
 
 testListing :: Assertion
@@ -194,3 +199,8 @@ checkRouteSuccess method uri router =
 
 allMethods :: [Method]
 allMethods = [GET, PUT, POST, DELETE]
+
+testAcceptHeaders :: Assertion
+testAcceptHeaders =
+  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = Map.singleton "Accept" "text/json" } accept
+     assertEqual "Accept json format." [JsonFormat] fmt
