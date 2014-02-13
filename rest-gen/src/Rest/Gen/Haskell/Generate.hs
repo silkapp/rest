@@ -1,26 +1,24 @@
 module Rest.Gen.Haskell.Generate where
 
-import Code.Build
-import Code.Build.Haskell
-
 import Control.Applicative
 import Control.Arrow (first)
 import Control.Monad
 import Data.List
 import Data.Maybe
-
 import Prelude hiding (catch)
-
-import Rest.Api (Version, Router)
-import Rest.Gen.Base
-import Rest.Gen.Utils
-import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
-
 import Safe
 import System.Directory
 import System.FilePath
-
 import Text.StringTemplate
+
+import Code.Build
+import Code.Build.Haskell
+import Rest.Api (Version, Router)
+
+import Rest.Gen.Base
+import Rest.Gen.Utils
+
+import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 
 data HaskellContext =
   HaskellContext
