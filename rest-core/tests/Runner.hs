@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Reader
 import Data.Monoid
@@ -11,6 +12,7 @@ import qualified Data.ByteString.Char8 as Char8
 
 import Rest.Api hiding (route)
 import Rest.Driver.Routing
+import Rest.Driver.Types
 import Rest.Handler
 import Rest.Resource
 import Rest.Schema
@@ -156,7 +158,8 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
 testMultiGet :: Assertion
 testMultiGet = checkRouteSuccess GET "" (Rest.root :: Rest.Router IO IO)
 
-checkSingleRoute :: (Monad m, Monad s) => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
+checkSingleRoute :: (Applicative m, Monad m, Monad s)
+                 => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
 checkSingleRoute uri resource handler_ =
   do checkRoute GET    uri (root -/ Rest.route resource { get = Just handler_ })
      checkRoute PUT    uri (root -/ Rest.route resource { update = Just handler_ })
