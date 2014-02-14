@@ -18,7 +18,7 @@ import Rest.Gen.Ruby.Generate (mkRbApi)
 import Rest.Gen.Utils
 
 generate :: String -> Config -> Api m -> [(String, String)] -> IO ()
-generate name config api moduleRewrites =
+generate name config api rewrites =
   withVersion (get apiVersion config) api (putStrLn "Could not find api version" >> exitFailure) $ \ver (Some1 r) ->
      case get action config of
        Just (MakeDocs root)        ->
@@ -32,7 +32,7 @@ generate name config api moduleRewrites =
        Just (MakeHS cabalTemplate) ->
          do loc <- getTargetDir config "./client"
             setupTargetDir config loc
-            let context = HaskellContext ver loc cabalTemplate (packageName ++ "-client") (get apiPrivate config) moduleRewrites [moduleName, "Client"]
+            let context = HaskellContext ver loc cabalTemplate (packageName ++ "-client") (get apiPrivate config) rewrites [moduleName, "Client"]
             mkHsApi context r
             exitSuccess
        Nothing                     -> return ()
