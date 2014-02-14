@@ -17,8 +17,8 @@ import Rest.Gen.Haskell.Generate (mkHsApi, HaskellContext (HaskellContext))
 import Rest.Gen.Ruby.Generate (mkRbApi)
 import Rest.Gen.Utils
 
-generate :: String -> Config -> Api m -> [(String, String)] -> IO ()
-generate name config api rewrites =
+generate :: Config -> String -> Api m -> [(String, String)] -> IO ()
+generate config name api rewrites =
   withVersion (get apiVersion config) api (putStrLn "Could not find api version" >> exitFailure) $ \ver (Some1 r) ->
      case get action config of
        Just (MakeDocs root)        ->
