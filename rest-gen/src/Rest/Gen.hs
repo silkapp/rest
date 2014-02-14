@@ -11,10 +11,10 @@ import System.Exit
 import Rest.Api (withVersion, Api, Some1 (..))
 
 import Rest.Gen.Config
-import Rest.Gen.Docs.Generate
-import Rest.Gen.JavaScript.Generate
-import Rest.Gen.Haskell.Generate hiding (apiVersion)
-import Rest.Gen.Ruby.Generate
+import Rest.Gen.Docs.Generate (writeDocs, DocsContext (DocsContext))
+import Rest.Gen.JavaScript.Generate (mkJsApi)
+import Rest.Gen.Haskell.Generate (mkHsApi, HaskellContext (HaskellContext))
+import Rest.Gen.Ruby.Generate (mkRbApi)
 import Rest.Gen.Utils
 
 generate :: String -> Config -> Api m -> [(String, String)] -> IO ()
