@@ -20,6 +20,7 @@ import qualified Distribution.PackageDescription.Parse       as Cabal
 import qualified Distribution.Verbosity                      as Cabal
 import qualified Distribution.Version                        as Cabal
 import qualified Distribution.PackageDescription.PrettyPrint as Cabal
+import qualified Distribution.Simple.Utils                   as Cabal
 
 import Code.Build
 import Code.Build.Haskell
@@ -56,11 +57,15 @@ mkCabalFile ctx tree =
        if cabalExists
        then updateExposedModules modules <$> Cabal.readPackageDescription Cabal.normal cabalFile
        else return (mkGenericPackageDescription (wrapperName ctx) modules)
-     Cabal.writeGenericPackageDescription cabalFile gpkg
+     writeCabalFile cabalFile gpkg
   where
     cabalFile = targetPath ctx </> wrapperName ctx ++ ".cabal"
     modules   = map (Cabal.fromString . intercalate ".") (sources ctx)
              ++ map (Cabal.fromString . qualModName . (namespace ctx ++)) (allSubResourceIds tree)
+
+writeCabalFile :: FilePath -> Cabal.GenericPackageDescription -> IO ()
+writeCabalFile path = Cabal.writeUTF8File path . unlines . filter emptyField . lines . Cabal.showGenericPackageDescription
+  where emptyField = (/= "\"\" ") . takeWhile (/= ':') . reverse
 
 updateExposedModules :: [Cabal.ModuleName] -> Cabal.GenericPackageDescription -> Cabal.GenericPackageDescription
 updateExposedModules modules = modify lCondLibrary (Just . maybe (mkCondLibrary modules) (set (lExposedModules . lCondTreeData) modules))
