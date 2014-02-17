@@ -39,7 +39,7 @@ data HaskellContext =
     , targetPath     :: String
     , wrapperName    :: String
     , includePrivate :: Bool
-    , sources        :: [[String]]
+    , sources        :: [String]
     , rewrites       :: [(String, String)]
     , namespace      :: [String]
     }
@@ -60,7 +60,7 @@ mkCabalFile ctx tree =
      writeCabalFile cabalFile gpkg
   where
     cabalFile = targetPath ctx </> wrapperName ctx ++ ".cabal"
-    modules   = map (Cabal.fromString . intercalate ".") (sources ctx)
+    modules   = map Cabal.fromString (sources ctx)
              ++ map (Cabal.fromString . qualModName . (namespace ctx ++)) (allSubResourceIds tree)
 
 writeCabalFile :: FilePath -> Cabal.GenericPackageDescription -> IO ()
