@@ -40,6 +40,7 @@ data HaskellContext =
     , wrapperName    :: String
     , includePrivate :: Bool
     , sources        :: [String]
+    , imports        :: [String]
     , rewrites       :: [(String, String)]
     , namespace      :: [String]
     }
@@ -97,22 +98,24 @@ mkRes ctx node =
   in showCode $
          "{-# LANGUAGE OverloadedStrings #-}\n{-# OPTIONS_GHC -fno-warn-unused-imports #-}\n{- Warning!! This is automatically generated code, do not modify! -}"
      <-> hsModule (qualModName $ namespace ctx ++ resId node)
-          [ mkImports (namespace ctx) node $ rewriteModules (rewrites ctx) $ nub $ concat mods
+          [ mkImports ctx node $ rewriteModules (rewrites ctx) $ nub $ concat mods
           , idData node
           , mkStack funcs
           ]
 
-mkImports :: [String] -> ApiResource -> [String] -> Code
-mkImports ns node datImp =
+mkImports :: HaskellContext -> ApiResource -> [String] -> Code
+mkImports ctx node datImp =
     mkStack
       [ code "import Rest.Client.Internal"
+      , extraImports
       , parentImports
       , dataImports
       ]
   where
+    extraImports  = mkStack . map ("import " <+>) $ imports ctx
     dataImports   = mkStack . map ("import qualified " <+>) $ datImp
     parentImports = mkStack . map mkImport . tail . inits . resParents $ node
-    mkImport p = "import qualified" <++> qualModName (ns ++ p) <++> "as" <++> modName (last p)
+    mkImport p = "import qualified" <++> qualModName (namespace ctx ++ p) <++> "as" <++> modName (last p)
 
 mkFunction :: Version -> String -> ApiAction -> (Code, [String])
 mkFunction ver res (ApiAction _ lnk ai) =

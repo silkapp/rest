@@ -17,8 +17,8 @@ import Rest.Gen.Haskell.Generate (mkHsApi, HaskellContext (HaskellContext))
 import Rest.Gen.Ruby.Generate (mkRbApi)
 import Rest.Gen.Utils
 
-generate :: Config -> String -> Api m -> [String] -> [(String, String)] -> IO ()
-generate config name api sources rewrites =
+generate :: Config -> String -> Api m -> [String] -> [String] -> [(String, String)] -> IO ()
+generate config name api sources imports rewrites =
   withVersion (get apiVersion config) api (putStrLn "Could not find api version" >> exitFailure) $ \ver (Some1 r) ->
      case get action config of
        Just (MakeDocs root) ->
@@ -32,7 +32,7 @@ generate config name api sources rewrites =
        Just MakeHS          ->
          do loc <- getTargetDir config "./client"
             setupTargetDir config loc
-            let context = HaskellContext ver loc (packageName ++ "-client") (get apiPrivate config) sources rewrites [moduleName, "Client"]
+            let context = HaskellContext ver loc (packageName ++ "-client") (get apiPrivate config) sources imports rewrites [moduleName, "Client"]
             mkHsApi context r
             exitSuccess
        Nothing              -> return ()
