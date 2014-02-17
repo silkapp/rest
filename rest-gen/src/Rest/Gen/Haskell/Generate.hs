@@ -1,6 +1,7 @@
 {-# LANGUAGE DoAndIfThenElse, TemplateHaskell #-}
 module Rest.Gen.Haskell.Generate where
 
+import Control.Applicative
 import Control.Arrow (first)
 import Control.Category
 import Control.Monad
@@ -51,10 +52,11 @@ mkHsApi ctx r =
 mkCabalFile :: HaskellContext -> ApiResource -> IO ()
 mkCabalFile ctx tree =
   do cabalExists <- doesFileExist cabalFile
-     if cabalExists
-     then Cabal.readPackageDescription Cabal.normal cabalFile >>=
-          Cabal.writeGenericPackageDescription cabalFile . updateExposedModules modules
-     else Cabal.writeGenericPackageDescription cabalFile (mkGenericPackageDescription (wrapperName ctx) modules)
+     gpkg <-
+       if cabalExists
+       then updateExposedModules modules <$> Cabal.readPackageDescription Cabal.normal cabalFile
+       else return (mkGenericPackageDescription (wrapperName ctx) modules)
+     Cabal.writeGenericPackageDescription cabalFile gpkg
   where
     cabalFile = targetPath ctx </> wrapperName ctx ++ ".cabal"
     modules   = map (Cabal.fromString . intercalate ".") (sources ctx)
