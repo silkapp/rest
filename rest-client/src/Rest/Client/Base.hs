@@ -65,7 +65,6 @@ class (MonadResource m, MonadBaseControl IO m, Monad m, Functor m, MonadUnsafeIO
   getApiState     :: m ApiState
   putApiState     :: ApiState -> m ()
   askApiInfo      :: m ApiInfo
---  localApiInfo    :: (ApiInfo -> ApiInfo) -> m a -> m a
 
 instance (MonadBaseControl IO m, Monad m, Functor m, MonadUnsafeIO m, MonadIO m, MonadThrow m) => ApiStateC (ApiT m) where
   getApiState    = ApiT get
