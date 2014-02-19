@@ -8,17 +8,17 @@
   , UndecidableInstances
   #-}
 module Rest.Client.Base
- ( Api
- , ApiT(..)
- , ApiStateC(..)
- , runT
- , run
- , runWithPort
- , ApiResponse(..)
- , responseToMaybe
- , ApiState(..)
- , ApiInfo(..)
- ) where
+  ( ApiInfo(..)
+  , ApiState(..)
+  , ApiT(..)
+  , Api
+  , ApiStateC(..)
+  , runT
+  , run
+  , runWithPort
+  , ApiResponse(..)
+  , responseToMaybe
+  ) where
 
 import Prelude hiding (catch)
 

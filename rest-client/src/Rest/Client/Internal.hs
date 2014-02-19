@@ -1,30 +1,24 @@
 {-# LANGUAGE FlexibleInstances, OverlappingInstances, UndecidableInstances #-}
 module Rest.Client.Internal
- ( module Control.Monad
- , LB.ByteString
- , Network.URI.Encode.encode
- , hAccept
- , hContentType
- , Data.List.intercalate
- , Api
- , ApiT(..)
- , ApiStateC(..)
- , MonadIO(..)
- , runT
- , run
- , ApiResponse
- , ApiRequest(..)
- , ApiState(..)
- , ApiInfo(..)
- , doRequest
- , parseResult
- , responseToMaybe
- , fromXML
- , fromJSON
- , toXML
- , toJSON
- , ShowUrl (..)
- ) where
+  ( module Control.Monad
+  , MonadIO (..)
+  , LB.ByteString
+  , intercalate
+  , Network.URI.Encode.encode
+
+  , module Rest.Client.Base
+  , ShowUrl (..)
+  , hAccept
+  , hContentType
+
+  , ApiRequest(..)
+  , doRequest
+  , parseResult
+  , fromJSON
+  , toJSON
+  , fromXML
+  , toXML
+  ) where
 
 import Control.Arrow
 import Control.Monad
