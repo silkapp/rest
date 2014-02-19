@@ -12,7 +12,6 @@ module Rest.Client.Internal
  , MonadIO(..)
  , runT
  , run
- , withHeaders
  , ApiResponse
  , ApiRequest(..)
  , ApiState(..)
@@ -22,8 +21,6 @@ module Rest.Client.Internal
  , responseToMaybe
  , fromXML
  , fromJSON
- , fromJSONlist
- , fromXMLlist
  , toXML
  , toJSON
  , ShowUrl (..)
@@ -52,7 +49,6 @@ import Data.Aeson (FromJSON, ToJSON, decode, encode)
 import Text.XML.HXT.Arrow.Pickle
 import qualified Text.Xml.Pickle as P
 
-import Rest.Types.Container
 import Rest.Types.Error
 import Rest.Types.ShowUrl
 
@@ -136,20 +132,3 @@ instance XmlPickler a => XmlStringToType a where
               . LB.toString
               ) v
   toXML = LB.fromString . P.toXML
-
-fromJSONlist :: FromJSON a => LB.ByteString -> [a]
-fromJSONlist v = ( items
-                 . fromMaybe err
-                 . decode
-                 ) v
-  where
-    err = error ("Error parsing json list in  api bindings, this should not happen: " ++ LB.toString v)
-
-fromXMLlist :: XmlPickler a => LB.ByteString -> [a]
-fromXMLlist v = ( items
-                . either err id
-                . P.eitherFromXML
-                . LB.toString
-                ) v
-  where
-    err = error ("Error parsing xml list in  api bindings, this should not happen: " ++ LB.toString v)

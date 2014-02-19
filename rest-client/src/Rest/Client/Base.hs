@@ -14,7 +14,6 @@ module Rest.Client.Base
  , runT
  , run
  , runWithPort
- , withHeaders
  , ApiResponse(..)
  , responseToMaybe
  , ApiState(..)
@@ -144,9 +143,6 @@ runWithPort hst prt api =
      v <- runT (ApiInfo m hst prt []) (ApiState (createCookieJar [])) api
      closeManager m
      return v
-
-withHeaders :: [(String, String)] -> ApiT m a -> ApiT m a
-withHeaders hds (ApiT (StateT sf)) = ApiT (StateT (\s -> ReaderT (\i -> runReaderT (sf s) (i { headers = hds ++ headers i}))))
 
 data ApiResponse e a  =
   ApiResponse
