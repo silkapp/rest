@@ -96,16 +96,14 @@ doRequest (ApiRequest m ur ps rhds bd) =
      return res
 
 parseResult :: (L.ByteString -> Reason e) -> (L.ByteString -> a) -> Response L.ByteString -> ApiResponse e a
-parseResult e c res = convertResponse
-  (case HTTP.statusCode (HTTP.responseStatus res) of
+parseResult e c res = convertResponse $
+  case HTTP.statusCode (HTTP.responseStatus res) of
     200 -> fmap (Right . c) res
     _   -> fmap (Left . e) res
-  )
 
 fromJSON :: FromJSON a => L.ByteString -> a
 fromJSON v = (fromMaybe err . decode) v
-  where
-    err = error ("Error parsing json in  api binding, this should not happen: " ++ L.toString v)
+  where err = error ("Error parsing JSON in api binding, this should not happen: " ++ L.toString v)
 
 toJSON :: ToJSON a => a -> L.ByteString
 toJSON = encode
@@ -119,8 +117,9 @@ instance XmlStringToType String where
   toXML = L.fromString
 
 instance XmlPickler a => XmlStringToType a where
-  fromXML v = ( either (error ("Error parsing XML in  api binding, this should not happen: " ++ L.toString v)) id
+  fromXML v = ( either err id
               . P.eitherFromXML
               . L.toString
               ) v
+    where err = error ("Error parsing XML in api binding, this should not happen: " ++ L.toString v)
   toXML = L.fromString . P.toXML

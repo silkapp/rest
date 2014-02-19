@@ -86,12 +86,12 @@ instance MonadBaseControl v m => MonadBaseControl v (ApiT m) where
   restoreM     = defaultRestoreM unStMApiT
 
 instance (MonadException m, MonadBaseControl IO m) => MonadException (ResourceT m) where
-  throw        = lift . throw
-  catch c f    = lift (runResourceT c `catch` (runResourceT . f))
+  throw     = lift . throw
+  catch c f = lift (runResourceT c `catch` (runResourceT . f))
 
 instance (MonadException m, MonadBaseControl IO m) => MonadException (ApiT m) where
-  throw        = lift . throw
-  catch c f    = ApiT (unApiT c `catch` (unApiT . f))
+  throw     = lift . throw
+  catch c f = ApiT (unApiT c `catch` (unApiT . f))
 
 instance MonadThrow m => MonadThrow (ApiT m) where monadThrow = ApiT . lift . lift . lift . monadThrow
 
@@ -99,29 +99,29 @@ instance (MonadIO m, MonadThrow m, MonadUnsafeIO m, Functor m, Applicative m) =>
   liftResourceT = ApiT . lift . lift . transResourceT liftIO
 
 instance (Error e, ApiStateC m) => ApiStateC (ErrorT e m) where
- getApiState = lift getApiState
- askApiInfo = lift askApiInfo
- putApiState = lift . putApiState
+  getApiState = lift getApiState
+  askApiInfo  = lift askApiInfo
+  putApiState = lift . putApiState
 
 instance (Monoid w, ApiStateC m) => ApiStateC (RWST r w s m) where
- getApiState = lift getApiState
- askApiInfo = lift askApiInfo
- putApiState = lift . putApiState
+  getApiState = lift getApiState
+  askApiInfo  = lift askApiInfo
+  putApiState = lift . putApiState
 
 instance (Monoid w, ApiStateC m) => ApiStateC (WriterT w m) where
- getApiState = lift getApiState
- askApiInfo = lift askApiInfo
- putApiState = lift . putApiState
+  getApiState = lift getApiState
+  askApiInfo  = lift askApiInfo
+  putApiState = lift . putApiState
 
 instance ApiStateC m => ApiStateC (ListT m) where
- getApiState = lift getApiState
- askApiInfo = lift askApiInfo
- putApiState = lift . putApiState
+  getApiState = lift getApiState
+  askApiInfo  = lift askApiInfo
+  putApiState = lift . putApiState
 
 instance ApiStateC m => ApiStateC (ReaderT r m) where
- getApiState = lift getApiState
- askApiInfo = lift askApiInfo
- putApiState = lift . putApiState
+  getApiState = lift getApiState
+  askApiInfo  = lift askApiInfo
+  putApiState = lift . putApiState
 
 instance ApiStateC m => ApiStateC (StateT s m) where
   getApiState = lift getApiState
