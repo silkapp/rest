@@ -11,7 +11,7 @@
            #-}
 module Rest.Client.Internal
  ( module Control.Monad
- , BS.ByteString
+ , LB.ByteString
  , Network.URI.Encode.encode
  , hAccept
  , hContentType
@@ -44,9 +44,8 @@ import Control.Monad
 import Control.Monad.Cont   hiding (mapM)
 
 import qualified Data.ByteString.Char8 as CH
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.Lazy.UTF8 as LB
 
 import Data.List
 import Data.Maybe
@@ -74,7 +73,7 @@ data ApiRequest = ApiRequest
   , uri            :: String
   , params         :: [(String, String)]
   , requestHeaders :: RequestHeaders
-  , requestBody    :: BS.ByteString
+  , requestBody    :: LB.ByteString
   }
 
 convertResponse :: Response (Either (Reason e) a) -> ApiResponse e a
@@ -108,7 +107,7 @@ doRequest (ApiRequest m ur ps rhds bd) =
                 , path = CH.pack (p ++ "/" ++ ur)
                 , queryString = (renderQuery False . simpleQueryToQuery . Prelude.map (CH.pack *** CH.pack)) ps
                 , HTTP.requestHeaders = rhds ++ Prelude.map (fromString *** CH.pack) hds
-                , HTTP.requestBody = RequestBodyBS bd
+                , HTTP.requestBody = RequestBodyLBS bd
                 , checkStatus = (\_ _ _ -> Nothing)
                 , redirectCount = 0
                 , responseTimeout = defaultTimeout
@@ -118,50 +117,49 @@ doRequest (ApiRequest m ur ps rhds bd) =
      putApiState (ApiState (jar `mappend` responseCookieJar res))
      return res
 
-parseResult :: (CH.ByteString -> Reason e) -> (CH.ByteString -> a) -> Response LB.ByteString -> ApiResponse e a
+parseResult :: (LB.ByteString -> Reason e) -> (LB.ByteString -> a) -> Response LB.ByteString -> ApiResponse e a
 parseResult e c res = convertResponse
   (case T.statusCode (HTTP.responseStatus res) of
-    200 -> fmap (Right . c . BS.concat . LB.toChunks) res
-    _   -> fmap (Left . e . BS.concat . LB.toChunks) res
+    200 -> fmap (Right . c) res
+    _   -> fmap (Left . e) res
   )
 
-fromJSON :: FromJSON a => BS.ByteString -> a
-fromJSON v = (fromMaybe err . decode . LB.fromStrict) v
+fromJSON :: FromJSON a => LB.ByteString -> a
+fromJSON v = (fromMaybe err . decode) v
   where
-    err = error ("Error parsing json in  api binding, this should not happen: " ++ BS.toString v)
+    err = error ("Error parsing json in  api binding, this should not happen: " ++ LB.toString v)
 
-toJSON :: ToJSON a => a -> BS.ByteString
-toJSON = LB.toStrict . encode
+toJSON :: ToJSON a => a -> LB.ByteString
+toJSON = encode
 
 class XmlStringToType a where
-  fromXML :: BS.ByteString -> a
-  toXML :: a -> BS.ByteString
+  fromXML :: LB.ByteString -> a
+  toXML :: a -> LB.ByteString
 
 instance XmlStringToType String where
-  fromXML = BS.toString
-  toXML = BS.fromString
+  fromXML = LB.toString
+  toXML = LB.fromString
 
 instance XmlPickler a => XmlStringToType a where
-  fromXML v = ( either (error ("Error parsing XML in  api binding, this should not happen: " ++ BS.toString v)) id
+  fromXML v = ( either (error ("Error parsing XML in  api binding, this should not happen: " ++ LB.toString v)) id
               . P.eitherFromXML
-              . BS.toString
+              . LB.toString
               ) v
-  toXML = BS.fromString . P.toXML
+  toXML = LB.fromString . P.toXML
 
-fromJSONlist :: FromJSON a => BS.ByteString -> [a]
+fromJSONlist :: FromJSON a => LB.ByteString -> [a]
 fromJSONlist v = ( items
                  . fromMaybe err
                  . decode
-                 . LB.fromStrict
                  ) v
   where
-    err = error ("Error parsing json list in  api bindings, this should not happen: " ++ BS.toString v)
+    err = error ("Error parsing json list in  api bindings, this should not happen: " ++ LB.toString v)
 
-fromXMLlist :: XmlPickler a => BS.ByteString -> [a]
+fromXMLlist :: XmlPickler a => LB.ByteString -> [a]
 fromXMLlist v = ( items
                 . either err id
                 . P.eitherFromXML
-                . BS.toString
+                . LB.toString
                 ) v
   where
-    err = error ("Error parsing xml list in  api bindings, this should not happen: " ++ BS.toString v)
+    err = error ("Error parsing xml list in  api bindings, this should not happen: " ++ LB.toString v)
