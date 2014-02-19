@@ -1,15 +1,12 @@
 {-# OPTIONS -fno-warn-orphans #-}
-{-# LANGUAGE DeriveDataTypeable
-           , FlexibleInstances
-           , TypeSynonymInstances
-           , OverlappingInstances
-           , UndecidableInstances
-           , GeneralizedNewtypeDeriving
-           , FlexibleContexts
-           , MultiParamTypeClasses
-           , TypeFamilies
-           , OverloadedStrings
-           #-}
+{-# LANGUAGE
+    FlexibleContexts
+  , FlexibleInstances
+  , GeneralizedNewtypeDeriving
+  , MultiParamTypeClasses
+  , TypeFamilies
+  , UndecidableInstances
+  #-}
 module Rest.Client.Base
  ( Api
  , ApiT(..)

@@ -1,14 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable
-           , FlexibleInstances
-           , TypeSynonymInstances
-           , OverlappingInstances
-           , UndecidableInstances
-           , GeneralizedNewtypeDeriving
-           , FlexibleContexts
-           , MultiParamTypeClasses
-           , TypeFamilies
-           , OverloadedStrings
-           #-}
+{-# LANGUAGE FlexibleInstances, OverlappingInstances, UndecidableInstances #-}
 module Rest.Client.Internal
  ( module Control.Monad
  , LB.ByteString
