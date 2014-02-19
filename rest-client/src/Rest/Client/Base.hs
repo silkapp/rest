@@ -26,19 +26,17 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Cont   hiding (mapM)
-import Control.Monad.Trans.Control
 import Control.Monad.Error  hiding (mapM)
+import Control.Monad.Exception
 import Control.Monad.List   hiding (mapM)
 import Control.Monad.RWS    hiding (mapM)
 import Control.Monad.Reader hiding (mapM)
 import Control.Monad.State  hiding (mapM)
-import Control.Monad.Writer hiding (mapM)
+import Control.Monad.Trans.Control
 import Control.Monad.Trans.Resource
-import Control.Monad.Exception
-
+import Control.Monad.Writer hiding (mapM)
 import Data.ByteString
 import Data.CaseInsensitive
-
 import Network.HTTP.Conduit hiding (method, responseBody)
 
 import Rest.Types.Error

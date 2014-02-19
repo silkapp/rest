@@ -22,29 +22,27 @@ module Rest.Client.Internal
 
 import Control.Arrow
 import Control.Monad
-import Control.Monad.Cont   hiding (mapM)
-
-import qualified Data.ByteString.Char8 as CH
-import qualified Data.ByteString.Lazy as LB
-import qualified Data.ByteString.Lazy.UTF8 as LB
-
+import Control.Monad.Cont
+import Data.Aeson (FromJSON, ToJSON, decode, encode)
 import Data.List
 import Data.Maybe
 import Data.Monoid
 import Data.String
-
 import Network.HTTP.Conduit hiding (method, responseBody, responseHeaders)
-import qualified Network.HTTP.Conduit as HTTP
-import qualified Network.HTTP.Types as T
 import Network.HTTP.Types hiding (statusCode, statusMessage)
-import qualified Network.URI.Encode
-
-import Data.Aeson (FromJSON, ToJSON, decode, encode)
 import Text.XML.HXT.Arrow.Pickle
-import qualified Text.Xml.Pickle as P
+
+import qualified Data.ByteString.Char8     as CH
+import qualified Data.ByteString.Lazy      as LB
+import qualified Data.ByteString.Lazy.UTF8 as LB
+import qualified Network.HTTP.Conduit      as HTTP
+import qualified Network.HTTP.Types        as T
 
 import Rest.Types.Error
 import Rest.Types.ShowUrl
+
+import qualified Network.URI.Encode
+import qualified Text.Xml.Pickle    as P
 
 import Rest.Client.Base
 
