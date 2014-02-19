@@ -2,9 +2,9 @@
 module Rest.Client.Internal
   ( module Control.Monad
   , MonadIO (..)
-  , LB.ByteString
+  , L.ByteString
   , intercalate
-  , Network.URI.Encode.encode
+  , URI.encode
 
   , module Rest.Client.Base
   , ShowUrl (..)
@@ -33,15 +33,15 @@ import Network.HTTP.Types hiding (statusCode, statusMessage)
 import Text.XML.HXT.Arrow.Pickle
 
 import qualified Data.ByteString.Char8     as CH
-import qualified Data.ByteString.Lazy      as LB
-import qualified Data.ByteString.Lazy.UTF8 as LB
+import qualified Data.ByteString.Lazy      as L
+import qualified Data.ByteString.Lazy.UTF8 as L
 import qualified Network.HTTP.Conduit      as HTTP
-import qualified Network.HTTP.Types        as T
+import qualified Network.HTTP.Types        as HTTP
 
 import Rest.Types.Error
 import Rest.Types.ShowUrl
 
-import qualified Network.URI.Encode
+import qualified Network.URI.Encode as URI
 import qualified Text.Xml.Pickle    as P
 
 import Rest.Client.Base
@@ -51,14 +51,14 @@ data ApiRequest = ApiRequest
   , uri            :: String
   , params         :: [(String, String)]
   , requestHeaders :: RequestHeaders
-  , requestBody    :: LB.ByteString
+  , requestBody    :: L.ByteString
   }
 
 convertResponse :: Response (Either (Reason e) a) -> ApiResponse e a
 convertResponse r =
   ApiResponse
-   { statusCode      = T.statusCode (responseStatus r)
-   , statusMessage   = T.statusMessage (responseStatus r)
+   { statusCode      = HTTP.statusCode (responseStatus r)
+   , statusMessage   = HTTP.statusMessage (responseStatus r)
    , httpVersion     = (\v -> (httpMajor v, httpMinor v)) (responseVersion r)
    , responseHeaders = HTTP.responseHeaders r
    , responseBody    = HTTP.responseBody r
@@ -70,7 +70,7 @@ defaultTimeout = Just (1000 * 1000 * 60 * 5)
 splitHost :: String -> (String, String)
 splitHost hst = break (== '/') hst
 
-doRequest :: (ApiStateC m, MonadIO m) => ApiRequest -> m (Response LB.ByteString)
+doRequest :: (ApiStateC m, MonadIO m) => ApiRequest -> m (Response L.ByteString)
 doRequest (ApiRequest m ur ps rhds bd) =
   do mn  <- fmap manager askApiInfo
      hst <- fmap apiHost askApiInfo
@@ -95,32 +95,32 @@ doRequest (ApiRequest m ur ps rhds bd) =
      putApiState (ApiState (jar `mappend` responseCookieJar res))
      return res
 
-parseResult :: (LB.ByteString -> Reason e) -> (LB.ByteString -> a) -> Response LB.ByteString -> ApiResponse e a
+parseResult :: (L.ByteString -> Reason e) -> (L.ByteString -> a) -> Response L.ByteString -> ApiResponse e a
 parseResult e c res = convertResponse
-  (case T.statusCode (HTTP.responseStatus res) of
+  (case HTTP.statusCode (HTTP.responseStatus res) of
     200 -> fmap (Right . c) res
     _   -> fmap (Left . e) res
   )
 
-fromJSON :: FromJSON a => LB.ByteString -> a
+fromJSON :: FromJSON a => L.ByteString -> a
 fromJSON v = (fromMaybe err . decode) v
   where
-    err = error ("Error parsing json in  api binding, this should not happen: " ++ LB.toString v)
+    err = error ("Error parsing json in  api binding, this should not happen: " ++ L.toString v)
 
-toJSON :: ToJSON a => a -> LB.ByteString
+toJSON :: ToJSON a => a -> L.ByteString
 toJSON = encode
 
 class XmlStringToType a where
-  fromXML :: LB.ByteString -> a
-  toXML :: a -> LB.ByteString
+  fromXML :: L.ByteString -> a
+  toXML :: a -> L.ByteString
 
 instance XmlStringToType String where
-  fromXML = LB.toString
-  toXML = LB.fromString
+  fromXML = L.toString
+  toXML = L.fromString
 
 instance XmlPickler a => XmlStringToType a where
-  fromXML v = ( either (error ("Error parsing XML in  api binding, this should not happen: " ++ LB.toString v)) id
+  fromXML v = ( either (error ("Error parsing XML in  api binding, this should not happen: " ++ L.toString v)) id
               . P.eitherFromXML
-              . LB.toString
+              . L.toString
               ) v
-  toXML = LB.fromString . P.toXML
+  toXML = L.fromString . P.toXML
