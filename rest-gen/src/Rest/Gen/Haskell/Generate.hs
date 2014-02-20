@@ -121,8 +121,9 @@ mkFunction :: Version -> String -> ApiAction -> (Code, [String])
 mkFunction ver res (ApiAction _ lnk ai) =
   let mInp     = fmap inputInfo $ chooseType $ inputs ai
       identMod = maybe [] Ident.haskellModule (ident ai)
+      defaultErrorConversion = if fmap dataType (chooseType (outputs ai)) == Just JSON then "fromJSON" else "fromXML"
       (oMod, oType, oCType, oFunc) = maybe ([], "()", "text/plain", "(const ())") outputInfo $ chooseType $ outputs ai
-      (eMod, eType, eFunc) = headDef (([], "()", "fromXML"))
+      (eMod, eType, eFunc) = headDef (([], "()", defaultErrorConversion))
                            . map errorInfo
                            . catMaybes
                            . map (\v -> find ((v ==) . dataType) $ errors ai)
