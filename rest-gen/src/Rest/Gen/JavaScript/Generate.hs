@@ -5,11 +5,8 @@ import Code.Build
 import Code.Build.JavaScript
 
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Text.StringTemplate
-
-import Prelude hiding (catch)
 
 import Rest.Api (Version, Router)
 import Rest.Gen.Base

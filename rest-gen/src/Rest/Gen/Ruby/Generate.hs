@@ -4,13 +4,9 @@ module Rest.Gen.Ruby.Generate (mkRbApi) where
 import Code.Build
 import Code.Build.Ruby
 
-import Control.Monad
-
 import Data.Char
 import Data.List
 import Data.Maybe
-
-import Prelude hiding (catch)
 
 import Rest.Api (Version, Router)
 import Rest.Gen.Base

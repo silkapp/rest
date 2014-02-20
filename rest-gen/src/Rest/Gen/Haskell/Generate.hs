@@ -8,7 +8,7 @@ import Control.Monad
 import Data.Label (mkLabels, modify, set)
 import Data.List
 import Data.Maybe
-import Prelude hiding ((.), id, catch)
+import Prelude hiding ((.), id)
 import Safe
 import System.Directory
 import System.FilePath
