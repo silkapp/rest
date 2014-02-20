@@ -23,7 +23,7 @@ module Rest.Client.Internal
 import Control.Arrow
 import Control.Monad
 import Control.Monad.Cont
-import Data.Aeson (FromJSON, ToJSON, decode, encode)
+import Data.Aeson.Utils (FromJSON, ToJSON, decodeV, encode)
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -102,7 +102,7 @@ parseResult e c res = convertResponse $
     _   -> fmap (Left . e) res
 
 fromJSON :: FromJSON a => L.ByteString -> a
-fromJSON v = (fromMaybe err . decode) v
+fromJSON v = (fromMaybe err . decodeV) v
   where err = error ("Error parsing JSON in api binding, this should not happen: " ++ L.toString v)
 
 toJSON :: ToJSON a => a -> L.ByteString

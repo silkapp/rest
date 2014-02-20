@@ -14,6 +14,7 @@ Library
   Build-Depends:
       base                      == 4.*
     , aeson                     >= 0.7     &&  < 0.8
+    , aeson-utils               == 0.2.1
     , bytestring                >= 0.9     &&  < 0.11
     , case-insensitive          >= 0.4     &&  < 1.2
     , exception-transformers    == 0.3.*
