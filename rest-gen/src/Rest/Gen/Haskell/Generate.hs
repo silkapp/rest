@@ -97,11 +97,13 @@ mkRes ctx node =
   showCode $
       "{-# LANGUAGE OverloadedStrings #-}\n{-# OPTIONS_GHC -fno-warn-unused-imports #-}\n{- Warning!! This is automatically generated code, do not modify! -}"
   <-> hsModule (qualModName $ namespace ctx ++ resId node)
-       [ mkImports ctx node $ rewriteModules (rewrites ctx) $ nub $ concat mods
+       [ mkImports ctx node rewrittenMods
        , idData node
        , mkStack funcs
        ]
-  where (funcs, mods) = unzip $ map (mkFunction (apiVersion ctx) $ resName node) $ resItems node
+  where
+    (funcs, mods) = unzip $ map (mkFunction (apiVersion ctx) $ resName node) $ resItems node
+    rewrittenMods = rewriteModules (rewrites ctx) $ nub $ concat mods
 
 mkImports :: HaskellContext -> ApiResource -> [String] -> Code
 mkImports ctx node datImp =
