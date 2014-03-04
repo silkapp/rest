@@ -39,5 +39,4 @@ eitherToStatus (Left  e) = Failure e
 eitherToStatus (Right e) = Success e
 
 domainReason :: (a -> Int) -> a -> Reason a
-domainReason toResp = CustomReason . DomainReason toResp
-
+domainReason f x = CustomReason (DomainReason (f x) x)

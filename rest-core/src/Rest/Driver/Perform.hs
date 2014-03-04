@@ -262,21 +262,21 @@ failureWriter es err =
 
     toRespCode e =
       case e of
-        NotFound                               -> 404
-        UnsupportedRoute                       -> 404
-        UnsupportedMethod                      -> 404
-        UnsupportedVersion                     -> 404
-        NotAllowed                             -> 403
-        AuthenticationFailed                   -> 401
-        Busy                                   -> 503
-        Gone                                   -> 410
-        OutputError (UnsupportedFormat _)      -> 406
-        InputError  _                          -> 400
-        OutputError _                          -> 500
-        IdentError  _                          -> 400
-        HeaderError _                          -> 400
-        ParamError  _                          -> 400
-        CustomReason (DomainReason toRespCd c) -> toRespCd c
+        NotFound                          -> 404
+        UnsupportedRoute                  -> 404
+        UnsupportedMethod                 -> 404
+        UnsupportedVersion                -> 404
+        NotAllowed                        -> 403
+        AuthenticationFailed              -> 401
+        Busy                              -> 503
+        Gone                              -> 410
+        OutputError (UnsupportedFormat _) -> 406
+        InputError  _                     -> 400
+        OutputError _                     -> 500
+        IdentError  _                     -> 400
+        HeaderError _                     -> 400
+        ParamError  _                     -> 400
+        CustomReason (DomainReason r _)   -> r
 
 -------------------------------------------------------------------------------
 -- Printing the output resource.

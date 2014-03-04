@@ -40,10 +40,7 @@ data DataError
   | UnsupportedFormat String
   deriving (Eq, Generic, Show)
 
-data DomainReason a = DomainReason { mkResponseCode :: a -> Int, reason :: a } deriving Generic
-
-instance Eq a => Eq (DomainReason a) where
-  (DomainReason f x) == (DomainReason g y) = f x == g y && x == y
+data DomainReason a = DomainReason { responseCode :: Int, reason :: a } deriving (Eq, Generic)
 
 instance Show a => Show (DomainReason a) where
   showsPrec a (DomainReason _ e) = showParen (a >= 11) (showString "Domain " . showsPrec 11 e)
