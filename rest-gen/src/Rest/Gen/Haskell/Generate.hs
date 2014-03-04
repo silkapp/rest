@@ -94,14 +94,14 @@ writeRes ctx node =
 
 mkRes :: HaskellContext -> ApiResource -> String
 mkRes ctx node =
-  let (funcs, mods) = unzip $ map (mkFunction (apiVersion ctx) $ resName node) $ resItems node
-  in showCode $
-         "{-# LANGUAGE OverloadedStrings #-}\n{-# OPTIONS_GHC -fno-warn-unused-imports #-}\n{- Warning!! This is automatically generated code, do not modify! -}"
-     <-> hsModule (qualModName $ namespace ctx ++ resId node)
-          [ mkImports ctx node $ rewriteModules (rewrites ctx) $ nub $ concat mods
-          , idData node
-          , mkStack funcs
-          ]
+  showCode $
+      "{-# LANGUAGE OverloadedStrings #-}\n{-# OPTIONS_GHC -fno-warn-unused-imports #-}\n{- Warning!! This is automatically generated code, do not modify! -}"
+  <-> hsModule (qualModName $ namespace ctx ++ resId node)
+       [ mkImports ctx node $ rewriteModules (rewrites ctx) $ nub $ concat mods
+       , idData node
+       , mkStack funcs
+       ]
+  where (funcs, mods) = unzip $ map (mkFunction (apiVersion ctx) $ resName node) $ resItems node
 
 mkImports :: HaskellContext -> ApiResource -> [String] -> Code
 mkImports ctx node datImp =
