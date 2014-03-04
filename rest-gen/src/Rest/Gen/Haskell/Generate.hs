@@ -113,8 +113,8 @@ mkImports ctx node datImp =
       ]
   where
     extraImports  = mkStack . map ("import " <+>) $ imports ctx
-    dataImports   = mkStack . map ("import qualified " <+>) $ datImp
     parentImports = mkStack . map mkImport . tail . inits . resParents $ node
+    dataImports   = mkStack . map ("import qualified " <+>) $ datImp
     mkImport p = "import qualified" <++> qualModName (namespace ctx ++ p) <++> "as" <++> modName (last p)
 
 mkFunction :: Version -> String -> ApiAction -> (Code, [String])
