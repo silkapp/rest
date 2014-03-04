@@ -38,9 +38,12 @@ data DataError
   | PrintError        String
   | MissingField      String
   | UnsupportedFormat String
-  deriving (Generic, Show)
+  deriving (Eq, Generic, Show)
 
 data DomainReason a = DomainReason { mkResponseCode :: a -> Int, reason :: a } deriving Generic
+
+instance Eq a => Eq (DomainReason a) where
+  (DomainReason f x) == (DomainReason g y) = f x == g y && x == y
 
 instance Show a => Show (DomainReason a) where
   showsPrec a (DomainReason _ e) = showParen (a >= 11) (showString "Domain " . showsPrec 11 e)
@@ -102,7 +105,7 @@ data Reason a
 
   -- Custom domain reasons.
   | CustomReason (DomainReason a)
-  deriving (Generic, Show, Typeable)
+  deriving (Eq, Generic, Show, Typeable)
 
 instance Error DataError
 
