@@ -1,5 +1,9 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP, ScopedTypeVariables #-}
 module Rest.Gen.PHP.Generate (mkPhpApi) where
+
+#if !MIN_VERSION_base(4,6,0)
+import Prelude hiding (catch)
+#endif
 
 import Code.Build
 import Code.Build.Ruby

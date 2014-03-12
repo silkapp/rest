@@ -1,6 +1,7 @@
 {-# OPTIONS -fno-warn-orphans #-}
 {-# LANGUAGE
-    FlexibleContexts
+    CPP
+  , FlexibleContexts
   , FlexibleInstances
   , GeneralizedNewtypeDeriving
   , MultiParamTypeClasses
@@ -20,7 +21,9 @@ module Rest.Client.Base
   , responseToMaybe
   ) where
 
+#if !MIN_VERSION_base(4,6,0)
 import Prelude hiding (catch)
+#endif
 
 import Control.Applicative
 import Control.Monad
