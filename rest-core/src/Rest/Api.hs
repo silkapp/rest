@@ -1,6 +1,7 @@
-{-# LANGUAGE GADTs
-           , KindSignatures
-           #-}
+{-# LANGUAGE
+    GADTs
+  , KindSignatures
+  #-}
 module Rest.Api where
 
 import Control.Applicative (Applicative)
@@ -11,7 +12,7 @@ import Data.List.Split
 import Data.Ord (comparing)
 
 import Rest.Resource
-import Rest.Schema (singleton, named)
+import Rest.Schema (named, singleton)
 
 
 import Safe
@@ -33,17 +34,19 @@ route = flip Embed []
 compose :: Router m s -> Router s t -> Router m s
 compose (Embed r xs) b = Embed r (xs ++ [Some1 b])
 
-infixl 4 ----/
-infixl 5 ---/
-infixl 6 --/
-infixl 7 -/
+infixl 4 -/
+infixl 5 --/
+infixl 6 ---/
+infixl 7 ----/
+infixl 8 -----/
 
-(----/), (---/), (--/), (-/) :: Router m s -> Router s t -> Router m s
+(-/), (--/), (---/), (----/), (-----/) :: Router m s -> Router s t -> Router m s
 
-(----/) = compose
-( ---/) = compose
-(  --/) = compose
-(   -/) = compose
+(    -/) = compose
+(   --/) = compose
+(  ---/) = compose
+( ----/) = compose
+(-----/) = compose
 
 root :: (Applicative m, Monad m) => Router m m
 root = route $ mkResourceId { schema = singleton () $ named [] }
