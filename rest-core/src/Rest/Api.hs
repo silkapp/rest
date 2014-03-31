@@ -39,14 +39,16 @@ infixl 5 --/
 infixl 6 ---/
 infixl 7 ----/
 infixl 8 -----/
+infixl 9 ------/
 
-(-/), (--/), (---/), (----/), (-----/) :: Router m s -> Router s t -> Router m s
+(-/), (--/), (---/), (----/), (-----/), (------/) :: Router m s -> Router s t -> Router m s
 
-(    -/) = compose
-(   --/) = compose
-(  ---/) = compose
-( ----/) = compose
-(-----/) = compose
+(     -/) = compose
+(    --/) = compose
+(   ---/) = compose
+(  ----/) = compose
+( -----/) = compose
+(------/) = compose
 
 root :: (Applicative m, Monad m) => Router m m
 root = route $ mkResourceId { schema = singleton () $ named [] }
