@@ -187,7 +187,7 @@ xmlJsonE = xmlE . jsonE . someE
 -- and allow output as JSON using the `Json` type class and allow output as XML
 -- using the `XmlPickler` type class.
 
-xmlJson :: (Typeable i, ToJSON i, FromJSON i, JSONSchema i, XmlPickler i
-           ,Typeable o, ToJSON o, FromJSON o, JSONSchema o, XmlPickler o)
+xmlJson :: (Typeable i, FromJSON i, JSONSchema i, XmlPickler i
+           ,Typeable o, ToJSON o, JSONSchema o, XmlPickler o)
         => Dict h p () () e -> Dict h p i o e
 xmlJson = xmlJsonI . xmlJsonO
