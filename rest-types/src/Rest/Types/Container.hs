@@ -51,7 +51,7 @@ data List a = List
 deriveAll ''List "PFList"
 type instance PF (List a) = PFList a
 
-instance XmlPickler a => XmlPickler (List a) where xpickle = gxpickle
+instance XmlPickler a => XmlPickler (List a) where xpickle   = gxpickle
 instance ToJSON     a => ToJSON     (List a) where toJSON    = gtoJson
 instance FromJSON   a => FromJSON   (List a) where parseJSON = gparseJson
 instance JSONSchema a => JSONSchema (List a) where schema    = gSchema
