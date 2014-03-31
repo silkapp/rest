@@ -42,7 +42,6 @@ Library
     , pretty                    >= 1.0     &&  < 1.2
     , process                   >= 1.0     &&  < 1.2
     , regular                   == 0.3.*
-    , regular-xmlpickler-typlab == 0.6.*
     , rest-core                 == 0.26.*
     , rest-types                == 1.9
     , safe                      >= 0.2     &&  < 0.4
