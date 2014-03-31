@@ -39,7 +39,7 @@ import Rest.Api (Some1(..))
 import Rest.Container
 import Rest.Dictionary
 import Rest.Error
-import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range, mkInputHandler)
+import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range, mkInputHandler, Range (..))
 import Rest.Types.Container.Resource (Resource, Resources (..))
 import qualified Rest.Types.Container.Resource as R
 import qualified Rest.Api                      as Rest
@@ -291,9 +291,9 @@ mkListHandler (GenHandler dict act sec) =
 
 mkListAction :: Monad m
             => (Env h p i -> ErrorT (Reason e) m [a])
-            -> Env h ((Int, Int), p) i
+            -> Env h (Range, p) i
             -> ErrorT (Reason e) m (List a)
-mkListAction act (Env h ((f, c), p) i) = do
+mkListAction act (Env h (Range f c, p) i) = do
   xs <- act (Env h p i)
   return (List f (min c (length xs)) (take c xs))
 

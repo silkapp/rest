@@ -48,23 +48,27 @@ type ListHandler m = GenHandler m []
 secureHandler :: Handler m -> Handler m
 secureHandler h = h { secure = True }
 
+data Range = Range { offset :: Int, count :: Int }
+
 mkListing
   :: Monad m
   => Modifier () () () o e
-  -> ((Int, Int) -> ErrorT (Reason e) m [o])
+  -> (Range -> ErrorT (Reason e) m [o])
   -> ListHandler m
 mkListing d a = mkGenHandler (mkPar range . d) (a . param)
 
-range :: Param (Int, Int)
+range :: Param Range
 range = Param ["offset", "count"] $ \xs ->
   maybe (Left (ParseError "range"))
         (Right . normalize)
     $ case xs of
-        [Just o, Just c] -> (,)    <$> readMay o <*> readMay c
-        [_     , Just c] -> (0,)   <$> readMay c
-        [Just o, _     ] -> (,100) <$> readMay o
-        _                -> Just (0, 100)
-  where normalize = (max 0 *** (min 1000 . max 0))
+        [Just o, Just c] -> Range         <$> readMay o <*> readMay c
+        [_     , Just c] -> Range 0       <$> readMay c
+        [Just o, _     ] -> (`Range` 100) <$> readMay o
+        _                -> Just $ Range 0 100
+  where normalize r = Range { offset = max 0 . offset $ r
+                            , count  = min 1000 . max 0 . count $ r
+                            }
 
 mkOrderedListing
   :: Monad m

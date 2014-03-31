@@ -8,9 +8,9 @@ module Rest
 
 import Rest.Dictionary.Combinators
 import Rest.Error
-import Rest.Handler ( Env (..), Handler, ListHandler, secureHandler, range
-                    , mkListing, mkOrderedListing, mkHandler, mkInputHandler
-                    , mkConstHandler, mkIdHandler
+import Rest.Handler ( Env (..), Handler, ListHandler, secureHandler
+                    , Range (..), range, mkListing, mkOrderedListing, mkHandler
+                    , mkInputHandler, mkConstHandler, mkIdHandler
                     )
 import Rest.Resource (Resource, mkResource, mkResourceId, mkResourceReader, mkResourceReaderWith, Void)
 import Rest.Schema
