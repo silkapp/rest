@@ -23,7 +23,7 @@ Library
     , hxt                       >= 9.2     &&  < 9.4
     , monad-control             == 0.3.*
     , mtl                       >= 2.0     &&  < 2.2
-    , regular-xmlpickler-typlab == 0.6.*
+    , hxt-pickle-utils          == 0.1.*
     , resourcet                 >= 0.4     &&  < 0.5
     , rest-types                == 1.9
     , transformers-base         == 0.4.*

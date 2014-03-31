@@ -25,7 +25,7 @@ Library
     , json-schema               == 0.4.*
     , mtl                       >= 2.0    &&  < 2.2
     , random                    == 1.0.*
-    , regular-xmlpickler-typlab == 0.6.*
+    , hxt-pickle-utils          == 0.1.*
     , rest-types                == 1.9
     , safe                      >= 0.2    &&  < 0.4
     , split                     >= 0.1    &&  < 0.3
