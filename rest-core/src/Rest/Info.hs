@@ -1,11 +1,12 @@
 -- | Module facilitating informative inspection of datatypes.
 
 {-# LANGUAGE
-    TypeSynonymInstances
-  , FlexibleInstances
+    FlexibleInstances
+  , TypeSynonymInstances
   #-}
 module Rest.Info where
 
+import Data.Text (Text)
 import Data.Typeable
 
 -- | Type class representing information about the read/show function on a data
@@ -17,6 +18,9 @@ class Typeable a => Info a where
   example _ = ""
 
 instance Info String where
+  describe _ = "string"
+
+instance Info Text where
   describe _ = "string"
 
 instance Info Int where
