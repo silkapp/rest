@@ -243,7 +243,7 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dict
 handlerOutputs :: Handler m -> [DataDescription]
 handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.dicts . Dict.outputs) dict)
   where handlerOutput :: Proxy a -> Output a -> DataDescription
-        handlerOutput _ StringO  = defaultDescription { dataTypeDesc = "Text" }
+        handlerOutput _ StringO  = defaultDescription { dataTypeDesc = "String" }
         handlerOutput d XmlO     = defaultDescription { dataType      = XML
                                                       , dataTypeDesc  = "XML"
                                                       , dataSchema    = X.showSchema  . X.getXmlSchema $ d
