@@ -212,11 +212,8 @@ paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 handlerInputs :: Handler m -> [DataDescription]
 handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dicts . Dict.inputs) dict)
   where handlerInput :: Proxy a -> Input a -> DataDescription
-        handlerInput _ StringI  = defaultDescription { dataTypeDesc = "String" }
-        handlerInput _ FileI    = defaultDescription { dataType     = File
-                                                     , dataTypeDesc = "File"
-                                                     }
         handlerInput d ReadI    = defaultDescription { dataTypeDesc = describe d }
+        handlerInput _ StringI  = defaultDescription { dataTypeDesc = "String" }
         handlerInput d XmlI     = defaultDescription { dataType     = XML
                                                      , dataTypeDesc = "XML"
                                                      , dataSchema   = X.showSchema  . X.getXmlSchema $ d
@@ -228,24 +225,25 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dict
                                                      , dataTypeDesc = "XML"
                                                      , haskellType  = "String"
                                                      }
+        handlerInput _ RawXmlI  = defaultDescription { dataType     = XML
+                                                     , dataTypeDesc = "XML"
+                                                     , haskellType  = "String"
+                                                     }
         handlerInput d JsonI    = defaultDescription { dataType     = JSON
                                                      , dataTypeDesc = "JSON"
                                                      , dataExample  = J.showExample . J.schema $ d
                                                      , haskellType  = typeString d
                                                      , haskellModule = modString d
                                                      }
-        handlerInput _ RawXmlI  = defaultDescription { dataType     = XML
-                                                     , dataTypeDesc = "XML"
-                                                     , haskellType  = "String"
+        handlerInput _ FileI    = defaultDescription { dataType     = File
+                                                     , dataTypeDesc = "File"
                                                      }
 
 -- | Extract output description from handlers
 handlerOutputs :: Handler m -> [DataDescription]
 handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.dicts . Dict.outputs) dict)
   where handlerOutput :: Proxy a -> Output a -> DataDescription
-        handlerOutput _ FileO    = defaultDescription { dataType      = File
-                                                      , dataTypeDesc  = "File"
-                                                      }
+        handlerOutput _ StringO  = defaultDescription { dataTypeDesc = "Text" }
         handlerOutput d XmlO     = defaultDescription { dataType      = XML
                                                       , dataTypeDesc  = "XML"
                                                       , dataSchema    = X.showSchema  . X.getXmlSchema $ d
@@ -253,17 +251,19 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.di
                                                       , haskellType   = typeString d
                                                       , haskellModule = modString d
                                                       }
+        handlerOutput _ RawXmlO  = defaultDescription { dataType     = XML
+                                                      , dataTypeDesc = "XML"
+                                                      , haskellType  = "String"
+                                                      }
         handlerOutput d JsonO    = defaultDescription { dataType      = JSON
                                                       , dataTypeDesc  = "JSON"
                                                       , dataExample   = J.showExample . J.schema $ d
                                                       , haskellType   = typeString d
                                                       , haskellModule = modString d
                                                       }
-        handlerOutput _ RawXmlO  = defaultDescription { dataType     = XML
-                                                      , dataTypeDesc = "XML"
-                                                      , haskellType  = "String"
+        handlerOutput _ FileO    = defaultDescription { dataType      = File
+                                                      , dataTypeDesc  = "File"
                                                       }
-        handlerOutput _ StringO  = defaultDescription { dataTypeDesc = "Text" }
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]

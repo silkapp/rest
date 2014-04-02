@@ -118,7 +118,7 @@ jsId (x : xs) = x ++ concatMap upFirst xs
 mkType :: DataDescription -> (String, String, Code -> Code)
 mkType ds =
   case dataType ds of
-    JSON  -> ("json", "text/json", call "JSON.stringify")
     XML   -> ("xml" , "text/xml", id)
+    JSON  -> ("json", "text/json", call "JSON.stringify")
     File  -> ("file", "application/octet-stream", id)
     Other -> ("text", "text/plain", id)
