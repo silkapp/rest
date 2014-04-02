@@ -246,23 +246,26 @@ dataName = modName
 inputInfo :: DataDescription -> ([String], String, String, String)
 inputInfo ds =
   case dataType ds of
-    XML   -> (haskellModule ds, haskellType ds, "text/xml", "toXML")
-    JSON  -> (haskellModule ds, haskellType ds, "text/json", "toJSON")
-    File  -> ([], "ByteString", "application/octet-stream", "id")
-    Other -> ([], "ByteString", "text/plain", "id")
+    String -> ([], "String", "text/plain", "fromString")
+    XML    -> (haskellModule ds, haskellType ds, "text/xml", "toXML")
+    JSON   -> (haskellModule ds, haskellType ds, "text/json", "toJSON")
+    File   -> ([], "ByteString", "application/octet-stream", "id")
+    Other  -> ([], "ByteString", "text/plain", "id")
 
 outputInfo :: DataDescription -> ([String], String, String, String)
 outputInfo ds =
   case dataType ds of
-    XML   -> (haskellModule ds, haskellType ds, "text/xml", "fromXML")
-    JSON  -> (haskellModule ds, haskellType ds, "text/json", "fromJSON")
-    File  -> ([], "ByteString", "*", "id")
-    Other -> ([], "ByteString", "text/plain", "id")
+    String -> ([], "String", "text/plain", "toString")
+    XML    -> (haskellModule ds, haskellType ds, "text/xml", "fromXML")
+    JSON   -> (haskellModule ds, haskellType ds, "text/json", "fromJSON")
+    File   -> ([], "ByteString", "*", "id")
+    Other  -> ([], "ByteString", "text/plain", "id")
 
 errorInfo :: DataDescription -> ([String], String, String)
 errorInfo ds =
   case dataType ds of
-    XML   -> (haskellModule ds, haskellType ds, "fromXML")
-    JSON  -> (haskellModule ds, haskellType ds, "fromJSON")
-    File  -> (haskellModule ds, haskellType ds, "fromXML")
-    Other -> (haskellModule ds, haskellType ds, "fromXML")
+    String -> (haskellModule ds, haskellType ds, "fromXML")
+    XML    -> (haskellModule ds, haskellType ds, "fromXML")
+    JSON   -> (haskellModule ds, haskellType ds, "fromJSON")
+    File   -> (haskellModule ds, haskellType ds, "fromXML")
+    Other  -> (haskellModule ds, haskellType ds, "fromXML")

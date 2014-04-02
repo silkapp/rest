@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleInstances, OverlappingInstances, UndecidableInstances #-}
 module Rest.Client.Internal
   ( module Control.Monad
+  , module Data.String
+  , module Data.String.ToString
   , MonadIO (..)
   , L.ByteString
   , intercalate
@@ -28,6 +30,7 @@ import Data.List
 import Data.Maybe
 import Data.Monoid
 import Data.String
+import Data.String.ToString
 import Network.HTTP.Conduit hiding (method, responseBody, responseHeaders)
 import Network.HTTP.Types hiding (statusCode, statusMessage)
 import Text.XML.HXT.Arrow.Pickle
@@ -123,3 +126,4 @@ instance XmlPickler a => XmlStringToType a where
               ) v
     where err = error ("Error parsing XML in api binding, this should not happen: " ++ L.toString v)
   toXML = L.fromString . P.toXML
+

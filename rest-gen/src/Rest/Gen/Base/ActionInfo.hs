@@ -61,7 +61,7 @@ data ActionInfo = ActionInfo
 isAccessor :: ActionInfo -> Bool
 isAccessor ai = actionType ai == Retrieve && actionTarget ai == Self
 
-data DataType = XML | JSON | File | Other deriving (Show, Eq)
+data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
 
 -- | Description of input/output data
 data DataDescription = DataDescription
@@ -213,7 +213,9 @@ handlerInputs :: Handler m -> [DataDescription]
 handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dicts . Dict.inputs) dict)
   where handlerInput :: Proxy a -> Input a -> DataDescription
         handlerInput d ReadI    = defaultDescription { dataTypeDesc = describe d }
-        handlerInput _ StringI  = defaultDescription { dataTypeDesc = "String" }
+        handlerInput _ StringI  = defaultDescription { dataType     = String
+                                                     , dataTypeDesc = "String"
+                                                     }
         handlerInput d XmlI     = defaultDescription { dataType     = XML
                                                      , dataTypeDesc = "XML"
                                                      , dataSchema   = X.showSchema  . X.getXmlSchema $ d
@@ -243,7 +245,9 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dict
 handlerOutputs :: Handler m -> [DataDescription]
 handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.dicts . Dict.outputs) dict)
   where handlerOutput :: Proxy a -> Output a -> DataDescription
-        handlerOutput _ StringO  = defaultDescription { dataTypeDesc = "String" }
+        handlerOutput _ StringO  = defaultDescription { dataType      = String
+                                                      , dataTypeDesc = "String"
+                                                      }
         handlerOutput d XmlO     = defaultDescription { dataType      = XML
                                                       , dataTypeDesc  = "XML"
                                                       , dataSchema    = X.showSchema  . X.getXmlSchema $ d

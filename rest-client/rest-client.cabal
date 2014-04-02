@@ -26,6 +26,7 @@ Library
     , hxt-pickle-utils          == 0.1.*
     , resourcet                 >= 0.4     &&  < 0.5
     , rest-types                == 1.9
+    , tostring                  == 0.2.*
     , transformers-base         == 0.4.*
     , uri-encode                == 1.5.*
     , utf8-string               == 0.3.*

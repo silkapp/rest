@@ -134,7 +134,8 @@ accessorName = concatMap upFirst . ("Access":) . concatMap cleanName
 mkType :: DataDescription -> (String, String, Code -> Code)
 mkType ds =
   case dataType ds of
-    XML   -> ("xml" , "text/xml", (<+> ".to_s"))
-    JSON  -> ("json", "text/json", call "mkJson")
-    File  -> ("file", "application/octet-stream", id)
-    Other -> ("data", "text/plain", id)
+    String -> ("data", "text/plain", id)
+    XML    -> ("xml" , "text/xml", (<+> ".to_s"))
+    JSON   -> ("json", "text/json", call "mkJson")
+    File   -> ("file", "application/octet-stream", id)
+    Other  -> ("data", "text/plain", id)
