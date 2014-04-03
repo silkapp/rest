@@ -22,7 +22,7 @@ Library
     , json-schema == 0.4.*
     , mtl >= 2.0 && < 2.2
     , regular == 0.3.*
-    , regular-xmlpickler-typlab == 0.6.*
+    , regular-xmlpickler == 0.2.*
     , text == 0.11.*
     , tostring == 0.2.*
     , unordered-containers == 0.2.*

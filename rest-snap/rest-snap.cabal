@@ -13,26 +13,26 @@ Library
   Hs-Source-Dirs:   src
   Build-Depends:
 
-      base                      == 4.*
-    , bytestring                >= 0.9    && < 0.11
-    , case-insensitive          >= 0.4    && < 1.2
-    , containers                >= 0.4    && < 0.6
-    , snap-core                 == 0.9.*
-    , hxt                       >= 9.2    && < 9.4
-    , fclabels                  == 2.0.*
-    , json                      >= 0.4    && < 0.8
-    , json-schema               == 0.4.*
-    , mtl                       >= 2.0    && < 2.2
-    , regular-xmlpickler-typlab == 0.6.*
-    , rest-types                == 1.9
-    , safe                      >= 0.2    && < 0.4
-    , split                     >= 0.1    && < 0.3
-    , text                      == 0.11.*
-    , transformers              == 0.3.*
-    , unordered-containers      == 0.2.*
-    , uri-encode                == 1.5.*
-    , utf8-string               == 0.3.*
-    , rest-core                 == 0.27.*
+      base                 == 4.*
+    , bytestring           >= 0.9    &&  < 0.11
+    , case-insensitive     >= 0.4    &&  < 1.2
+    , containers           >= 0.4    &&  < 0.6
+    , snap-core            == 0.9.*
+    , hxt                  >= 9.2    &&  < 9.4
+    , fclabels             == 2.0.*
+    , json                 >= 0.4    &&  < 0.8
+    , json-schema          == 0.4.*
+    , mtl                  >= 2.0    &&  < 2.2
+    , regular-xmlpickler   == 0.2.*
+    , rest-types           == 1.9
+    , safe                 >= 0.2    &&  < 0.4
+    , split                >= 0.1    &&  < 0.3
+    , text                 == 0.11.*
+    , transformers         == 0.3.*
+    , unordered-containers == 0.2.*
+    , uri-encode           == 1.5.*
+    , utf8-string          == 0.3.*
+    , rest-core            == 0.27.*
 
   Exposed-Modules:  Rest.Driver.Snap
 
