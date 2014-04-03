@@ -73,16 +73,16 @@ range = Param ["offset", "count"] $ \xs ->
 mkOrderedListing
   :: Monad m
   => Modifier () () () o e
-  -> ((Int, Int, Maybe String, Maybe String) -> ErrorT (Reason e) m [o])
+  -> ((Range, Maybe String, Maybe String) -> ErrorT (Reason e) m [o])
   -> ListHandler m
 mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
 
-orderedRange :: Param (Int, Int, Maybe String, Maybe String)
+orderedRange :: Param (Range, Maybe String, Maybe String)
 orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
   case xs of
     [mo, mc, mor, md] ->
       maybe (Left (ParseError "range"))
-            (Right . (\(o, c) -> (o, c, mor, md)) . normalize)
+            (Right . (\(o, c) -> (Range o c, mor, md)) . normalize)
         $ case (mo, mc) of
             (Just o, Just c) -> (,)    <$> readMay o <*> readMay c
             (_     , Just c) -> (0,)   <$> readMay c
