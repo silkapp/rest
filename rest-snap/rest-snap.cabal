@@ -37,3 +37,6 @@ Library
 
   Exposed-Modules:  Rest.Driver.Snap
 
+Source-repository head
+  Type:              Git
+  Location:          https://github.com/silkapp/rest.git

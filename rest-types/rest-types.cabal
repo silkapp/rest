@@ -35,3 +35,6 @@ Library
                    Rest.Types.Error
                    Rest.Types.ShowUrl
 
+Source-repository head
+  Type:              Git
+  Location:          https://github.com/silkapp/rest.git

@@ -82,3 +82,7 @@ Test-suite rest-gen-tests
   main-is:             Runner.hs
   type:                exitcode-stdio-1.0
   ghc-options:         -Wall
+
+Source-repository head
+  Type:              Git
+  Location:          https://github.com/silkapp/rest.git
