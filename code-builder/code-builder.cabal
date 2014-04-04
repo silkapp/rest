@@ -2,7 +2,8 @@ Name:                code-builder
 Version:             0.1.2.1
 Synopsis:            Simple system for generating code.
 Description:         Simple system for generating code.
-License:             OtherLicense
+License:             BSD3
+License-file:        LICENSE
 Author:              Silk
 Maintainer:          code@silk.co
 Category:            Data

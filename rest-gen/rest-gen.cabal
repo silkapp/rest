@@ -6,8 +6,8 @@ Maintainer:       code@silk.co
 Category:         Web
 Build-Type:       Simple
 Cabal-Version:    >= 1.8
-License:          OtherLicense
-
+License:          BSD3
+License-File:     LICENSE
 Data-Dir:         files
 Data-Files:       Docs/*.st
                   Docs/*.js
