@@ -1,6 +1,7 @@
 Name:                code-builder
 Version:             0.1.2.1
-Synopsis:            Simple system for generating code
+Synopsis:            Simple system for generating code.
+Description:         Simple system for generating code.
 License:             OtherLicense
 Author:              Silk
 Maintainer:          code@silk.co
