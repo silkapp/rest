@@ -1,5 +1,5 @@
 Name:             rest-snap
-Version:          0.1.17.3
+Version:          0.1.17.4
 Description:      Rest driver for Snap.
 Synopsis:         Rest driver for Snap.
 Maintainer:       code@silk.co
@@ -24,7 +24,7 @@ Library
     , json-schema          == 0.4.*
     , mtl                  >= 2.0    &&  < 2.2
     , regular-xmlpickler   == 0.2.*
-    , rest-types           == 1.9
+    , rest-types           == 1.9.0.1
     , safe                 >= 0.2    &&  < 0.4
     , split                >= 0.1    &&  < 0.3
     , text                 == 0.11.*
