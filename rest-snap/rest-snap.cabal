@@ -21,7 +21,6 @@ Library
     , snap-core            == 0.9.*
     , hxt                  >= 9.2    &&  < 9.4
     , fclabels             == 2.0.*
-    , json                 >= 0.4    &&  < 0.8
     , json-schema          == 0.4.*
     , mtl                  >= 2.0    &&  < 2.2
     , regular-xmlpickler   == 0.2.*
