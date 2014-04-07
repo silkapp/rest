@@ -1,17 +1,10 @@
+-- | Combinators for specifying the input/output dictionaries of a
+-- 'Handler'. The combinators can be combined using @(@'.'@)@.
 module Rest.Dictionary.Combinators
   (
-  -- ** Header dictionaries
-
-    mkHeader
-
-  -- ** Parameter dictionaries
-
-  , mkPar
-  , addPar
-
   -- ** Input dictionaries
 
-  , someI
+    someI
   , stringI
   , xmlTextI
   , fileI
@@ -42,6 +35,15 @@ module Rest.Dictionary.Combinators
   , xmlJsonO
   , xmlJsonE
   , xmlJson
+
+  -- ** Header dictionaries
+
+  , mkHeader
+
+  -- ** Parameter dictionaries
+
+  , mkPar
+  , addPar
   ) where
 
 import Prelude hiding (id, (.))

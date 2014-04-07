@@ -9,6 +9,9 @@
   , GADTs
   , NamedFieldPuns
   #-}
+-- | A 'Resource' type for representing a REST resource, as well as
+-- smart constructors for empty resources which can them be filled in
+-- using record updates.
 module Rest.Resource where
 
 import Control.Applicative (Applicative)
@@ -17,10 +20,12 @@ import Control.Monad.Reader
 import Rest.Handler
 import Rest.Schema (Schema (..), Step (..))
 
--- | The 'Void' type is used as the identifier for resources that
--- can't be routed to. It contains no values apart from bottom.
+-- * The @Resource@ type.
 
-newtype Void = Void { magic :: forall a. a }
+-- | The 'Resource' data type represents a single resource in a REST
+-- API. Handlers run in a monad @m@, while things below this resource
+-- run in @s@. The identifiers @sid@, @mid@ and @aid@ identify a
+-- single item, a listing and an action.
 
 data Resource m s sid mid aid where
   Resource :: (Applicative m, Monad m, Applicative s, Monad s) =>
@@ -42,6 +47,11 @@ data Resource m s sid mid aid where
     , selects     :: [(String, Handler s)]       -- ^ Properties of a single resource.
     } -> Resource m s sid mid aid
 
+-- * Smart constructors for empty resources.
+
+-- | Create an empty resource given an 'enter' function. It has no
+-- name, so if you wish to route to this resource, you should set one.
+
 mkResource :: (Applicative m, Monad m, Applicative s, Monad s) => (forall b. sid -> s b -> m b) -> Resource m s sid Void Void
 mkResource e = Resource
   { name           = ""
@@ -62,12 +72,29 @@ mkResource e = Resource
   , selects        = []
   }
 
+-- | Make a resource that doesn't add any information for
+-- subresources (i.e. 'enter' is set to 'id').
+
 mkResourceId :: (Applicative m, Monad m) => Resource m m sid Void Void
 mkResourceId = mkResource (const id)
 
-mkResourceReaderWith :: (Applicative m, Monad m, Applicative s, Monad s) => (forall b. s b -> ReaderT sid m b) -> Resource m s sid Void Void
-mkResourceReaderWith f = mkResource (\a -> flip runReaderT a . f)
+-- | Make a resource that provides the single resource identifier to
+-- its subresources.
 
 mkResourceReader :: (Applicative m, Monad m) => Resource m (ReaderT sid m) sid Void Void
 mkResourceReader = mkResourceReaderWith id
 
+-- | Make a resource that provides the single resource identifier to
+-- its subresources, by giving a convertion function to a 'ReaderT'.
+-- If @s@ is a newtype around 'ReaderT', for example, the function
+-- should unwrap the newtype.
+
+mkResourceReaderWith :: (Applicative m, Monad m, Applicative s, Monad s) => (forall b. s b -> ReaderT sid m b) -> Resource m s sid Void Void
+mkResourceReaderWith f = mkResource (\a -> flip runReaderT a . f)
+
+-- * The @Void@ type.
+
+-- | The 'Void' type is used as the identifier for resources that
+-- can't be routed to. It contains no values apart from bottom.
+
+newtype Void = Void { magic :: forall a. a }

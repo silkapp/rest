@@ -1,9 +1,19 @@
+-- | These modules allow you to define a single REST resource. Then,
+-- you can combine multiple resources into an API using "Rest.Api",
+-- and run them using 'rest-happstack' or 'rest-snap', or generate
+-- client code or documentation using 'rest-gen'.
 module Rest
-  ( module Rest.Dictionary.Combinators
-  , module Rest.Error
-  , module Rest.Handler
-  , module Rest.Resource
+  ( -- | Creating a 'Resource'.
+    module Rest.Resource
+    -- | Defining the routing schema.
   , module Rest.Schema
+    -- | Defining 'Handler's for endpoints in the resource.
+  , module Rest.Handler
+    -- | Combinators for defining input and ouput dictionaries of
+    -- handlers.
+  , module Rest.Dictionary.Combinators
+    -- | Working with errors returned from handlers.
+  , module Rest.Error
   ) where
 
 import Rest.Dictionary.Combinators
