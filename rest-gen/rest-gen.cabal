@@ -47,7 +47,7 @@ Library
     , safe                      >= 0.2     &&  < 0.4
     , split                     >= 0.1     &&  < 0.3
     , tagged                    >= 0.2     &&  < 0.8
-    , text                      == 0.11.*
+    , text                      >= 0.11    &&  < 1.2
     , unordered-containers      == 0.2.*
     , utf8-string               == 0.3.*
     , vector                    == 0.10.*
