@@ -1,0 +1,10 @@
+language: haskell
+install:
+  - "cabal install code-builder/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ --dry-run -v3"
+script:
+  - "cabal install code-builder/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/"
+notifications:
+  email:
+    recipients: travis@silk.co
+    on_success: change
+    on_failure: change
