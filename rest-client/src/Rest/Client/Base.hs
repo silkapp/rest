@@ -28,13 +28,13 @@ import Prelude hiding (catch)
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Base
-import Control.Monad.Cont   hiding (mapM)
-import Control.Monad.Error  hiding (mapM)
+import Control.Monad.Cont hiding (mapM)
+import Control.Monad.Error hiding (mapM)
 import Control.Monad.Exception
-import Control.Monad.List   hiding (mapM)
-import Control.Monad.RWS    hiding (mapM)
+import Control.Monad.List hiding (mapM)
+import Control.Monad.RWS hiding (mapM)
 import Control.Monad.Reader hiding (mapM)
-import Control.Monad.State  hiding (mapM)
+import Control.Monad.State hiding (mapM)
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Resource
 import Control.Monad.Writer hiding (mapM)
@@ -132,17 +132,18 @@ instance ApiStateC m => ApiStateC (StateT s m) where
   putApiState = lift . putApiState
 
 runT :: (MonadBaseControl IO m, Monad m) => ApiInfo -> ApiState -> ApiT m a -> m a
-runT inf st api = runResourceT (runReaderT (evalStateT (unApiT api) st) inf)
+runT inf st api = runResourceT $ runT' inf st api
+
+runT' :: (MonadBaseControl IO m, Monad m) => ApiInfo -> ApiState -> ApiT m a -> ResourceT m a
+runT' inf st api = runReaderT (evalStateT (unApiT api) st) inf
 
 run :: String -> ApiT IO a -> IO a
 run = flip runWithPort 80
 
 runWithPort :: String -> Int -> ApiT IO a -> IO a
 runWithPort hst prt api =
-  do m <- newManager def
-     v <- runT (ApiInfo m hst prt []) (ApiState (createCookieJar [])) api
-     closeManager m
-     return v
+  withManager $ \m ->
+    runT' (ApiInfo m hst prt []) (ApiState (createCookieJar [])) api
 
 data ApiResponse e a  =
   ApiResponse

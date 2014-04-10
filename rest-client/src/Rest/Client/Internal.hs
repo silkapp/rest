@@ -1,4 +1,9 @@
-{-# LANGUAGE FlexibleInstances, OverlappingInstances, UndecidableInstances #-}
+{-# LANGUAGE
+    CPP
+  , FlexibleInstances
+  , OverlappingInstances
+  , UndecidableInstances
+  #-}
 module Rest.Client.Internal
   ( module Control.Monad
   , module Data.String
@@ -34,6 +39,9 @@ import Data.String.ToString
 import Network.HTTP.Conduit hiding (method, responseBody, responseHeaders)
 import Network.HTTP.Types hiding (statusCode, statusMessage)
 import Text.XML.HXT.Arrow.Pickle
+#if MIN_VERSION_http_conduit(2,0,0)
+import Data.Default (def)
+#endif
 
 import qualified Data.ByteString.Char8     as CH
 import qualified Data.ByteString.Lazy      as L
