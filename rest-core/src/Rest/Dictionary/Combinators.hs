@@ -54,7 +54,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
 import Data.Text.Lazy (Text)
 import Data.Typeable
-import Network.CGI.Multipart (BodyPart)
+import Network.Multipart (BodyPart)
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.Label.Total as L
 

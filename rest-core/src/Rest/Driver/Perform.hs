@@ -22,7 +22,7 @@ import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.UUID (UUID)
-import Network.CGI.Multipart (showMultipartBody, MultiPart(..), BodyPart (..))
+import Network.Multipart (showMultipartBody, MultiPart(..), BodyPart (..))
 import Safe
 import System.IO.Unsafe
 import System.Random (randomIO)

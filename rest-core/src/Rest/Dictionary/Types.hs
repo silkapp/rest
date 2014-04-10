@@ -52,7 +52,7 @@ import Data.Label ((:->), lens)
 import Data.Label.Derive
 import Data.Text.Lazy (Text)
 import Data.Typeable
-import Network.CGI.Multipart (BodyPart)
+import Network.Multipart (BodyPart)
 import Text.XML.HXT.Arrow.Pickle
 
 import Rest.Error
