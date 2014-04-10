@@ -41,7 +41,7 @@ executable rest-example
     , monad-control
     , mtl
     , regular
-    , regular-xmlpickler-typlab
+    , regular-xmlpickler
     , rest-core
     , rest-happstack
     , stm
