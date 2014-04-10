@@ -24,7 +24,7 @@ Library
     , json-schema          == 0.4.*
     , mtl                  >= 2.0    &&  < 2.2
     , regular-xmlpickler   == 0.2.*
-    , rest-types           == 1.9.0.1
+    , rest-types           == 1.9.*
     , safe                 >= 0.2    &&  < 0.4
     , split                >= 0.1    &&  < 0.3
     , text                 >= 0.11   &&  < 1.2

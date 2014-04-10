@@ -43,7 +43,7 @@ Library
     , process                   >= 1.0     &&  < 1.2
     , regular                   == 0.3.*
     , rest-core                 == 0.27.*
-    , rest-types                == 1.9.0.1
+    , rest-types                == 1.9.*
     , safe                      >= 0.2     &&  < 0.4
     , split                     >= 0.1     &&  < 0.3
     , tagged                    >= 0.2     &&  < 0.8
