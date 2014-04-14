@@ -25,6 +25,8 @@ import Control.Monad.State (StateT, evalStateT, MonadState)
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
+import Network.Multipart (BodyPart (..))
+import Network.CGI.Protocol  (HeaderName (..))
 import Safe
 import qualified Control.Monad.State       as State
 import qualified Data.ByteString.UTF8      as UTF8
@@ -38,7 +40,6 @@ import Rest.Container
 import Rest.Dictionary
 import Rest.Error
 import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range, mkInputHandler, Range (..))
-import Rest.Multipart (BodyPart (..), HeaderName (..))
 import Rest.Types.Container.Resource (Resource, Resources (..))
 import qualified Rest.Types.Container.Resource as R
 import qualified Rest.Api                      as Rest
