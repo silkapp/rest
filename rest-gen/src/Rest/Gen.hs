@@ -4,9 +4,9 @@ import Data.Char
 import Data.Label
 import Data.Foldable
 import Data.Maybe
-import System.Cmd
 import System.Directory
 import System.Exit
+import System.Process
 
 import Rest.Api (withVersion, Api, Some1 (..))
 
