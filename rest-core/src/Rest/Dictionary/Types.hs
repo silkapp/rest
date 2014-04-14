@@ -52,11 +52,11 @@ import Data.Label ((:->), lens)
 import Data.Label.Derive
 import Data.Text.Lazy (Text)
 import Data.Typeable
-import Network.Multipart (BodyPart)
 import Text.XML.HXT.Arrow.Pickle
 
 import Rest.Error
 import Rest.Info
+import Rest.Multipart (BodyPart)
 
 -- | The `Format` datatype enumerates all input and output formats we might recognize.
 

@@ -22,7 +22,6 @@ import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.UUID (UUID)
-import Network.Multipart (showMultipartBody, MultiPart(..), BodyPart (..))
 import Safe
 import System.IO.Unsafe
 import System.Random (randomIO)
@@ -40,6 +39,7 @@ import Rest.Dictionary ( Dict, Format (..)
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
+import Rest.Multipart (showMultipartBody, MultiPart(..), BodyPart (..))
 import qualified Rest.Dictionary   as D
 import qualified Rest.Driver.Types as Rest
 
