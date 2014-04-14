@@ -25,8 +25,7 @@ import Control.Monad.State (StateT, evalStateT, MonadState)
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
-import Network.Multipart (BodyPart (..))
-import Network.CGI.Protocol  (HeaderName (..))
+import Network.Multipart (BodyPart (..), HeaderName (..))
 import Safe
 import qualified Control.Monad.State       as State
 import qualified Data.ByteString.UTF8      as UTF8
