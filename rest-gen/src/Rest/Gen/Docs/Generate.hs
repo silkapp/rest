@@ -14,7 +14,7 @@ import qualified Prelude as P
 
 import Control.Monad hiding (forM_)
 import Data.Function (on)
-import Data.HashTable
+import Data.Hashable (hash)
 import Data.List hiding (head, span)
 import Data.String
 import System.Directory
@@ -166,7 +166,7 @@ dataDescriptions _ descs =
 
 mkCode :: String -> String -> String -> Html
 mkCode lng cap cd =
-  let eid = "idv" ++ (show $ toInteger $ hashString cd)
+  let eid = "idv" ++ show (hash cd)
   in do div ! cls "modal hide fade code" ! id (toValue eid) $
           do cdiv "modal-header" $
               do a ! href (toValue "#") ! cls "close" $ toHtml "x"
