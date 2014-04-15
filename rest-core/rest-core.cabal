@@ -1,5 +1,5 @@
 Name:             rest-core
-Version:          0.28
+Version:          0.28.0.1
 Description:      Rest API library.
 Synopsis:         Rest API library.
 Maintainer:       code@silk.co
@@ -13,7 +13,7 @@ Library
   GHC-Options:     -Wall
   Hs-Source-Dirs:   src
   Build-Depends:
-      base                      == 4.*
+      base                      >= 4.5    &&  < 4.8
     , aeson                     >= 0.7    &&  < 0.8
     , aeson-utils               == 0.2.*
     , bytestring                >= 0.9    &&  < 0.11
@@ -55,7 +55,7 @@ Library
                     Rest.Schema
 
 Test-suite rest-tests
-  build-depends:       base                 >= 4.5    && < 4.7
+  build-depends:       base                 >= 4.5    && < 4.8
                      , HUnit                == 1.2.*
                      , bytestring           >= 0.9    && < 0.11
                      , mtl                  >= 2.0    && < 2.2
