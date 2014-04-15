@@ -13,7 +13,6 @@ Library
   GHC-Options:     -Wall
   Hs-Source-Dirs:   src
   Build-Depends:
-
       base == 4.*
     , aeson >= 0.7 && < 0.8
     , bytestring >= 0.9 && < 0.11
@@ -24,8 +23,8 @@ Library
     , mtl >= 2.0 && < 2.2
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*
+    , rest-stringmap == 0.1.*
     , text >= 0.11 && < 1.2
-    , tostring == 0.2.*
     , unordered-containers == 0.2.*
     , utf8-string == 0.3.*
     , uuid >= 1.2 && < 1.4

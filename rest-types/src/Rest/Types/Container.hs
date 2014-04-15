@@ -15,20 +15,13 @@
   #-}
 module Rest.Types.Container
   ( List(..)
-  , StringMap(..)
-  , fromStringMap
-  , toStringMap
   , SomeOutput(..)
   ) where
 
-import Control.Applicative
-import Data.Aeson
+import Prelude hiding (mapM)
+
+import Data.Aeson.Types
 import Data.JSON.Schema hiding (Object, Value)
-import Data.JSON.Schema.Combinators (field)
-import Data.Map (Map)
-import Data.String
-import Data.String.ToString
-import Data.Text (pack, unpack)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
@@ -37,8 +30,6 @@ import Generics.Regular.XmlPickler (gxpickle)
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
-import qualified Data.HashMap.Strict as H
-import qualified Data.Map            as M
 
 -------------------------------------------------------------------------------
 
@@ -55,31 +46,6 @@ instance XmlPickler a => XmlPickler (List a) where xpickle   = gxpickle
 instance ToJSON     a => ToJSON     (List a) where toJSON    = gtoJson
 instance FromJSON   a => FromJSON   (List a) where parseJSON = gparseJson
 instance JSONSchema a => JSONSchema (List a) where schema    = gSchema
-
--------------------------------------------------------------------------------
-
-newtype StringMap a b = StringMap { unMap :: [(a, b)] } deriving (Show, Typeable)
-
-deriveAll ''StringMap "PFStringMap"
-type instance PF (StringMap a b) = PFStringMap a b
-
-instance (IsString a, ToString a, XmlPickler b) => XmlPickler (StringMap a b) where
-  xpickle = xpElem "map" (xpWrap (StringMap, unMap) (xpList (xpPair (xpElem "key" (xpWrap (fromString,toString) xpText)) xpickle)))
-
-instance (ToString a, ToJSON b) => ToJSON (StringMap a b) where
-  toJSON = toJSON . Object . H.fromList . map (\(a,b) -> pack (toString a) .= b) . unMap
-
-instance (IsString a, FromJSON b) => FromJSON (StringMap a b) where
-  parseJSON = withObject "StringMap" (fmap StringMap . mapM (\(k,v) -> (fromString . unpack $ k,) <$> parseJSON v) . H.toList)
-
-instance (IsString a, ToString a, JSONSchema b) => JSONSchema (StringMap a b) where
-  schema _ = field "key" False (schema (Proxy :: Proxy b))
-
-fromStringMap :: (Ord a, IsString a, ToString a) => StringMap a b -> Map a b
-fromStringMap = M.fromList . unMap
-
-toStringMap :: (Ord a, IsString a, ToString a) => Map a b -> StringMap a b
-toStringMap = StringMap . M.toList
 
 -------------------------------------------------------------------------------
 

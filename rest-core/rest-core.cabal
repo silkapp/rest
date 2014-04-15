@@ -28,12 +28,13 @@ Library
     , mtl                       >= 2.0    &&  < 2.2
     , multipart                 >= 0.1.1  &&  < 0.2
     , random                    == 1.0.*
+    , rest-stringmap            == 0.1.*
     , rest-types                == 1.9.*
     , safe                      >= 0.2    &&  < 0.4
     , split                     >= 0.1    &&  < 0.3
     , text                      >= 0.11   &&  < 1.2
-    , tostring                  == 0.2.*
     , transformers              >= 0.2    &&  < 0.4
+    , unordered-containers      == 0.2.*
     , uri-encode                == 1.5.*
     , utf8-string               == 0.3.*
     , uuid                      >= 1.2    &&  < 1.4

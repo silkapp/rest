@@ -1,4 +1,7 @@
-{-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
+{-# LANGUAGE
+    OverloadedStrings
+  , ScopedTypeVariables
+  #-}
 
 import Control.Applicative
 import Control.Monad
@@ -6,12 +9,13 @@ import Control.Monad.Reader
 import Data.Monoid
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (Assertion, assertFailure, assertEqual)
+import Test.HUnit (Assertion, assertEqual, assertFailure)
 
 import qualified Data.ByteString.Char8 as Char8
-import qualified Data.Map as Map
+import qualified Data.HashMap.Strict   as H
 
 import Rest.Api hiding (route)
+import Rest.Dictionary
 import Rest.Driver.Perform (accept)
 import Rest.Driver.RestM (runRestM_)
 import Rest.Driver.Routing
@@ -19,8 +23,7 @@ import Rest.Driver.Types
 import Rest.Handler
 import Rest.Resource
 import Rest.Schema
-import Rest.Dictionary
-import qualified Rest.Api as Rest
+import qualified Rest.Api          as Rest
 import qualified Rest.Driver.RestM as RestM
 
 main :: IO ()
@@ -202,5 +205,5 @@ allMethods = [GET, PUT, POST, DELETE]
 
 testAcceptHeaders :: Assertion
 testAcceptHeaders =
-  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = Map.singleton "Accept" "text/json" } accept
+  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "text/json" } accept
      assertEqual "Accept json format." [JsonFormat] fmt

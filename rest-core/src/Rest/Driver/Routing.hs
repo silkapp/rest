@@ -4,6 +4,8 @@
            , NamedFieldPuns
            , FlexibleContexts
            , StandaloneDeriving
+    , ViewPatterns
+    , NamedFieldPuns
            , GADTs
            , ScopedTypeVariables
            , DeriveDataTypeable
@@ -34,13 +36,14 @@ import Network.Multipart (BodyPart (..), HeaderName (..))
 import Safe
 import qualified Control.Monad.State       as State
 import qualified Data.ByteString.Lazy.UTF8 as LUTF8
+import qualified Data.HashMap.Strict       as H
 import qualified Data.Label.Total          as L
-import qualified Data.Map                  as Map
 
 import Network.URI.Encode (decode)
 import Rest.Api (Some1(..))
 import Rest.Container
 import Rest.Dictionary
+import qualified Rest.StringMap.HashMap.Strict as StringHashMap
 import Rest.Error
 import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range, mkInputHandler, Range (..))
 import Rest.Types.Container.Resource (Resource, Resources (..))
@@ -308,11 +311,11 @@ mkMultiHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> p
     mNewDict =  L.traverse inputs mappingI
             <=< L.traverse outputs (mappingO <=< statusO (L.get errors newErrDict))
              $  newErrDict
-    newAct (Env hs ps (StringMap vs)) =
-      do bs <- lift $ forM vs $ \(k, v) -> runErrorT $
+    newAct (Env hs ps vs) =
+      do bs <- lift $ forM (StringHashMap.toList vs) $ \(k, v) -> runErrorT $
            do i <- parseIdent sBy k
               mapErrorT (run i) (act (Env hs ps v))
-         return (StringMap (zipWith (\(k, _) b -> (k, eitherToStatus b)) vs bs))
+         return . StringHashMap.fromList $ zipWith (\(k, _) b -> (k, eitherToStatus b)) (StringHashMap.toList vs) bs
 
 mkMultiGetHandler :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Handler m
 mkMultiGetHandler root = mkInputHandler (xmlJsonI . someI . multipartO) $ \(Resources rs) -> multiGetHandler rs
@@ -332,13 +335,13 @@ runResource root res
     routeResource uri = runRouter GET (splitUriString uri) (routeRoot root)
 
     toRestInput r = Rest.emptyInput
-      { Rest.headers    = Map.map R.unValue . fromStringMap . R.headers    $ r
-      , Rest.parameters = Map.map R.unValue . fromStringMap . R.parameters $ r
+      { Rest.headers    = H.map (R.unValue) . StringHashMap.toHashMap . R.headers    $ r
+      , Rest.parameters = H.map (R.unValue) . StringHashMap.toHashMap . R.parameters $ r
       , Rest.body       = LUTF8.fromString (R.input r)
       , Rest.paths      = splitUriString (R.uri r)
       }
 
-    mkHeaders = map (first HeaderName) . Map.toList
+    mkHeaders = map (first HeaderName) . H.toList
 
     mkBodyPart bdy restOutput =
       let hdrs = (HeaderName "X-Response-Code", maybe "200" show (Rest.responseCode restOutput))

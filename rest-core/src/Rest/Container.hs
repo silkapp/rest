@@ -1,11 +1,11 @@
 {-# LANGUAGE
-    TemplateHaskell
+    DeriveDataTypeable
   , EmptyDataDecls
-  , TypeFamilies
   , FlexibleInstances
-  , ScopedTypeVariables
-  , DeriveDataTypeable
   , GADTs
+  , ScopedTypeVariables
+  , TemplateHaskell
+  , TypeFamilies
   #-}
 module Rest.Container
   ( module Rest.Types.Container
@@ -18,12 +18,10 @@ module Rest.Container
   ) where
 
 import Data.Maybe
-import Data.String
-import Data.String.ToString
-import Data.Typeable
 
 import Rest.Dictionary
 import Rest.Error
+import Rest.StringMap.HashMap.Strict
 import Rest.Types.Container
 
 listI :: Inputs a -> Maybe (Inputs (List a))
@@ -50,26 +48,26 @@ listO (Dicts os) =
     listDictO JsonO = Just JsonO
     listDictO _     = Nothing
 
-mappingI :: forall k i. (Typeable k, IsString k, ToString k) => Inputs i -> Maybe (Inputs (StringMap k i))
+mappingI :: forall i. Inputs i -> Maybe (Inputs (StringHashMap String i))
 mappingI None       = Just (Dicts [XmlI, JsonI])
 mappingI (Dicts is) =
   case mapMaybe mappingDictI is of
     []  -> Nothing
     mis -> Just (Dicts mis)
   where
-    mappingDictI :: Input i -> Maybe (Input (StringMap k i))
+    mappingDictI :: Input i -> Maybe (Input (StringHashMap String i))
     mappingDictI XmlI  = Just XmlI
     mappingDictI JsonI = Just JsonI
     mappingDictI _     = Nothing
 
-mappingO :: forall k o. (Typeable k, IsString k, ToString k) => Outputs o -> Maybe (Outputs (StringMap k o))
+mappingO :: forall o. Outputs o -> Maybe (Outputs (StringHashMap String o))
 mappingO None       = Just (Dicts [XmlO, JsonO])
 mappingO (Dicts os) =
   case mapMaybe mappingDictO os of
     []  -> Nothing
     mos -> Just (Dicts mos)
   where
-    mappingDictO :: Output o -> Maybe (Output (StringMap k o))
+    mappingDictO :: Output o -> Maybe (Output (StringHashMap String o))
     mappingDictO XmlO  = Just XmlO
     mappingDictO JsonO = Just JsonO
     mappingDictO _     = Nothing

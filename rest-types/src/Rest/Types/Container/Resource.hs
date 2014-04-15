@@ -1,9 +1,9 @@
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveGeneric
+  , EmptyDataDecls
   , TemplateHaskell
   , TypeFamilies
-  , EmptyDataDecls
   #-}
 module Rest.Types.Container.Resource
   ( Resource (..)
@@ -20,12 +20,11 @@ import GHC.Generics
 import Generics.Generic.Aeson
 import Generics.Regular (PF, deriveAll)
 import Generics.Regular.XmlPickler (gxpickle)
+import Rest.StringMap.HashMap.Strict (StringHashMap)
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.JSON.Schema as Json
 
-import Rest.Types.Container
-
-type KeyValues = StringMap String Value
+type KeyValues = StringHashMap String Value
 
 newtype Value = Value { unValue :: String } deriving (Show, Typeable)
 
