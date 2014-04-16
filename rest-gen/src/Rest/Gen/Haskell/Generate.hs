@@ -1,4 +1,7 @@
-{-# LANGUAGE DoAndIfThenElse, TemplateHaskell #-}
+{-# LANGUAGE
+    DoAndIfThenElse
+  , TemplateHaskell
+  #-}
 module Rest.Gen.Haskell.Generate where
 
 import Control.Applicative
@@ -8,7 +11,7 @@ import Control.Monad
 import Data.Label (mkLabels, modify, set)
 import Data.List
 import Data.Maybe
-import Prelude hiding ((.), id)
+import Prelude hiding (id, (.))
 import Safe
 import System.Directory
 import System.FilePath
@@ -17,14 +20,14 @@ import qualified Distribution.ModuleName                     as Cabal
 import qualified Distribution.Package                        as Cabal
 import qualified Distribution.PackageDescription             as Cabal
 import qualified Distribution.PackageDescription.Parse       as Cabal
-import qualified Distribution.Verbosity                      as Cabal
-import qualified Distribution.Version                        as Cabal
 import qualified Distribution.PackageDescription.PrettyPrint as Cabal
 import qualified Distribution.Simple.Utils                   as Cabal
+import qualified Distribution.Verbosity                      as Cabal
+import qualified Distribution.Version                        as Cabal
 
 import Code.Build
 import Code.Build.Haskell
-import Rest.Api (Version, Router)
+import Rest.Api (Router, Version)
 
 import Rest.Gen.Base
 import Rest.Gen.Utils
@@ -229,7 +232,13 @@ rewriteModules rw (v : vs) = maybe v (++ (" as " ++ v)) (lookup v rw) : rewriteM
 
 hsName :: [String] -> String
 hsName []       = ""
-hsName (x : xs) = downFirst x ++ concatMap upFirst xs
+hsName (x : xs) = clean $ downFirst x ++ concatMap upFirst xs
+  where
+    clean s = if s `elem` reservedNames then s ++ "_" else s
+    reservedNames =
+      ["as","case","class","data","instance","default","deriving","do"
+      ,"foreign","if","then","else","import","infix","infixl","infixr","let"
+      ,"in","module","newtype","of","qualified","type","where"]
 
 qualModName :: ResourceId -> String
 qualModName = intercalate "." . map modName
