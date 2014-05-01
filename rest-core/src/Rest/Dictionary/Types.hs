@@ -94,6 +94,10 @@ data Header h where
   NoHeader ::                                                       Header ()
   Header   :: [String] -> ([Maybe String] -> Either DataError h) -> Header h
 
+instance Show (Header h) where
+  showsPrec _ NoHeader      = showString "NoHeader"
+  showsPrec n (Header hs _) = showParen (n > 9) (showString "Header " . showsPrec 10 hs)
+
 -- | The explicit dictionary `Parameter` describes how to translate the request
 -- parameters to some Haskell value. The first field in the `Header`
 -- constructor is a white list of paramters we can recognize, used in generic
@@ -109,6 +113,15 @@ data Param p where
   NoParam   ::                                                       Param ()
   Param     :: [String] -> ([Maybe String] -> Either DataError p) -> Param p
   TwoParams :: Param p -> Param q                                 -> Param (p, q)
+
+instance Show (Param p) where
+  showsPrec _ NoParam         = showString "NoParam"
+  showsPrec n (Param ns _)    = showParen (n > 9) (showString "Param " . showsPrec 10 ns)
+  showsPrec n (TwoParams p q) = showParen (n > 9) ( showString "TwoParams "
+                                                  . showsPrec 10 p
+                                                  . showString " "
+                                                  . showsPrec 10 q
+                                                  )
 
 -- | The explicitly dictionary `Input` describes how to translate the request
 -- body into some Haskell value. We currently use a constructor for every
@@ -187,7 +200,7 @@ fclabels [d|
     , inputs  :: Inputs  i
     , outputs :: Outputs o
     , errors  :: Errors  e
-    }
+    } deriving Show
   |]
 
 -- | The empty dictionary, recognizing no types.
