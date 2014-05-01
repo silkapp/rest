@@ -146,7 +146,7 @@ routeUnnamed :: Rest.Resource m s sid mid aid
              -> Router (RunnableHandler m)
 routeUnnamed resource@(Rest.Resource { Rest.list }) subRouters cardinality =
   case cardinality of
-    Rest.Single sBy -> withSegment (multiPut resource sBy) $ \seg ->
+    Rest.Single sBy -> withSegment (multi resource sBy) $ \seg ->
       parseIdent sBy seg >>= \sid -> withSubresource sid resource subRouters
     Rest.Many   mBy ->
       do seg <- popSegment
@@ -162,18 +162,23 @@ routeGetter :: Rest.Getter sid
 routeGetter getter resource subRouters =
   case getter of
     Rest.Singleton sid -> getOrDeep sid
-    Rest.By        sBy -> withSegment (multiPut resource sBy) $ \seg ->
+    Rest.By        sBy -> withSegment (multi resource sBy) $ \seg ->
                             parseIdent sBy seg >>= getOrDeep
   where
     getOrDeep sid = withSubresource sid resource subRouters
 
-multiPut :: Rest.Resource m s sid mid aid -> Rest.Id sid -> Router (RunnableHandler m)
-multiPut (Rest.Resource { Rest.update, Rest.enter }) sBy =
-  do hasMethod PUT
-     maybe (apiError UnsupportedRoute) return $
-       do updateH    <- update
-          putHandler <- mkMultiPutHandler sBy enter updateH
-          return (RunnableHandler id putHandler)
+multi :: Rest.Resource m s sid mid aid -> Rest.Id sid -> Router (RunnableHandler m)
+multi (Rest.Resource { Rest.update, Rest.remove, Rest.enter }) sBy =
+  ask >>= \method ->
+  case method of
+    PUT    -> handleOrNotFound update
+    DELETE -> handleOrNotFound remove
+    _      -> apiError UnsupportedMethod
+  where
+    handleOrNotFound handler =
+      maybe (apiError UnsupportedRoute)
+            (return . RunnableHandler id)
+            (handler >>= mkMultiHandler sBy enter)
 
 routeListGetter :: Monad m
                 => Rest.Getter mid
@@ -296,8 +301,8 @@ mkListAction act (Env h (Range f c, p) i) = do
   xs <- act (Env h p i)
   return (List f (min c (length xs)) (take c xs))
 
-mkMultiPutHandler :: Monad m => Rest.Id id -> (id -> Run s m) -> Handler s -> Maybe (Handler m)
-mkMultiPutHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> pure newAct <*> pure sec
+mkMultiHandler :: Monad m => Rest.Id id -> (id -> Run s m) -> Handler s -> Maybe (Handler m)
+mkMultiHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> pure newAct <*> pure sec
   where
     newErrDict = L.modify errors reasonE dict
     mNewDict =  L.traverse inputs mappingI

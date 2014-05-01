@@ -22,7 +22,7 @@ import qualified Rest.Gen.Base.JSON as J
 import qualified Rest.Gen.Base.XML  as X
 
 import Rest.Dictionary (Param (..), Input (..), Output (..), Error (..))
-import Rest.Driver.Routing (mkListHandler, mkMultiPutHandler)
+import Rest.Driver.Routing (mkListHandler, mkMultiHandler)
 import Rest.Handler
 import Rest.Resource
 import Rest.Schema
@@ -147,7 +147,7 @@ updateActionInfo mId pth = handlerActionInfo mId False Update Any pth PUT
 
 multiUpdateActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
 multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany Any pth PUT
-                               <$> mkMultiPutHandler id_ (const id) h
+                               <$> mkMultiHandler id_ (const id) h
 
 removeActionInfo :: Handler m -> ActionInfo
 removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
