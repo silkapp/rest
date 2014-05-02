@@ -9,7 +9,13 @@
            , DeriveDataTypeable
            , TupleSections
            #-}
-module Rest.Driver.Routing where
+module Rest.Driver.Routing
+  ( route
+  , mkListHandler
+  , mkMultiHandler
+
+  , UriParts
+  ) where
 
 import Prelude hiding (id, (.))
 
@@ -24,11 +30,9 @@ import Control.Monad.Reader
 import Control.Monad.State (StateT, evalStateT, MonadState)
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Maybe
-import Data.ByteString (ByteString)
 import Network.Multipart (BodyPart (..), HeaderName (..))
 import Safe
 import qualified Control.Monad.State       as State
-import qualified Data.ByteString.UTF8      as UTF8
 import qualified Data.ByteString.Lazy.UTF8 as LUTF8
 import qualified Data.Label.Total          as L
 import qualified Data.Map                  as Map
@@ -51,7 +55,6 @@ import Rest.Driver.RestM (runRestM)
 
 import qualified Rest.Driver.RestM as Rest
 
-type Uri = ByteString
 type UriParts = [String]
 
 apiError :: (MonadError (Reason e) m) => Reason e -> m a
@@ -245,9 +248,6 @@ parseIdent (Rest.Id ReadId   byF) seg =
   case readMay seg of
     Nothing  -> throwError (IdentError (ParseError $ "Failed to parse " ++ seg))
     Just sid -> return (byF sid)
-
-splitUri :: Uri -> UriParts
-splitUri = splitUriString . UTF8.toString
 
 splitUriString :: String -> UriParts
 splitUriString = filter (/= "") . map decode . splitOn "/"
