@@ -332,7 +332,7 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
         tryD (MultipartO : _ ) _            = outputMultipart v
         tryD (FileO      : _ ) FileFormat   = do mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower (snd v))
                                                  setHeader "Content-Type" mime
-                                                 setHeader "Cache-Control" "private, max-age=604800"
+                                                 setHeader "Cache-Control" "max-age=604800"
                                                  ok (fst v)
         tryD []                t            = throwError (UnsupportedFormat (show t))
         tryD (_          : xs) t            = tryD xs t
