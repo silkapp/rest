@@ -217,6 +217,7 @@ mkHsName ai = hsName $ concatMap cleanName parts
                 Create     -> ["create"] ++ by ++ target
                 -- Should be delete, but delete is a JS keyword and causes problems in collect.
                 Delete     -> ["remove"] ++ by ++ target
+                DeleteMany -> ["removeMany"] ++ by ++ target
                 List       -> ["list"]   ++ by ++ target
                 Update     -> ["save"]   ++ by ++ target
                 UpdateMany -> ["saveMany"] ++ by ++ target

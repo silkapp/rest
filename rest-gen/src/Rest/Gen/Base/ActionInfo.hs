@@ -39,7 +39,7 @@ type ResourceId  = [String]
 -- | Intermediate data representation of Rest structure
 data RequestMethod = GET | POST | PUT | DELETE deriving (Show, Eq)
 
-data ActionType = Retrieve | Create | Delete | List | Update | UpdateMany | Modify
+data ActionType = Retrieve | Create | Delete | DeleteMany | List | Update | UpdateMany | Modify
   deriving (Show, Eq)
 
 data ActionTarget = Self | Any deriving (Show, Eq)
@@ -135,6 +135,7 @@ singleActionInfo r@Resource{} mId pth
    = foldMap (return . getActionInfo         mId pth) (Rest.get     r)
   ++ foldMap (return . updateActionInfo      mId pth) (Rest.update  r)
   ++ maybeToList (join $ multiUpdateActionInfo <$> mId <*> pure pth <*> Rest.update r)
+  ++ maybeToList (join $ multiRemoveActionInfo <$> mId <*> pure pth <*> Rest.remove r)
 
 --------------------
 -- * Smart constructors for ActionInfo.
@@ -151,6 +152,10 @@ multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany An
 
 removeActionInfo :: Handler m -> ActionInfo
 removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
+
+multiRemoveActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
+multiRemoveActionInfo id_ pth h =  handlerActionInfo Nothing False DeleteMany Any pth DELETE
+                               <$> mkMultiHandler id_ (const id) h
 
 listActionInfo :: Monad m => Maybe (Id mid) -> String -> ListHandler m -> Maybe ActionInfo
 listActionInfo mId pth h = handlerActionInfo mId False List Self pth GET <$> mkListHandler h
@@ -335,6 +340,7 @@ mkActionDescription res ai =
       Retrieve   -> "Retrieve " ++ targetS ++ " data"
       Create     -> "Create " ++ targetS
       Delete     -> "Delete " ++ targetS
+      DeleteMany -> "Delete many " ++ targetS
       List       -> "List " ++ targetS ++ "s"
       Update     -> "Update " ++ targetS
       UpdateMany -> "Update many " ++ targetS

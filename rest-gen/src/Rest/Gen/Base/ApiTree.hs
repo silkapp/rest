@@ -122,6 +122,7 @@ mkFuncParts (ApiAction _ _ ai) = concatMap cleanName parts
                 Create     -> ["create"]     ++ by ++ target
                 -- Should be delete, but delete is a JS keyword and causes problems in collect.
                 Delete     -> ["remove"]     ++ by ++ target
+                DeleteMany -> ["removeMany"] ++ by ++ target
                 List       -> ["list"]       ++ by ++ target
                 Update     -> ["save"]       ++ by ++ target
                 UpdateMany -> ["saveMany"]   ++ by ++ target
@@ -130,7 +131,8 @@ mkFuncParts (ApiAction _ _ ai) = concatMap cleanName parts
       target = if resDir ai == ""                then [] else [resDir ai]
       by     = if null target
                ||    isNothing (ident ai)
-                  && actionType ai /= UpdateMany then [] else ["by"]
+                  && actionType ai /= UpdateMany
+                  && actionType ai /= DeleteMany then [] else ["by"]
       get    = if isAccessor ai                  then [] else ["get"]
 
 cleanName :: String -> [String]
