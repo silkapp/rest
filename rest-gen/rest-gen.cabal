@@ -1,19 +1,20 @@
-Name:             rest-gen
-Version:          0.10
-Description:      Documentation and client generation from rest definition.
-Synopsis:         Documentation and client generation from rest definition.
-Maintainer:       code@silk.co
-Category:         Web
-Build-Type:       Simple
-Cabal-Version:    >= 1.8
-License:          BSD3
-License-File:     LICENSE
-Data-Dir:         files
-Data-Files:       Docs/*.st
-                  Docs/*.js
-                  Docs/*.css
-                  Javascript/base.js
-                  Ruby/base.rb
+Name:               rest-gen
+Version:            0.10
+Description:        Documentation and client generation from rest definition.
+Synopsis:           Documentation and client generation from rest definition.
+Maintainer:         code@silk.co
+Category:           Web
+Build-Type:         Simple
+Cabal-Version:      >= 1.8
+License:            BSD3
+License-File:       LICENSE
+Data-Dir:           files
+Data-Files:         Docs/*.st
+                    Docs/*.js
+                    Docs/*.css
+                    Javascript/base.js
+                    Ruby/base.rb
+Extra-Source-Files: CHANGELOG.md
 
 Library
   GHC-Options:     -Wall
