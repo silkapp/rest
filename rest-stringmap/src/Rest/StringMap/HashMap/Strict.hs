@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    FlexibleInstances
+    DeriveDataTypeable
+  , FlexibleInstances
   , OverlappingInstances
   , ScopedTypeVariables
   #-}
@@ -17,13 +18,14 @@ import Data.Hashable
 import Data.JSON.Schema
 import Data.String
 import Data.String.ToString
+import Data.Typeable
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.HashMap.Strict as H
 
 import Rest.StringMap.Util
 
 newtype StringHashMap a b = StringHashMap { unH :: HashMap a b }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Typeable)
 
 fromHashMap :: HashMap a b -> StringHashMap a b
 fromHashMap = StringHashMap
@@ -55,5 +57,5 @@ instance (ToString a, ToJSON b) => ToJSON (StringHashMap a b) where
 instance (Hashable a, Eq a, IsString a, FromJSON b) => FromJSON (StringHashMap a b) where
   parseJSON = mapParseJSON mapKeys
 
-instance (JSONSchema a, JSONSchema b) => JSONSchema (StringHashMap a b) where
+instance JSONSchema b => JSONSchema (StringHashMap a b) where
   schema _ = mapSchema (Proxy :: Proxy b)

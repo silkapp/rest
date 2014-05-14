@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    FlexibleInstances
+    DeriveDataTypeable
+  , FlexibleInstances
   , OverlappingInstances
   , ScopedTypeVariables
   #-}
@@ -13,17 +14,17 @@ module Rest.StringMap.Map.Strict
 
 import Data.Aeson
 import Data.JSON.Schema
-import Data.JSON.Schema.Combinators
 import Data.Map.Strict (Map)
 import Data.String
 import Data.String.ToString
+import Data.Typeable
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.Map.Strict as M
 
 import Rest.StringMap.Util
 
 newtype StringMap a b = StringMap { unM :: Map a b }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Typeable)
 
 fromMap :: Map a b -> StringMap a b
 fromMap = StringMap
@@ -52,5 +53,5 @@ instance (ToString a, ToJSON b) => ToJSON (StringMap a b) where
 instance (Ord a, IsString a, FromJSON b) => FromJSON (StringMap a b) where
   parseJSON = fmap (StringMap . M.mapKeys fromString) . parseJSON
 
-instance (JSONSchema a, JSONSchema b) => JSONSchema (StringMap a b) where
-  schema _ = field "key" False (schema (Proxy :: Proxy b))
+instance JSONSchema b => JSONSchema (StringMap a b) where
+  schema _ = mapSchema (Proxy :: Proxy b)
