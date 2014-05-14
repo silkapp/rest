@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.10.0.1
+
+* Bump `Cabal` upper bound to `< 1.22`
+
 ## 0.10
 
 * Generate documentation, Javascript and Haskell code for multi-delete
