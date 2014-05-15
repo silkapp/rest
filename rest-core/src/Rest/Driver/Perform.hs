@@ -330,9 +330,11 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
         tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
         tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
         tryD (MultipartO : _ ) _            = outputMultipart v
-        tryD (FileO      : _ ) FileFormat   = do mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower (snd v))
+        tryD (FileO      : _ ) FileFormat   = do let ext = (reverse . takeWhile (/='.') . reverse) $ snd v
+                                                 mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower ext)
                                                  setHeader "Content-Type" mime
                                                  setHeader "Cache-Control" "max-age=604800"
+                                                 setHeader "Content-Disposition" ("filename=" ++ snd v)
                                                  ok (fst v)
         tryD []                t            = throwError (UnsupportedFormat (show t))
         tryD (_          : xs) t            = tryD xs t
