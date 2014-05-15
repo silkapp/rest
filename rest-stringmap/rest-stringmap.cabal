@@ -27,6 +27,7 @@ library
     , hashable == 1.2.*
     , hxt == 9.3.*
     , json-schema == 0.4.*
+    , tagged >= 0.2 && < 0.8
     , text >= 0.10 && < 1.2
     , tostring == 0.2.*
     , unordered-containers == 0.2.*
