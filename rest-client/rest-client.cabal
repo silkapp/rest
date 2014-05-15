@@ -1,5 +1,5 @@
 Name:             rest-client
-Version:          0.2.3.2
+Version:          0.2.3.3
 Description:      Utility library for use in generated API client libraries.
 Synopsis:         Utility library for use in generated API client libraries.
 Maintainer:       code@silk.co
@@ -27,7 +27,7 @@ Library
     , monad-control             == 0.3.*
     , mtl                       >= 2.0     &&  < 2.2
     , resourcet                 >= 0.4     &&  < 0.5
-    , rest-types                == 1.9.*
+    , rest-types                == 1.10.*
     , tostring                  == 0.2.*
     , transformers-base         == 0.4.*
     , uri-encode                == 1.5.*

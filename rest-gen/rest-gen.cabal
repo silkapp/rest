@@ -1,5 +1,5 @@
 Name:               rest-gen
-Version:            0.10.0.1
+Version:            0.10.0.2
 Description:        Documentation and client generation from rest definition.
 Synopsis:           Documentation and client generation from rest definition.
 Maintainer:         code@silk.co
@@ -44,8 +44,8 @@ Library
     , pretty                    >= 1.0     &&  < 1.2
     , process                   >= 1.0     &&  < 1.3
     , regular                   == 0.3.*
-    , rest-core                 == 0.29.*
-    , rest-types                == 1.9.*
+    , rest-core                 >= 0.29    &&  < 0.31
+    , rest-types                == 1.10.*
     , safe                      >= 0.2     &&  < 0.4
     , split                     >= 0.1     &&  < 0.3
     , tagged                    >= 0.2     &&  < 0.8
@@ -76,7 +76,7 @@ Library
 Test-suite rest-gen-tests
   build-depends:       base                 >= 4.5    && < 4.8
                      , HUnit                == 1.2.*
-                     , rest-core            == 0.29.*
+                     , rest-core            >= 0.29   &&  < 0.31
                      , rest-gen
                      , test-framework       == 0.8.*
                      , test-framework-hunit == 0.3.*

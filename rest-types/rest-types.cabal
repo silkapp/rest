@@ -1,5 +1,5 @@
 Name:             rest-types
-Version:          1.9.0.2
+Version:          1.10
 Description:      Silk Rest Framework Types
 Synopsis:         Silk Rest Framework Types
 Maintainer:       code@silk.co
@@ -8,6 +8,8 @@ Build-Type:       Simple
 Cabal-Version:    >= 1.8
 License:          BSD3
 License-File:     LICENSE
+
+Extra-Source-Files: CHANGELOG.md
 
 Library
   GHC-Options:     -Wall

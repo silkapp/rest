@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.30
+
+* Use `Content-Disposition` to provide filenames for file responses.
+  This slightly changes the semantics of `FileO`: what used to be
+  interpreted as the file extension is now used for the whole file name.
+
+* `Rest.Types.Container.StringMap` Has been replaced by `rest-stringmap`. This
+  changes the XML serialization format of multi part messages, the old format
+  was `<map><key>k</key>v[...]</map>` and the new one is
+  `<map><value key="k">v</value>[...]</map>`.
+
 ## 0.29
 
 * Add multi-delete handler. It is used on a DELETE to
