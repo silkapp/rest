@@ -1,41 +1,45 @@
-Name:             rest-client
-Version:          0.2.3.3
-Description:      Utility library for use in generated API client libraries.
-Synopsis:         Utility library for use in generated API client libraries.
-Maintainer:       code@silk.co
-Category:         Web
-Build-Type:       Simple
-Cabal-Version:    >= 1.8
-License:          BSD3
-License-file:     LICENSE
+name:                rest-client
+version:             0.2.3.3
+description:         Utility library for use in generated API client libraries.
+synopsis:            Utility library for use in generated API client libraries.
+maintainer:          code@silk.co
+category:            Web
+build-Type:          Simple
+cabal-version:       >= 1.8
+license:             BSD3
+license-file:        LICENSE
+
+extra-source-files:
+  CHANGELOG.md
+  LICENSE
+
+source-repository head
+  type:              git
+  location:          https://github.com/silkapp/rest.git
 
 Library
-  GHC-Options:     -Wall
-  Hs-Source-Dirs:   src
-  Build-Depends:
-      base                      == 4.*
-    , aeson                     >= 0.7     &&  < 0.8
-    , aeson-utils               == 0.2.1
-    , bytestring                >= 0.9     &&  < 0.11
-    , case-insensitive          >= 0.4     &&  < 1.3
-    , data-default              == 0.5.*
-    , exception-transformers    == 0.3.*
-    , http-conduit              >= 1.9.2.1 &&  < 2.2
-    , http-types                >= 0.7     &&  < 0.9
-    , hxt                       >= 9.2     &&  < 9.4
-    , hxt-pickle-utils          == 0.1.*
-    , monad-control             == 0.3.*
-    , mtl                       >= 2.0     &&  < 2.2
-    , resourcet                 >= 0.4     &&  < 0.5
-    , rest-types                == 1.10.*
-    , tostring                  == 0.2.*
-    , transformers-base         == 0.4.*
-    , uri-encode                == 1.5.*
-    , utf8-string               == 0.3.*
-
-  Exposed-Modules:  Rest.Client.Base
-                    Rest.Client.Internal
-
-Source-repository head
-  Type:              Git
-  Location:          https://github.com/silkapp/rest.git
+  ghc-options:       -Wall
+  hs-source-dirs:    src
+  exposed-modules:
+    Rest.Client.Base
+    Rest.Client.Internal
+  build-depends:
+      base == 4.*
+    , aeson >= 0.7 && < 0.8
+    , aeson-utils == 0.2.1
+    , bytestring >= 0.9 && < 0.11
+    , case-insensitive >= 0.4 && < 1.3
+    , data-default == 0.5.*
+    , exception-transformers == 0.3.*
+    , http-conduit >= 1.9.2.1 && < 2.2
+    , http-types >= 0.7 && < 0.9
+    , hxt >= 9.2 && < 9.4
+    , hxt-pickle-utils == 0.1.*
+    , monad-control == 0.3.*
+    , mtl >= 2.0 && < 2.2
+    , resourcet >= 0.4 && < 0.5
+    , rest-types == 1.10.*
+    , tostring == 0.2.*
+    , transformers-base == 0.4.*
+    , uri-encode == 1.5.*
+    , utf8-string == 0.3.*

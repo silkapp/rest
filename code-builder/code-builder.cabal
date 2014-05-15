@@ -1,26 +1,32 @@
-Name:                code-builder
-Version:             0.1.2.1
-Synopsis:            Simple system for generating code.
-Description:         Simple system for generating code.
-License:             BSD3
-License-file:        LICENSE
-Author:              Silk
-Maintainer:          code@silk.co
-Category:            Data
-Build-type:          Simple
-Cabal-version:       >=1.6
+name:                code-builder
+version:             0.1.2.1
+synopsis:            Simple system for generating code.
+description:         Simple system for generating code.
+license:             BSD3
+license-file:        LICENSE
+author:              Silk
+maintainer:          code@silk.co
+category:            Data
+build-type:          Simple
+cabal-version:       >=1.6
 
-Library
-  Hs-Source-Dirs:    src
-  Exposed-Modules:   Code.Build
-                     Code.Build.JavaScript
-                     Code.Build.Haskell
-                     Code.Build.PHP
-                     Code.Build.Ruby
-  Build-Depends:     base == 4.*
-                   , containers >= 0.3 && < 0.6
-  Ghc-Options:       -Wall
+extra-source-files:
+  CHANGELOG.md
+  LICENSE
 
-Source-repository head
-  Type:              Git
-  Location:          https://github.com/silkapp/rest.git
+source-repository head
+  type:              git
+  location:          https://github.com/silkapp/rest.git
+
+library
+  ghc-options:       -Wall
+  hs-source-dirs:    src
+  exposed-modules:
+    Code.Build
+    Code.Build.Haskell
+    Code.Build.JavaScript
+    Code.Build.PHP
+    Code.Build.Ruby
+  build-depends:
+      base == 4.*
+    , containers >= 0.3 && < 0.6

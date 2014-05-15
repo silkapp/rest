@@ -1,20 +1,31 @@
-Name:             rest-types
-Version:          1.10
-Description:      Silk Rest Framework Types
-Synopsis:         Silk Rest Framework Types
-Maintainer:       code@silk.co
-Category:         Web
-Build-Type:       Simple
-Cabal-Version:    >= 1.8
-License:          BSD3
-License-File:     LICENSE
+name:                rest-types
+version:             1.10
+description:         Silk Rest Framework Types
+synopsis:            Silk Rest Framework Types
+maintainer:          code@silk.co
+category:            Web
+build-type:          Simple
+cabal-version:       >= 1.8
+license:             BSD3
+license-file:        LICENSE
 
-Extra-Source-Files: CHANGELOG.md
+extra-source-files:
+  CHANGELOG.md
+  LICENSE
 
-Library
-  GHC-Options:     -Wall
-  Hs-Source-Dirs:   src
-  Build-Depends:
+source-repository head
+  type:              git
+  location:          https://github.com/silkapp/rest.git
+
+library
+  ghc-options:       -Wall
+  hs-source-dirs:    src
+  exposed-modules:
+    Rest.Types.Container
+    Rest.Types.Container.Resource
+    Rest.Types.Error
+    Rest.Types.ShowUrl
+  build-depends:
       base == 4.*
     , aeson >= 0.7 && < 0.8
     , bytestring >= 0.9 && < 0.11
@@ -30,12 +41,3 @@ Library
     , unordered-containers == 0.2.*
     , utf8-string == 0.3.*
     , uuid >= 1.2 && < 1.4
-
-  Exposed-Modules: Rest.Types.Container
-                   Rest.Types.Container.Resource
-                   Rest.Types.Error
-                   Rest.Types.ShowUrl
-
-Source-repository head
-  Type:              Git
-  Location:          https://github.com/silkapp/rest.git

@@ -1,41 +1,43 @@
-Name:             rest-snap
-Version:          0.1.17.9
-Description:      Rest driver for Snap.
-Synopsis:         Rest driver for Snap.
-Maintainer:       code@silk.co
-Category:         Web
-Build-Type:       Simple
-Cabal-Version:    >= 1.8
-License:          BSD3
-License-File:     LICENSE
+name:                rest-snap
+version:             0.1.17.9
+description:         Rest driver for Snap.
+synopsis:            Rest driver for Snap.
+maintainer:          code@silk.co
+category:            Web
+build-type:          Simple
+cabal-version:       >= 1.8
+license:             BSD3
+license-file:        LICENSE
 
-Library
-  GHC-Options:     -Wall
-  Hs-Source-Dirs:   src
-  Build-Depends:
+extra-source-files:
+  CHANGELOG.md
+  LICENSE
 
-      base                 == 4.*
-    , bytestring           >= 0.9    &&  < 0.11
-    , case-insensitive     >= 0.4    &&  < 1.3
-    , containers           >= 0.4    &&  < 0.6
-    , snap-core            == 0.9.*
-    , hxt                  >= 9.2    &&  < 9.4
-    , fclabels             == 2.0.*
-    , json-schema          == 0.4.*
-    , mtl                  >= 2.0    &&  < 2.2
-    , regular-xmlpickler   == 0.2.*
-    , rest-types           == 1.10.*
-    , safe                 >= 0.2    &&  < 0.4
-    , split                >= 0.1    &&  < 0.3
-    , text                 >= 0.11   &&  < 1.2
-    , transformers         == 0.3.*
+source-repository head
+  type:              git
+  location:          https://github.com/silkapp/rest.git
+
+library
+  ghc-options:       -Wall
+  hs-source-dirs:    src
+  exposed-modules:   Rest.Driver.Snap
+  build-depends:
+      base == 4.*
+    , bytestring >= 0.9 && < 0.11
+    , case-insensitive >= 0.4 && < 1.3
+    , containers >= 0.4 && < 0.6
+    , fclabels == 2.0.*
+    , hxt >= 9.2 && < 9.4
+    , json-schema == 0.4.*
+    , mtl >= 2.0 && < 2.2
+    , regular-xmlpickler == 0.2.*
+    , rest-core >= 0.28 && < 0.31
+    , rest-types == 1.10.*
+    , safe >= 0.2 && < 0.4
+    , snap-core == 0.9.*
+    , split >= 0.1 && < 0.3
+    , text >= 0.11 && < 1.2
+    , transformers == 0.3.*
     , unordered-containers == 0.2.*
-    , uri-encode           == 1.5.*
-    , utf8-string          == 0.3.*
-    , rest-core            >= 0.28 && < 0.31
-
-  Exposed-Modules:  Rest.Driver.Snap
-
-Source-repository head
-  Type:              Git
-  Location:          https://github.com/silkapp/rest.git
+    , uri-encode == 1.5.*
+    , utf8-string == 0.3.*
