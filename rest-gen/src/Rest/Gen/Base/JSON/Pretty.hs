@@ -2,20 +2,20 @@ module Rest.Gen.Base.JSON.Pretty where
 
 import Control.Arrow (first)
 import Data.Aeson.Types
-import Data.Aeson.Utils (parseNumber)
 import Data.Char
 import Data.HashMap.Strict (HashMap)
+import Data.Scientific (floatingOrInteger)
 import Data.Text (Text, unpack)
 import Numeric
 import Text.PrettyPrint.HughesPJ hiding (first)
 import qualified Data.HashMap.Strict as H
-import qualified Data.Vector as V
+import qualified Data.Vector         as V
 
 pp_value         :: Value -> Doc
 pp_value v        = case v of
     Null      -> pp_null
     Bool x    -> pp_boolean x
-    Number x  -> pp_number (parseNumber x)
+    Number x  -> pp_number . either Right Left . floatingOrInteger $ x
     String x  -> pp_js_string (unpack x)
     Array vs  -> pp_array $ V.toList vs
     Object xs -> pp_js_object xs

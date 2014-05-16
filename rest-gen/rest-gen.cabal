@@ -50,7 +50,6 @@ library
     , Cabal >= 1.18 && < 1.22
     , HStringTemplate >= 0.6 && < 0.8
     , aeson >= 0.7 && < 0.8
-    , aeson-utils == 0.2.*
     , attoparsec >= 0.10 && < 0.12
     , blaze-html >= 0.5 && < 0.8
     , bytestring >= 0.9 && < 0.11
@@ -72,6 +71,7 @@ library
     , rest-core >= 0.29 && < 0.31
     , rest-types == 1.10.*
     , safe >= 0.2 && < 0.4
+    , scientific >= 0.3.2 && < 0.4
     , split >= 0.1 && < 0.3
     , tagged >= 0.2 && < 0.8
     , text >= 0.11 && < 1.2
