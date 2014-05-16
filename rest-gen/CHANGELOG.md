@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.10.0.3
+
+* Allow `mtl == 2.2.*`
+
 #### 0.10.0.1
 
 * Bump `Cabal` upper bound to `< 1.22`
