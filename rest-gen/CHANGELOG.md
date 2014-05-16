@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.10.0.4
+
+* Drops `aeson-utils` dependency in favor of `scientific >= 0.3.2`
+
 #### 0.10.0.3
 
 * Allow `mtl == 2.2.*`
