@@ -49,7 +49,7 @@ library
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
     , json-schema == 0.4.*
-    , mtl >= 2.0 && < 2.2
+    , mtl >= 2.0 && < 2.3
     , multipart >= 0.1.1 && < 0.2
     , random == 1.0.*
     , rest-stringmap == 0.1.*
@@ -57,7 +57,7 @@ library
     , safe >= 0.2 && < 0.4
     , split >= 0.1 && < 0.3
     , text >= 0.11 && < 1.2
-    , transformers >= 0.2 && < 0.4
+    , transformers >= 0.2 && < 0.5
     , unordered-containers == 0.2.*
     , uri-encode == 1.5.*
     , utf8-string == 0.3.*
@@ -72,7 +72,7 @@ test-suite rest-tests
       base >= 4.5 && < 4.8
     , HUnit == 1.2.*
     , bytestring >= 0.9 && < 0.11
-    , mtl >= 2.0 && < 2.2
+    , mtl >= 2.0 && < 2.3
     , rest-core
     , test-framework == 0.8.*
     , test-framework-hunit == 0.3.*

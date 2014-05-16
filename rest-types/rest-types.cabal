@@ -33,7 +33,7 @@ library
     , generic-aeson == 0.1.*
     , hxt >= 9.2 && < 9.4
     , json-schema == 0.4.*
-    , mtl >= 2.0 && < 2.2
+    , mtl >= 2.0 && < 2.3
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*
     , rest-stringmap == 0.1.*

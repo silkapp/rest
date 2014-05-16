@@ -36,7 +36,7 @@ Library
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
     , monad-control == 0.3.*
-    , mtl >= 2.0 && < 2.2
+    , mtl >= 2.0 && < 2.3
     , resourcet >= 0.4 && < 0.5
     , rest-types == 1.10.*
     , tostring == 0.2.*

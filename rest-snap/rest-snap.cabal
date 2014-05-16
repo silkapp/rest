@@ -29,7 +29,7 @@ library
     , fclabels == 2.0.*
     , hxt >= 9.2 && < 9.4
     , json-schema == 0.4.*
-    , mtl >= 2.0 && < 2.2
+    , mtl >= 2.0 && < 2.3
     , regular-xmlpickler == 0.2.*
     , rest-core >= 0.28 && < 0.31
     , rest-types == 1.10.*
@@ -37,7 +37,7 @@ library
     , snap-core == 0.9.*
     , split >= 0.1 && < 0.3
     , text >= 0.11 && < 1.2
-    , transformers == 0.3.*
+    , transformers >= 0.3 && < 0.5
     , unordered-containers == 0.2.*
     , uri-encode == 1.5.*
     , utf8-string == 0.3.*

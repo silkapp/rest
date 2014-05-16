@@ -25,9 +25,9 @@ library
       base             == 4.*
     , containers       >= 0.4    && < 0.6
     , happstack-server >= 7.0.5  && < 7.4
-    , mtl              >= 2.0    && < 2.2
+    , mtl              >= 2.0    && < 2.3
     , rest-types       == 1.10.*
-    , transformers     == 0.3.*
+    , transformers     >= 0.3 && < 0.5
     , utf8-string      == 0.3.*
     , rest-core        >= 0.28 && < 0.31
 
