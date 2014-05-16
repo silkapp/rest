@@ -35,7 +35,6 @@ executable rest-example
       base >= 4.6 && < 4.8
     , aeson
     , containers
-    , data-default
     , filepath
     , happstack-server
     , hxt
