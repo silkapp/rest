@@ -48,7 +48,7 @@ instance (Ord a, IsString a, ToString a, XmlPickler b) => XmlPickler (StringMap 
   xpickle = pickleMap mapKeys mapKeys
 
 instance (ToString a, ToJSON b) => ToJSON (StringMap a b) where
-  toJSON = toJSON . M.mapKeys toString . unM
+  toJSON = toJSON . M.mapKeys toString . toMap
 
 instance (Ord a, IsString a, FromJSON b) => FromJSON (StringMap a b) where
   parseJSON = fmap (StringMap . M.mapKeys fromString) . parseJSON

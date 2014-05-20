@@ -52,10 +52,10 @@ instance (Eq a, Hashable a, IsString a, ToString a, XmlPickler b) => XmlPickler 
   xpickle = pickleMap mapKeys mapKeys
 
 instance (ToString a, ToJSON b) => ToJSON (StringHashMap a b) where
-  toJSON = mapToJSON mapKeys
+  toJSON = toJSON . toHashMap . mapKeys toString
 
-instance (Hashable a, Eq a, IsString a, FromJSON b) => FromJSON (StringHashMap a b) where
-  parseJSON = mapParseJSON mapKeys
+instance (Eq a, Hashable a, IsString a, FromJSON b) => FromJSON (StringHashMap a b) where
+  parseJSON = fmap (mapKeys fromString . fromHashMap) . parseJSON
 
 instance JSONSchema b => JSONSchema (StringHashMap a b) where
   schema _ = mapSchema (Proxy :: Proxy b)

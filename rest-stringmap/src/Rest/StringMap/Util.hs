@@ -2,11 +2,8 @@ module Rest.StringMap.Util
   ( pickleStringMap
   , pickleMap
   , mapSchema
-  , mapToJSON
-  , mapParseJSON
   ) where
 
-import Data.Aeson.Types
 import Data.JSON.Schema (JSONSchema, Schema, schema)
 import Data.JSON.Schema.Combinators (field)
 import Data.Proxy (Proxy)
@@ -25,9 +22,3 @@ pickleMap mapKeys mapKeys' = xpWrap (mapKeys fromString, mapKeys' toString) xpic
 
 mapSchema :: JSONSchema a => Proxy a -> Schema
 mapSchema = field "key" False . schema
-
-mapToJSON :: (ToString a, ToJSON m) => ((a -> String) -> m' -> m) -> m' -> Value
-mapToJSON mapKeys = toJSON . mapKeys toString
-
-mapParseJSON :: (FromJSON m, IsString k) => ((String -> k) -> m -> m') -> Value -> Parser m'
-mapParseJSON mapKeys = fmap (mapKeys fromString) . parseJSON
