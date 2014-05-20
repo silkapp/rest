@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.30.0.2
+
+* Use `rest-stringmap == 0.2.*`
+
 #### 0.30.0.1
 
 * Allow `mtl == 2.2.*` and `transformers == 0.4.*`

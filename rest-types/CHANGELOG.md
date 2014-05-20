@@ -1,5 +1,9 @@
 # Changelog
 
+#### 1.10.0.2
+
+* Use `rest-stringmap == 0.2.*`
+
 #### 1.10.0.1
 
 * Allow `mtl == 2.2.*`

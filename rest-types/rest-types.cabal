@@ -1,5 +1,5 @@
 name:                rest-types
-version:             1.10.0.1
+version:             1.10.0.2
 description:         Silk Rest Framework Types
 synopsis:            Silk Rest Framework Types
 maintainer:          code@silk.co
@@ -36,7 +36,7 @@ library
     , mtl >= 2.0 && < 2.3
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*
-    , rest-stringmap == 0.1.*
+    , rest-stringmap == 0.2.*
     , text >= 0.11 && < 1.2
     , unordered-containers == 0.2.*
     , utf8-string == 0.3.*
