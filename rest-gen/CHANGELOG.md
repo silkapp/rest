@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11
+
+* Bugfix: Haskell: Resources without a getter now generate identifier arguments for other end points
+* Shuffles some internal (but exposed) functions around
+
 #### 0.10.0.4
 
 * Drops `aeson-utils` dependency in favor of `scientific >= 0.3.2`
