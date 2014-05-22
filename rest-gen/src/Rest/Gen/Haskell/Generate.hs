@@ -173,7 +173,7 @@ urlParts res lnk ac@(rlnk, pars) =
   case lnk of
     [] -> ac
     (LResource r : a@(LAccess _) : xs) | not (hasParam a) -> urlParts res xs (rlnk ++ [hsArray [string r]], pars)
-                                   | otherwise ->
+                                       | otherwise ->
       urlParts res xs
             ( rlnk ++ [ hsArray [string r]
                       , (if r == res then noCode else modName r <+> ".") <+> "readId" <++> hsName (cleanName r)
@@ -185,28 +185,29 @@ urlParts res lnk ac@(rlnk, pars) =
 
 idData :: ApiResource -> Code
 idData node =
-  let items  = filter isAccessor $ map itemInfo $ resItems node
-      mkCons = dataName . resDir
-  in case items of
-      []  -> noCode
-      [x] -> maybe noCode
-             (\i -> mkStack
-              [ code "type Identifier = " <++> Ident.haskellType i
-              , function "readId" "Identifier -> [String]"
-              , hsDecl "readId" ["x"] (hsArray $ if resDir x /= "" then [string $ resDir x, code "showUrl x"] else [code "showUrl x"])
-              ]
-             )
-             (ident x)
-      ls  -> mkStack $
-              [ hsData "Identifier" $ map (\i -> mkCons i ++ maybe "" (\x -> " (" ++ Ident.haskellType x ++ ")") (ident i)) ls
-              , function "readId" "Identifier -> [String]"
-              , mkStack $
-                  map (\i ->
-                          if isJust (ident i)
-                            then hsDecl "readId" ["(" ++ mkCons i ++ " x" ++ ")"] $ hsArray [string (resDir i), code "showUrl x"]
-                            else hsDecl "readId" [mkCons i] $ hsArray [string (resDir i)]
-                      ) ls
-              ]
+  case resAccessors node of
+    []  -> noCode
+    [(pth,mi)] -> maybe noCode
+           (\i -> mkStack
+            [ code "type Identifier = " <++> Ident.haskellType i
+            , function "readId" "Identifier -> [String]"
+            , hsDecl "readId" ["x"] (hsArray $ if pth /= ""
+                                               then [string pth, code "showUrl x"]
+                                               else [code "showUrl x"]
+                                    )
+            ]
+           )
+           mi
+    ls  -> mkStack $
+            [ hsData "Identifier" $ map (\(pth,mi) -> dataName pth ++ maybe "" (\x -> " (" ++ Ident.haskellType x ++ ")") mi) ls
+            , function "readId" "Identifier -> [String]"
+            , mkStack $
+                map (\(pth,mi) ->
+                        if isJust mi
+                          then hsDecl "readId" ["(" ++ dataName pth ++ " x" ++ ")"] $ hsArray [string pth, code "showUrl x"]
+                          else hsDecl "readId" [dataName pth] $ hsArray [string pth]
+                    ) ls
+            ]
 
 mkHsName :: ActionInfo -> String
 mkHsName ai = hsName $ concatMap cleanName parts

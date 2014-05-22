@@ -2,13 +2,12 @@
 module Rest.Gen.Base.ApiTree where
 
 import Data.Char
+import Data.Function
 import Data.List
 import Data.Maybe
-import Data.Function
 
 import Rest.Api (Router (..), Some1 (..))
 import Rest.Gen.Base.ActionInfo
-import Rest.Gen.Base.ActionInfo.Ident (description)
 import Rest.Gen.Base.Link
 import Rest.Gen.Utils
 import qualified Rest.Resource as Res
@@ -26,12 +25,15 @@ data ApiResource =
     , resId          :: ResourceId
     , resParents     :: ResourceId
     , resLink        :: Link
-    , resIdents      :: [Link]
+    , resAccessors   :: [Accessor]
     , resPrivate     :: Bool
     , resItems       :: [ApiAction]
     , resDescription :: String
     , subResources   :: [ApiResource]
     } deriving (Show, Eq)
+
+resIdents :: ApiResource -> [Link]
+resIdents = return . accessLink . resAccessors
 
 apiSubtrees :: Router m s -> ApiResource
 apiSubtrees (Embed _ routes) = defaultTree { subResources = map (\(Some1 r) -> apiTree r) routes }
@@ -41,30 +43,20 @@ apiTree = apiTree' [] []
 
 apiTree' :: ResourceId -> Link -> Router m s -> ApiResource
 apiTree' rid lnk (Embed r routes) =
-    let myId        = rid ++ [Res.name r]
-        myLnk       = lnk ++ [LResource (Res.name r)]
-        accessLinks = [ actionInfoToLink [] ai | ai <- resourceToActionInfo r, isAccessor ai ]
+    let myId  = rid ++ [Res.name r]
+        myLnk = lnk ++ [LResource (Res.name r)]
+        as    = resourceToAccessors r
     in TreeItem
         { resName        = Res.name r
         , resId          = myId
         , resParents     = rid
         , resLink        = myLnk
-        , resIdents      = accessLinks
+        , resAccessors   = as
         , resPrivate     = Res.private r
-        , resItems       = [ ApiAction myId (myLnk ++ actionInfoToLink [LAccess accessLinks] ai) ai | ai <- resourceToActionInfo r ]
+        , resItems       = [ ApiAction myId (myLnk ++ link ai) ai | ai <- resourceToActionInfo r ]
         , resDescription = Res.description r
-        , subResources   = map (\(Some1 chd) -> apiTree' myId (myLnk ++ [LAccess accessLinks]) chd) routes
+        , subResources   = map (\(Some1 chd) -> apiTree' myId (myLnk ++ [LAccess [accessLink as]]) chd) routes
         }
-
--- | Create urls from an action
-actionInfoToLink :: Link -> ActionInfo -> Link
-actionInfoToLink ac ai
-  | postAction ai = ac ++ dirPart ++ identPart
-  | otherwise     = dirPart ++ identPart
-  where dirPart   = if resDir ai /= ""
-                      then [LAction $ resDir ai]
-                      else []
-        identPart = maybe [] ((:[]) . LParam . description) (ident ai)
 
 defaultTree :: ApiResource
 defaultTree = TreeItem "" [] [] [] [] False [] "" []

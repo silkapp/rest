@@ -1,4 +1,8 @@
-{-# LANGUAGE GADTs, CPP, ScopedTypeVariables #-}
+{-# LANGUAGE
+    CPP
+  , GADTs
+  , ScopedTypeVariables
+  #-}
 module Rest.Gen.Base.ActionInfo where
 
 import Prelude hiding (id, (.))
@@ -14,17 +18,18 @@ import Data.Typeable
 #if __GLASGOW_HASKELL__ < 704
 import Data.List.Split
 #endif
-import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident))
+import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident), description)
 import Rest.Info
 import qualified Data.JSON.Schema   as J
 import qualified Data.Label.Total   as L
 import qualified Rest.Gen.Base.JSON as J
 import qualified Rest.Gen.Base.XML  as X
 
-import Rest.Dictionary (Param (..), Input (..), Output (..), Error (..))
+import Rest.Dictionary (Error (..), Input (..), Output (..), Param (..))
 import Rest.Driver.Routing (mkListHandler, mkMultiHandler)
+import Rest.Gen.Base.Link
 import Rest.Handler
-import Rest.Resource
+import Rest.Resource hiding (description)
 import Rest.Schema
 
 import qualified Rest.Dictionary as Dict
@@ -56,6 +61,7 @@ data ActionInfo = ActionInfo
   , errors       :: [DataDescription]
   , params       :: [String]
   , https        :: Bool
+  , link         :: Link
   } deriving (Show, Eq)
 
 isAccessor :: ActionInfo -> Bool
@@ -89,9 +95,36 @@ resourceToActionInfo r =
     Schema mTopLevel step -> foldMap (topLevelActionInfo r) mTopLevel
                           ++ stepActionInfo r step
                           ++ foldMap (return . createActionInfo) (Rest.create r)
-                          ++ foldMap (return . removeActionInfo) (Rest.remove  r)
-                          ++ map (uncurry selectActionInfo) (Rest.selects r)
-                          ++ map (uncurry actionActionInfo) (Rest.actions r)
+                          ++ foldMap (return . removeActionInfo accLnk) (Rest.remove r)
+                          ++ map (uncurry (selectActionInfo accLnk)) (Rest.selects r)
+                          ++ map (uncurry (actionActionInfo accLnk)) (Rest.actions r)
+      where
+        accLnk = accessLink (accessors step)
+
+accessLink :: [Accessor] -> Link
+accessLink [] = []
+accessLink xs = [LAccess . map f $ xs]
+  where
+    f ("", x) = par x
+    f (pth, x) = LAction pth : par x
+    par = maybe [] (return . LParam . description)
+
+accessors :: Step sid mid aid -> [Accessor]
+accessors (Named hs) = mapMaybe (uncurry accessorsNamed) hs
+  where
+    accessorsNamed pth (Right (Single g)) = Just (pth, getId g)
+    accessorsNamed _ _ = Nothing
+    getId (Singleton _) = Nothing
+    getId (By id_) = Just . idIdent $ id_
+accessors (Unnamed (Single id_)) = [("", Just . idIdent $ id_)]
+accessors (Unnamed (Many _)) = []
+
+type Accessor = (String, Maybe Ident)
+
+resourceToAccessors :: Resource m s sid mid aid -> [Accessor]
+resourceToAccessors r =
+  case schema r of
+    Schema _ step -> accessors step
 
 topLevelActionInfo :: Resource m s sid mid aid -> Cardinality sid mid -> [ActionInfo]
 topLevelActionInfo r            (Single _  ) = singleActionInfo r Nothing ""
@@ -141,36 +174,36 @@ singleActionInfo r@Resource{} mId pth
 -- * Smart constructors for ActionInfo.
 
 getActionInfo :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
-getActionInfo mId pth = handlerActionInfo mId False Retrieve Self pth GET
+getActionInfo mId pth = handlerActionInfo mId False Retrieve Self pth GET []
 
 updateActionInfo :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
-updateActionInfo mId pth = handlerActionInfo mId False Update Any pth PUT
+updateActionInfo mId pth = handlerActionInfo mId False Update Any pth PUT []
 
 multiUpdateActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
-multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany Any pth PUT
+multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany Any pth PUT []
                                <$> mkMultiHandler id_ (const id) h
 
-removeActionInfo :: Handler m -> ActionInfo
-removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
+removeActionInfo :: Link -> Handler m -> ActionInfo
+removeActionInfo lnk = handlerActionInfo Nothing True Delete Self "" DELETE lnk
 
 multiRemoveActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
-multiRemoveActionInfo id_ pth h =  handlerActionInfo Nothing False DeleteMany Any pth DELETE
+multiRemoveActionInfo id_ pth h =  handlerActionInfo Nothing False DeleteMany Any pth DELETE []
                                <$> mkMultiHandler id_ (const id) h
 
 listActionInfo :: Monad m => Maybe (Id mid) -> String -> ListHandler m -> Maybe ActionInfo
-listActionInfo mId pth h = handlerActionInfo mId False List Self pth GET <$> mkListHandler h
+listActionInfo mId pth h = handlerActionInfo mId False List Self pth GET [] <$> mkListHandler h
 
 staticActionInfo :: String -> Handler m -> ActionInfo
-staticActionInfo pth = handlerActionInfo Nothing False Modify Any pth POST
+staticActionInfo pth = handlerActionInfo Nothing False Modify Any pth POST []
 
 createActionInfo :: Handler m -> ActionInfo
-createActionInfo = handlerActionInfo Nothing False Create Self "" POST
+createActionInfo = handlerActionInfo Nothing False Create Self "" POST []
 
-selectActionInfo :: String -> Handler m -> ActionInfo
-selectActionInfo pth = handlerActionInfo Nothing True Retrieve Any pth GET
+selectActionInfo :: Link -> String -> Handler m -> ActionInfo
+selectActionInfo lnk pth = handlerActionInfo Nothing True Retrieve Any pth GET lnk
 
-actionActionInfo :: String -> Handler m -> ActionInfo
-actionActionInfo pth = handlerActionInfo Nothing True Modify Any pth POST
+actionActionInfo :: Link -> String -> Handler m -> ActionInfo
+actionActionInfo lnk pth = handlerActionInfo Nothing True Modify Any pth POST lnk
 
 handlerActionInfo :: Maybe (Id id)
                   -> Bool
@@ -178,10 +211,11 @@ handlerActionInfo :: Maybe (Id id)
                   -> ActionTarget
                   -> String
                   -> RequestMethod
+                  -> Link
                   -> Handler m
                   -> ActionInfo
-handlerActionInfo mId postAct actType actTarget pth mth h = ActionInfo
-  { ident        = idIdent <$> mId
+handlerActionInfo mId postAct actType actTarget pth mth ac h = ActionInfo
+  { ident        = id_
   , postAction   = postAct
   , actionType   = actType
   , actionTarget = actTarget
@@ -192,7 +226,19 @@ handlerActionInfo mId postAct actType actTarget pth mth h = ActionInfo
   , errors       = handlerErrors  h
   , params       = handlerParams  h
   , https        = secure         h
+  , link         = makeLink
   }
+  where
+    id_ = idIdent <$> mId
+    makeLink :: Link
+    makeLink
+      | postAct   = ac ++ dirPart ++ identPart
+      | otherwise = dirPart ++ identPart
+      where dirPart   = if pth /= ""
+                        then [LAction pth]
+                        else []
+            identPart = maybe [] ((:[]) . LParam . description) id_
+
 
 --------------------
 -- * Utilities for extraction information from Handlers.
