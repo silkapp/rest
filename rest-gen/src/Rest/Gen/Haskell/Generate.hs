@@ -10,6 +10,7 @@ import Control.Category
 import Control.Monad
 import Data.Label (mkLabels, modify, set)
 import Data.List
+import Data.List.Split
 import Data.Maybe
 import Prelude hiding (id, (.))
 import Safe
@@ -105,7 +106,7 @@ mkRes ctx node =
        , mkStack funcs
        ]
   where
-    (funcs, mods) = unzip $ map (mkFunction (apiVersion ctx) $ resName node) $ resItems node
+    (funcs, mods) = unzip $ map (mkFunction (rewrites ctx) (apiVersion ctx) $ resName node) $ resItems node
     rewrittenMods = rewriteModules (rewrites ctx) $ nub $ concat mods
 
 mkImports :: HaskellContext -> ApiResource -> [String] -> Code
@@ -122,9 +123,9 @@ mkImports ctx node datImp =
     dataImports   = mkStack . map ("import qualified " <+>) $ datImp
     mkImport p = "import qualified" <++> qualModName (namespace ctx ++ p) <++> "as" <++> modName (last p)
 
-mkFunction :: Version -> String -> ApiAction -> (Code, [String])
-mkFunction ver res (ApiAction _ lnk ai) =
-  let mInp     = fmap inputInfo $ chooseType $ inputs ai
+mkFunction :: [(String,String)] -> Version -> String -> ApiAction -> (Code, [String])
+mkFunction rewrits ver res (ApiAction _ lnk ai) =
+  let mInp     = fmap (inputInfo rewrits) $ chooseType $ inputs ai
       identMod = maybe [] Ident.haskellModule (ident ai)
       defaultErrorConversion = if fmap dataType (chooseType (outputs ai)) == Just JSON then "fromJSON" else "fromXML"
       (oMod, oType, oCType, oFunc) = maybe ([], "()", "text/plain", "(const ())") outputInfo $ chooseType $ outputs ai
@@ -228,9 +229,14 @@ mkHsName ai = hsName $ concatMap cleanName parts
       by     = if target /= [] && (isJust (ident ai) || actionType ai == UpdateMany) then ["by"] else []
       get    = if isAccessor ai then [] else ["get"]
 
+-- | Rewrites multiple flattened module names
 rewriteModules :: [(String, String)] -> [String] -> [String]
 rewriteModules _  [] = []
-rewriteModules rw (v : vs) = maybe v (++ (" as " ++ v)) (lookup v rw) : rewriteModules rw vs
+rewriteModules rw (v : vs) = maybe v (\m -> m ++ " as " ++ m) (lookup v rw) : rewriteModules rw vs
+
+-- | Rewrites a single module name
+rewriteModule :: [(String, String)] -> [String] -> [String]
+rewriteModule rewrits m = maybe m (splitOn ".") (lookup (intercalate "." $ m) rewrits)
 
 hsName :: [String] -> String
 hsName []       = ""
@@ -254,12 +260,12 @@ modName = concatMap upFirst . cleanName
 dataName :: String -> String
 dataName = modName
 
-inputInfo :: DataDescription -> ([String], String, String, String)
-inputInfo ds =
+inputInfo :: [(String,String)] -> DataDescription -> ([String], String, String, String)
+inputInfo rewrits ds =
   case dataType ds of
     String -> ([], "String", "text/plain", "fromString")
-    XML    -> (haskellModule ds, haskellType ds, "text/xml", "toXML")
-    JSON   -> (haskellModule ds, haskellType ds, "text/json", "toJSON")
+    XML    -> (rewriteModule rewrits (haskellModule ds), haskellType ds, "text/xml", "toXML")
+    JSON   -> (rewriteModule rewrits (haskellModule ds), haskellType ds, "text/json", "toJSON")
     File   -> ([], "ByteString", "application/octet-stream", "id")
     Other  -> ([], "ByteString", "text/plain", "id")
 
