@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.12
+
+* Haskell: Module rewrites such as `Data.Text.Internal` -> `Data.Text` now produces qualified imports `import qualified Data.Text as Data.Text` instead of `import qualified Data.Text as Data.Text.Lazy`. This prevents building against different versions of the same package that may have moved the internal module (as is the case with `text`) from generating different clients.
+
 ## 0.11
 
 * Bugfix: Haskell: Resources without a getter now generate identifier arguments for other end points
