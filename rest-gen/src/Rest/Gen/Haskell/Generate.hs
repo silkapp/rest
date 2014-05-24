@@ -15,7 +15,6 @@ import Prelude hiding (id, (.))
 import Safe
 import System.Directory
 import System.FilePath
-
 import qualified Distribution.ModuleName                     as Cabal
 import qualified Distribution.Package                        as Cabal
 import qualified Distribution.PackageDescription             as Cabal
@@ -30,6 +29,7 @@ import Code.Build.Haskell
 import Rest.Api (Router, Version)
 
 import Rest.Gen.Base
+import Rest.Gen.Types
 import Rest.Gen.Utils
 
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
@@ -44,7 +44,7 @@ data HaskellContext =
     , includePrivate :: Bool
     , sources        :: [String]
     , imports        :: [String]
-    , rewrites       :: [(String, String)]
+    , rewrites       :: [(ModuleName, ModuleName)]
     , namespace      :: [String]
     }
 
@@ -228,9 +228,9 @@ mkHsName ai = hsName $ concatMap cleanName parts
       by     = if target /= [] && (isJust (ident ai) || actionType ai == UpdateMany) then ["by"] else []
       get    = if isAccessor ai then [] else ["get"]
 
-rewriteModules :: [(String, String)] -> [String] -> [String]
+rewriteModules :: [(ModuleName, ModuleName)] -> [String] -> [String]
 rewriteModules _  [] = []
-rewriteModules rw (v : vs) = maybe v (++ (" as " ++ v)) (lookup v rw) : rewriteModules rw vs
+rewriteModules rw (v : vs) = maybe v (\r -> unModuleName r ++ (" as " ++ v)) (lookup (ModuleName v) rw) : rewriteModules rw vs
 
 hsName :: [String] -> String
 hsName []       = ""

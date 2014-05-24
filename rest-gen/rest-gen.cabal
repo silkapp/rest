@@ -44,6 +44,7 @@ library
     Rest.Gen.Haskell.Generate
     Rest.Gen.JavaScript.Generate
     Rest.Gen.Ruby.Generate
+    Rest.Gen.Types
     Rest.Gen.Utils
   build-depends:
       base >= 4.5 && < 4.8

@@ -1,20 +1,22 @@
 module Rest.Gen where
 
+import Control.Arrow
 import Data.Char
-import Data.Label
 import Data.Foldable
+import Data.Label
 import Data.Maybe
 import System.Directory
 import System.Exit
 import System.Process
 
-import Rest.Api (withVersion, Api, Some1 (..))
+import Rest.Api (Api, Some1 (..), withVersion)
 
 import Rest.Gen.Config
-import Rest.Gen.Docs.Generate (writeDocs, DocsContext (DocsContext))
+import Rest.Gen.Docs.Generate (DocsContext (DocsContext), writeDocs)
+import Rest.Gen.Haskell.Generate (HaskellContext (HaskellContext), mkHsApi)
 import Rest.Gen.JavaScript.Generate (mkJsApi)
-import Rest.Gen.Haskell.Generate (mkHsApi, HaskellContext (HaskellContext))
 import Rest.Gen.Ruby.Generate (mkRbApi)
+import Rest.Gen.Types
 import Rest.Gen.Utils
 
 generate :: Config -> String -> Api m -> [String] -> [String] -> [(String, String)] -> IO ()
@@ -32,13 +34,14 @@ generate config name api sources imports rewrites =
        Just MakeHS          ->
          do loc <- getTargetDir config "./client"
             setupTargetDir config loc
-            let context = HaskellContext ver loc (packageName ++ "-client") (get apiPrivate config) sources imports rewrites [moduleName, "Client"]
+            let context = HaskellContext ver loc (packageName ++ "-client") (get apiPrivate config) sources imports rews [moduleName, "Client"]
             mkHsApi context r
             exitSuccess
        Nothing              -> return ()
   where
     packageName = map toLower name
     moduleName  = upFirst packageName
+    rews = map (ModuleName *** ModuleName) rewrites
 
 getTargetDir :: Config -> String -> IO String
 getTargetDir config str =
