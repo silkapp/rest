@@ -1,6 +1,5 @@
 module Rest.Gen where
 
-import Control.Arrow
 import Data.Char
 import Data.Foldable
 import Data.Label
@@ -19,7 +18,7 @@ import Rest.Gen.Ruby.Generate (mkRbApi)
 import Rest.Gen.Types
 import Rest.Gen.Utils
 
-generate :: Config -> String -> Api m -> [String] -> [String] -> [(String, String)] -> IO ()
+generate :: Config -> String -> Api m -> [ModuleName] -> [Import] -> [(ModuleName, ModuleName)] -> IO ()
 generate config name api sources imports rewrites =
   withVersion (get apiVersion config) api (putStrLn "Could not find api version" >> exitFailure) $ \ver (Some1 r) ->
      case get action config of
@@ -29,19 +28,18 @@ generate config name api sources imports rewrites =
             let context = DocsContext root ver (fromMaybe "./templates" (getSourceLocation config))
             writeDocs context r loc
             exitSuccess
-       Just MakeJS          -> mkJsApi (moduleName ++ "Api") (get apiPrivate config) ver r >>= toTarget config
-       Just MakeRb          -> mkRbApi (moduleName ++ "Api") (get apiPrivate config) ver r >>= toTarget config
+       Just MakeJS          -> mkJsApi (overModuleName (++ "Api") moduleName) (get apiPrivate config) ver r >>= toTarget config
+       Just MakeRb          -> mkRbApi (overModuleName (++ "Api") moduleName) (get apiPrivate config) ver r >>= toTarget config
        Just MakeHS          ->
          do loc <- getTargetDir config "./client"
             setupTargetDir config loc
-            let context = HaskellContext ver loc (packageName ++ "-client") (get apiPrivate config) sources imports rews [moduleName, "Client"]
+            let context = HaskellContext ver loc (packageName ++ "-client") (get apiPrivate config) sources imports rewrites [unModuleName moduleName, "Client"]
             mkHsApi context r
             exitSuccess
        Nothing              -> return ()
   where
     packageName = map toLower name
-    moduleName  = upFirst packageName
-    rews = map (ModuleName *** ModuleName) rewrites
+    moduleName  = ModuleName $ upFirst packageName
 
 getTargetDir :: Config -> String -> IO String
 getTargetDir config str =

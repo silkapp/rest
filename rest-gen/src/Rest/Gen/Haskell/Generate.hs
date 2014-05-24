@@ -42,8 +42,8 @@ data HaskellContext =
     , targetPath     :: String
     , wrapperName    :: String
     , includePrivate :: Bool
-    , sources        :: [String]
-    , imports        :: [String]
+    , sources        :: [ModuleName]
+    , imports        :: [Import]
     , rewrites       :: [(ModuleName, ModuleName)]
     , namespace      :: [String]
     }
@@ -64,7 +64,7 @@ mkCabalFile ctx tree =
      writeCabalFile cabalFile gpkg
   where
     cabalFile = targetPath ctx </> wrapperName ctx ++ ".cabal"
-    modules   = map Cabal.fromString (sources ctx)
+    modules   = map (Cabal.fromString . unModuleName) (sources ctx)
              ++ map (Cabal.fromString . qualModName . (namespace ctx ++)) (allSubResourceIds tree)
 
 writeCabalFile :: FilePath -> Cabal.GenericPackageDescription -> IO ()
@@ -108,21 +108,21 @@ mkRes ctx node =
     (funcs, mods) = unzip $ map (mkFunction (apiVersion ctx) $ resName node) $ resItems node
     rewrittenMods = rewriteModules (rewrites ctx) $ nub $ concat mods
 
-mkImports :: HaskellContext -> ApiResource -> [String] -> Code
+mkImports :: HaskellContext -> ApiResource -> [Import] -> Code
 mkImports ctx node datImp =
     mkStack
-      [ code "import Rest.Client.Internal"
+      [ code $ Import UnQualified (ModuleName "Rest.Client.Internal") Nothing Nothing
       , extraImports
       , parentImports
       , dataImports
       ]
   where
-    extraImports  = mkStack . map ("import " <+>) $ imports ctx
+    extraImports  = mkStack . map code $ imports ctx
     parentImports = mkStack . map mkImport . tail . inits . resParents $ node
-    dataImports   = mkStack . map ("import qualified " <+>) $ datImp
+    dataImports   = mkStack . map code $ datImp
     mkImport p = "import qualified" <++> qualModName (namespace ctx ++ p) <++> "as" <++> modName (last p)
 
-mkFunction :: Version -> String -> ApiAction -> (Code, [String])
+mkFunction :: Version -> String -> ApiAction -> (Code, [ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
   let mInp     = fmap inputInfo $ chooseType $ inputs ai
       identMod = maybe [] Ident.haskellModule (ident ai)
@@ -162,7 +162,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
               ]
               $ "liftM (parseResult" <++> eFunc <++> oFunc <+> ") . doRequest $ request"
         ]
-     , eMod ++ oMod ++ identMod ++ maybe [] (\(m,_,_,_) -> m) mInp
+     , map ModuleName $ eMod ++ oMod ++ identMod ++ maybe [] (\(m,_,_,_) -> m) mInp
      )
 
 linkToURL :: String -> Link -> (Code, [String])
@@ -228,9 +228,11 @@ mkHsName ai = hsName $ concatMap cleanName parts
       by     = if target /= [] && (isJust (ident ai) || actionType ai == UpdateMany) then ["by"] else []
       get    = if isAccessor ai then [] else ["get"]
 
-rewriteModules :: [(ModuleName, ModuleName)] -> [String] -> [String]
+rewriteModules :: [(ModuleName, ModuleName)] -> [ModuleName] -> [Import]
 rewriteModules _  [] = []
-rewriteModules rw (v : vs) = maybe v (\r -> unModuleName r ++ (" as " ++ v)) (lookup (ModuleName v) rw) : rewriteModules rw vs
+rewriteModules rw (v : vs) =
+  maybe (Import Qualified v Nothing Nothing) (\r -> Import Qualified r (Just v) Nothing) (lookup v rw)
+    : rewriteModules rw vs
 
 hsName :: [String] -> String
 hsName []       = ""

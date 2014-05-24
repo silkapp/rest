@@ -8,19 +8,20 @@ import Control.Monad
 import Data.Maybe
 import Text.StringTemplate
 
-import Rest.Api (Version, Router)
+import Rest.Api (Router, Version)
 import Rest.Gen.Base
+import Rest.Gen.Types
 import Rest.Gen.Utils
 
-mkJsApi :: String -> Bool -> Version -> Router m s -> IO String
+mkJsApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =
   do prelude <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/base.js")
      let cod = showCode $ mkStack
-                [ ns ++ ".prototype.version" .=. string (show ver)
-                , mkJsCode ns priv r
+                [ unModuleName ns ++ ".prototype.version" .=. string (show ver)
+                , mkJsCode (unModuleName ns) priv r
                 ]
      return $ prelude ++ cod
-  where attrs = [("apinamespace", ns), ("dollar", "$")]
+  where attrs = [("apinamespace", unModuleName ns), ("dollar", "$")]
 
 mkJsCode :: String -> Bool -> Router m s -> Code
 mkJsCode ns priv = mkJs ns . sortTree . (if priv then id else noPrivate) . apiSubtrees

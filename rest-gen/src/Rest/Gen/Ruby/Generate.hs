@@ -1,21 +1,22 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Rest.Gen.Ruby.Generate (mkRbApi) where
 
-import Code.Build
-import Code.Build.Ruby
-
 import Data.Char
 import Data.List
 import Data.Maybe
 
-import Rest.Api (Version, Router)
+import Code.Build
+import Code.Build.Ruby
+
+import Rest.Api (Router, Version)
 import Rest.Gen.Base
+import Rest.Gen.Types
 import Rest.Gen.Utils
 
-mkRbApi :: String -> Bool -> Version -> Router m s -> IO String
+mkRbApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =
   do prelude <- readContent "Ruby/base.rb"
-     let cod = showCode . mkRb ns ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
+     let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
      return $ cod ++ prelude
 
 mkRb :: String -> Version -> ApiResource -> Code
