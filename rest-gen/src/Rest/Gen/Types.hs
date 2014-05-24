@@ -42,7 +42,7 @@ instance Codeable Import where
       <++> q
       <++> m
       <++> maybe (code "") ("as" <++>) mas
-      <++> maybe (code "") (\v -> "(" <++> f v <++> ")") ids
+      <++> maybe (code "") (\v -> "(" <+> f v <+> ")") ids
     where
       f :: [QName] -> Code
       f = foldl' (<++>) (code "") . intersperse (code ",") . map code

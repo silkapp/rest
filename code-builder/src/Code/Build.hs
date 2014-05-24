@@ -1,4 +1,9 @@
-{-# LANGUAGE OverlappingInstances, TypeSynonymInstances, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE
+    FlexibleInstances
+  , OverlappingInstances
+  , TypeSynonymInstances
+  , UndecidableInstances
+  #-}
 module Code.Build where
 
 import Data.List
@@ -135,7 +140,12 @@ a <+> b =
 
 -- | Same as <++> but with space
 (<++>) :: (Codeable a, Codeable b) => a -> b -> Code
-a <++> b = a <+> " " <+> b
+a <++> b
+  | empty a = code b
+  | empty b = code a
+  | otherwise = a <+> " " <+> b
+    where
+     empty x = all (== "") (unCode (code x))
 
 -- | Place the second block after the last line of the first block. Aligns the second block
 (<+|) :: (Codeable a, Codeable b) => a -> b -> Code
