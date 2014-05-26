@@ -109,22 +109,21 @@ mkRes ctx node =
     rewrittenMods = rewriteModules (rewrites ctx) $ nub $ concat mods
 
 mkImports :: HaskellContext -> ApiResource -> [Import] -> Code
-mkImports ctx node datImp =
-    mkStack
-      [ code $ Import UnQualified (ModuleName "Rest.Client.Internal") Nothing Nothing
-      , extraImports
-      , parentImports
-      , dataImports
-      , idImports
-      ]
+mkImports ctx node datImp
+  = mkStack
+  . map (rewriteImport $ rewrites ctx)
+  $    [Import UnQualified (ModuleName "Rest.Client.Internal") Nothing Nothing]
+    ++ extraImports
+    ++ parentImports
+    ++ dataImports
+    ++ idImports
   where
-    extraImports  = mkStack . map code $ imports ctx
-    parentImports = mkStack . map mkImport . tail . inits . resParents $ node
-    dataImports   = mkStack . map code $ datImp
-    mkImport p = "import qualified" <++> qualModName (namespace ctx ++ p) <++> "as" <++> modName (last p)
-    idImports = mkStack . mapMaybe (fmap (qualImp . intercalate "." . Ident.haskellModule) . snd) . resAccessors $ node
-    qualImp v = Import Qualified (ModuleName v) Nothing Nothing
-
+    extraImports  = imports ctx
+    parentImports = map mkImport . tail . inits . resParents $ node
+    dataImports   = datImp
+    idImports     = mapMaybe (fmap (qualImp . intercalate "." . Ident.haskellModule) . snd) . resAccessors $ node
+    qualImp v     = Import Qualified (ModuleName v) Nothing Nothing
+    mkImport p    = Import Qualified (ModuleName . qualModName $ namespace ctx ++ p) (Just . ModuleName . modName . last $ p) Nothing
 
 mkFunction :: Version -> String -> ApiAction -> (Code, [ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
@@ -236,6 +235,11 @@ rewriteModules _  [] = []
 rewriteModules rw (v : vs) =
   maybe (Import Qualified v Nothing Nothing) (\r -> Import Qualified r (Just v) Nothing) (lookup v rw)
     : rewriteModules rw vs
+
+rewriteImport :: [(ModuleName, ModuleName)] -> Import -> Import
+rewriteImport rws i = case i of
+  Import q m Nothing    l -> Import q (fromMaybe m $ lookup m rws) Nothing                               l
+  Import q m (Just mas) l -> Import q (fromMaybe m (lookup m rws)) (Just $ fromMaybe mas (lookup m rws)) l
 
 hsName :: [String] -> String
 hsName []       = ""
