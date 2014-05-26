@@ -100,12 +100,6 @@ resourceToActionInfo r =
                           ++ map (uncurry (actionActionInfo accLnk)) (Rest.actions r)
       where
         accLnk = accessLink (accessors step)
-{-
-        mId :: Maybe (Id sid)
-        mId = headMay . catMaybes . map snd . stepIds $ step
-        headMay [] = Nothing
-        headMay (x:_) = Just x
--}
 
 accessLink :: [Accessor] -> Link
 accessLink [] = []
@@ -114,17 +108,6 @@ accessLink xs = [LAccess . map f $ xs]
     f ("", x) = par x
     f (pth, x) = LAction pth : par x
     par = maybe [] (return . LParam . description)
-{-
-stepIds :: Step sid mid aid -> [(String, Maybe (Id sid))]
-stepIds (Named hs) = mapMaybe (uncurry accessorsNamed) hs
-  where
-    accessorsNamed pth (Right (Single g)) = Just (pth, getId g)
-    accessorsNamed _ _ = Nothing
-    getId (Singleton _) = Nothing
-    getId (By id_) = Just id_
-stepIds (Unnamed (Single id_)) = [("", Just id_)]
-stepIds (Unnamed (Many _)) = []
--}
 
 accessors :: Step sid mid aid -> [Accessor]
 accessors (Named hs) = mapMaybe (uncurry accessorsNamed) hs
@@ -184,7 +167,6 @@ singleActionInfo :: Resource m s sid mid aid -> Maybe (Id sid) -> String -> [Act
 singleActionInfo r@Resource{} mId pth
    = foldMap (return . getActionInfo         mId pth) (Rest.get     r)
   ++ foldMap (return . updateActionInfo      mId pth) (Rest.update  r)
---  ++ foldMap (return . removeActionInfo'     mId pth) (Rest.remove  r)
   ++ maybeToList (join $ multiUpdateActionInfo <$> mId <*> pure pth <*> Rest.update r)
   ++ maybeToList (join $ multiRemoveActionInfo <$> mId <*> pure pth <*> Rest.remove r)
 
@@ -203,9 +185,6 @@ multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany An
 
 removeActionInfo :: Link -> Handler m -> ActionInfo
 removeActionInfo lnk = handlerActionInfo Nothing True Delete Self "" DELETE lnk
-
---removeActionInfo' :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
---removeActionInfo' mId pth = handlerActionInfo mId True Delete Self pth DELETE []
 
 multiRemoveActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
 multiRemoveActionInfo id_ pth h =  handlerActionInfo Nothing False DeleteMany Any pth DELETE []
