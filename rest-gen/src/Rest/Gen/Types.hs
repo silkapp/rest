@@ -21,6 +21,7 @@ overModuleName :: (String -> String) -> ModuleName -> ModuleName
 overModuleName f = ModuleName . f . unModuleName
 
 newtype Name = Name { unName :: String }
+  deriving (Eq, Show)
 
 instance Codeable Name where
   code = code . unName
@@ -28,12 +29,14 @@ instance Codeable Name where
 data QName
   = Qual ModuleName Name
   | UnQual Name
+  deriving (Eq, Show)
 
 instance Codeable QName where
   code (UnQual n) = code n
   code (Qual m n) = code m <+> "." <+> code n
 
 data Qualification = Qualified | UnQualified
+  deriving (Eq, Show)
 
 instance Codeable Qualification where
   code Qualified   = code "qualified"
@@ -41,6 +44,7 @@ instance Codeable Qualification where
 
 data Import
   = Import Qualification ModuleName (Maybe ModuleName) (Maybe [QName])
+  deriving (Eq, Show)
 
 instance Codeable Import where
   code i = case i of
