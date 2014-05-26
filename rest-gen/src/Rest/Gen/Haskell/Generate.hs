@@ -115,17 +115,20 @@ mkImports ctx node datImp =
       , extraImports
       , parentImports
       , dataImports
+      , idImports
       ]
   where
     extraImports  = mkStack . map code $ imports ctx
     parentImports = mkStack . map mkImport . tail . inits . resParents $ node
     dataImports   = mkStack . map code $ datImp
     mkImport p = "import qualified" <++> qualModName (namespace ctx ++ p) <++> "as" <++> modName (last p)
+    idImports = mkStack . mapMaybe (fmap (qualImp . intercalate "." . Ident.haskellModule) . snd) . resAccessors $ node
+    qualImp v = Import Qualified (ModuleName v) Nothing Nothing
+
 
 mkFunction :: Version -> String -> ApiAction -> (Code, [ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
   let mInp     = fmap inputInfo $ chooseType $ inputs ai
-      identMod = maybe [] Ident.haskellModule (ident ai)
       defaultErrorConversion = if fmap dataType (chooseType (outputs ai)) == Just JSON then "fromJSON" else "fromXML"
       (oMod, oType, oCType, oFunc) = maybe ([], "()", "text/plain", "(const ())") outputInfo $ chooseType $ outputs ai
       (eMod, eType, eFunc) = headDef (([], "()", defaultErrorConversion))
@@ -162,7 +165,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
               ]
               $ "liftM (parseResult" <++> eFunc <++> oFunc <+> ") . doRequest $ request"
         ]
-     , map ModuleName $ eMod ++ oMod ++ identMod ++ maybe [] (\(m,_,_,_) -> m) mInp
+     , map ModuleName $ eMod ++ oMod ++ maybe [] (\(m,_,_,_) -> m) mInp
      )
 
 linkToURL :: String -> Link -> (Code, [String])

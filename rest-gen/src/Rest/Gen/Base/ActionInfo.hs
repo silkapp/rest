@@ -184,7 +184,7 @@ singleActionInfo :: Resource m s sid mid aid -> Maybe (Id sid) -> String -> [Act
 singleActionInfo r@Resource{} mId pth
    = foldMap (return . getActionInfo         mId pth) (Rest.get     r)
   ++ foldMap (return . updateActionInfo      mId pth) (Rest.update  r)
-  ++ foldMap (return . removeActionInfo'     mId pth) (Rest.remove  r)
+--  ++ foldMap (return . removeActionInfo'     mId pth) (Rest.remove  r)
   ++ maybeToList (join $ multiUpdateActionInfo <$> mId <*> pure pth <*> Rest.update r)
   ++ maybeToList (join $ multiRemoveActionInfo <$> mId <*> pure pth <*> Rest.remove r)
 
@@ -204,8 +204,8 @@ multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany An
 removeActionInfo :: Link -> Handler m -> ActionInfo
 removeActionInfo lnk = handlerActionInfo Nothing True Delete Self "" DELETE lnk
 
-removeActionInfo' :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
-removeActionInfo' mId pth = handlerActionInfo mId True Delete Self pth DELETE []
+--removeActionInfo' :: Maybe (Id sid) -> String -> Handler m -> ActionInfo
+--removeActionInfo' mId pth = handlerActionInfo mId True Delete Self pth DELETE []
 
 multiRemoveActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
 multiRemoveActionInfo id_ pth h =  handlerActionInfo Nothing False DeleteMany Any pth DELETE []
