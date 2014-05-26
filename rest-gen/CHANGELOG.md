@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.13.1
+
+* Derive `Eq, Show` for all types in `Rest.Gen.Types`
+* Haskell: Nub generated imports
+
 ## 0.13
 
 Breaking changes:
