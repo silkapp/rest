@@ -112,8 +112,7 @@ mkRes ctx node =
 
 mkImports :: HaskellContext -> ApiResource -> [ModuleName] -> Code
 mkImports ctx node datImp
-  = mkStack
-  . map (rewriteImport $ rewrites ctx)
+  = mkStack . nub . map (rewriteImport $ rewrites ctx)
   $    [Import UnQualified (ModuleName "Rest.Client.Internal") Nothing Nothing]
     ++ extraImports
     ++ parentImports
