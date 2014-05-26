@@ -35,7 +35,6 @@ import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
-
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 
 mkLabelsNamed ("_" ++) [''Cabal.GenericPackageDescription, ''Cabal.CondTree, ''Cabal.Library]

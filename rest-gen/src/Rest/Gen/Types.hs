@@ -48,8 +48,13 @@ instance Codeable Import where
       -> "import"
       <++> q
       <++> m
-      <++> maybe (code "") ("as" <++>) mas
-      <++> maybe (code "") (\v -> "(" <+> f v <+> ")") ids
-    where
-      f :: [QName] -> Code
-      f = foldl' (<++>) (code "") . intersperse (code ",") . map code
+      <++> qualAs
+      <++> maybe (code "") (\v -> "(" <+> impList v <+> ")") ids
+      where
+        qualAs = case mas of
+          Just as
+            | as == m   -> code ""
+            | otherwise -> "as" <++> as
+          Nothing       -> code ""
+        impList :: [QName] -> Code
+        impList = foldl' (<++>) (code "") . intersperse (code ",") . map code
