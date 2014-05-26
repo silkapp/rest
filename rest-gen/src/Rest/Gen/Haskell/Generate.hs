@@ -120,12 +120,19 @@ mkImports ctx node datImp
     extraImports  = imports ctx
     parentImports = map mkImport . tail . inits . resParents $ node
     dataImports   = map qualImp datImp
-    idImports     = mapMaybe (fmap (qualImp . ModuleName . intercalate "." . Ident.haskellModule) . snd) . resAccessors $ node
-    qualImp v     = Import Qualified v Nothing Nothing
+    idImports     = concat . mapMaybe (return . map (qualImp . ModuleName) . Ident.haskellModule <=< snd) . resAccessors $ node
+    -- We need the `as' name to be explicit here even though it's the same, see comment below.
+    qualImp v     = Import Qualified v (Just v) Nothing
     mkImport p    = Import Qualified (ModuleName . qualModName $ namespace ctx ++ p) (Just . ModuleName . modName . last $ p) Nothing
     rewriteImport :: [(ModuleName, ModuleName)] -> Import -> Import
     rewriteImport rws i = case i of
-      Import q m mas l -> Import q (look m) (fmap look mas) l
+      -- We don't rewrite the `as` part of the import so if you have a
+      -- rewrite ("Data.Text.Internal.Lazy", "Data.Text.Lazy") the
+      -- import will become `import qualified Data.Text as
+      -- Data.Text.Internal.Lazy', this is because mkFunction produces
+      -- types through strings and doesn't take rewrites into
+      -- account. mkFunction should be changed to do this.
+      Import q m mas l -> Import q (look m) mas l
       where
        look m = lookupJustDef m m rws
 
