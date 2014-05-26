@@ -5,7 +5,7 @@
 module Rest.Gen.Haskell.Generate where
 
 import Control.Applicative
-import Control.Arrow (first)
+import Control.Arrow (first, second)
 import Control.Category
 import Control.Monad
 import Data.Label (mkLabels, modify, set)
@@ -100,15 +100,14 @@ mkRes ctx node =
   showCode $
       "{-# LANGUAGE OverloadedStrings #-}\n{-# OPTIONS_GHC -fno-warn-unused-imports #-}\n{- Warning!! This is automatically generated code, do not modify! -}"
   <-> hsModule (qualModName $ namespace ctx ++ resId node)
-       [ mkImports ctx node rewrittenMods
+       [ mkImports ctx node mods
        , idData node
        , mkStack funcs
        ]
   where
-    (funcs, mods) = unzip $ map (mkFunction (apiVersion ctx) $ resName node) $ resItems node
-    rewrittenMods = rewriteModules (rewrites ctx) $ nub $ concat mods
+    (funcs, mods) = second (nub . concat) . unzip . map (mkFunction (apiVersion ctx) . resName $ node) $ resItems node
 
-mkImports :: HaskellContext -> ApiResource -> [Import] -> Code
+mkImports :: HaskellContext -> ApiResource -> [ModuleName] -> Code
 mkImports ctx node datImp
   = mkStack
   . map (rewriteImport $ rewrites ctx)
@@ -120,10 +119,15 @@ mkImports ctx node datImp
   where
     extraImports  = imports ctx
     parentImports = map mkImport . tail . inits . resParents $ node
-    dataImports   = datImp
-    idImports     = mapMaybe (fmap (qualImp . intercalate "." . Ident.haskellModule) . snd) . resAccessors $ node
-    qualImp v     = Import Qualified (ModuleName v) Nothing Nothing
+    dataImports   = map qualImp datImp
+    idImports     = mapMaybe (fmap (qualImp . ModuleName . intercalate "." . Ident.haskellModule) . snd) . resAccessors $ node
+    qualImp v     = Import Qualified v Nothing Nothing
     mkImport p    = Import Qualified (ModuleName . qualModName $ namespace ctx ++ p) (Just . ModuleName . modName . last $ p) Nothing
+    rewriteImport :: [(ModuleName, ModuleName)] -> Import -> Import
+    rewriteImport rws i = case i of
+      Import q m mas l -> Import q (look m) (fmap look mas) l
+      where
+       look m = lookupJustDef m m rws
 
 mkFunction :: Version -> String -> ApiAction -> (Code, [ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
@@ -229,17 +233,6 @@ mkHsName ai = hsName $ concatMap cleanName parts
       target = if resDir ai == "" then maybe [] ((:[]) . description) (ident ai) else [resDir ai]
       by     = if target /= [] && (isJust (ident ai) || actionType ai == UpdateMany) then ["by"] else []
       get    = if isAccessor ai then [] else ["get"]
-
-rewriteModules :: [(ModuleName, ModuleName)] -> [ModuleName] -> [Import]
-rewriteModules _  [] = []
-rewriteModules rw (v : vs) =
-  maybe (Import Qualified v Nothing Nothing) (\r -> Import Qualified r (Just v) Nothing) (lookup v rw)
-    : rewriteModules rw vs
-
-rewriteImport :: [(ModuleName, ModuleName)] -> Import -> Import
-rewriteImport rws i = case i of
-  Import q m Nothing    l -> Import q (fromMaybe m $ lookup m rws) Nothing                               l
-  Import q m (Just mas) l -> Import q (fromMaybe m (lookup m rws)) (Just $ fromMaybe mas (lookup m rws)) l
 
 hsName :: [String] -> String
 hsName []       = ""
