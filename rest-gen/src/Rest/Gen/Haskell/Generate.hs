@@ -120,7 +120,7 @@ mkImports ctx node datImp
     extraImports  = imports ctx
     parentImports = map mkImport . tail . inits . resParents $ node
     dataImports   = map qualImp datImp
-    idImports     = concat . mapMaybe (return . map (qualImp . ModuleName) . Ident.haskellModule <=< snd) . resAccessors $ node
+    idImports     = concat . mapMaybe (return . map qualImp . Ident.haskellModules <=< snd) . resAccessors $ node
     -- We need the `as' name to be explicit here even though it's the same, see comment below.
     qualImp v     = Import Qualified v (Just v) Nothing
     mkImport p    = Import Qualified (ModuleName . qualModName $ namespace ctx ++ p) (Just . ModuleName . modName . last $ p) Nothing

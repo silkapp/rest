@@ -18,22 +18,24 @@ import Data.Typeable
 #if __GLASGOW_HASKELL__ < 704
 import Data.List.Split
 #endif
-import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident), description)
-import Rest.Info
-import qualified Data.JSON.Schema   as J
-import qualified Data.Label.Total   as L
-import qualified Rest.Gen.Base.JSON as J
-import qualified Rest.Gen.Base.XML  as X
+import qualified Data.JSON.Schema as J
+import qualified Data.Label.Total as L
 
 import Rest.Dictionary (Error (..), Input (..), Output (..), Param (..))
 import Rest.Driver.Routing (mkListHandler, mkMultiHandler)
-import Rest.Gen.Base.Link
 import Rest.Handler
+import Rest.Info
 import Rest.Resource hiding (description)
 import Rest.Schema
-
 import qualified Rest.Dictionary as Dict
 import qualified Rest.Resource   as Rest
+
+import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident))
+import Rest.Gen.Base.Link
+import Rest.Gen.Types
+import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
+import qualified Rest.Gen.Base.JSON             as J
+import qualified Rest.Gen.Base.XML              as X
 
 --------------------
 -- * The types describing a resource's actions.
@@ -107,7 +109,7 @@ accessLink xs = [LAccess . map f $ xs]
   where
     f ("", x) = par x
     f (pth, x) = LAction pth : par x
-    par = maybe [] (return . LParam . description)
+    par = maybe [] (return . LParam . Ident.description)
 
 accessors :: Step sid mid aid -> [Accessor]
 accessors (Named hs) = mapMaybe (uncurry accessorsNamed) hs
@@ -237,7 +239,7 @@ handlerActionInfo mId postAct actType actTarget pth mth ac h = ActionInfo
       where dirPart   = if pth /= ""
                         then [LAction pth]
                         else []
-            identPart = maybe [] ((:[]) . LParam . description) id_
+            identPart = maybe [] ((:[]) . LParam . Ident.description) id_
 
 
 --------------------
@@ -370,8 +372,18 @@ idIdent :: Id id -> Ident
 idIdent (Id idnt _) = actionIdent idnt
 
 actionIdent :: forall a. Dict.Ident a -> Ident
-actionIdent Dict.StringId = Ident "string" "String" []
-actionIdent Dict.ReadId   = Ident (describe proxy_) (typeString proxy_) (modString proxy_)
+actionIdent Dict.StringId
+  = Ident
+    { Ident.description    = "string"
+    , Ident.haskellType    = "String"
+    , Ident.haskellModules = []
+    }
+actionIdent Dict.ReadId
+  = Ident
+    { Ident.description    = describe proxy_
+    , Ident.haskellType    =  typeString proxy_
+    , Ident.haskellModules = map ModuleName $ modString proxy_
+    }
   where
     proxy_ :: Proxy a
     proxy_ = Proxy
