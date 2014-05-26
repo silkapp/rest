@@ -1,5 +1,5 @@
 name:                code-builder
-version:             0.1.2.1
+version:             0.1.3
 synopsis:            Simple system for generating code.
 description:         Simple system for generating code.
 license:             BSD3
