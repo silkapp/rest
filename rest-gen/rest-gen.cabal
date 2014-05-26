@@ -1,5 +1,5 @@
 name:                rest-gen
-version:             0.11
+version:             0.12
 description:         Documentation and client generation from rest definition.
 synopsis:            Documentation and client generation from rest definition.
 maintainer:          code@silk.co
@@ -27,9 +27,17 @@ source-repository head
 library
   ghc-options:       -Wall
   hs-source-dirs:    src
-  other-modules:     Paths_rest_gen
   exposed-modules:
     Rest.Gen
+    Rest.Gen.Config
+    Rest.Gen.Docs.Generate
+    Rest.Gen.Docs.Happstack
+    Rest.Gen.Haskell.Generate
+    Rest.Gen.JavaScript.Generate
+    Rest.Gen.Ruby.Generate
+    Rest.Gen.Types
+  other-modules:
+    Paths_rest_gen
     Rest.Gen.Base
     Rest.Gen.Base.ActionInfo
     Rest.Gen.Base.ActionInfo.Ident
@@ -38,13 +46,6 @@ library
     Rest.Gen.Base.JSON.Pretty
     Rest.Gen.Base.Link
     Rest.Gen.Base.XML
-    Rest.Gen.Config
-    Rest.Gen.Docs.Generate
-    Rest.Gen.Docs.Happstack
-    Rest.Gen.Haskell.Generate
-    Rest.Gen.JavaScript.Generate
-    Rest.Gen.Ruby.Generate
-    Rest.Gen.Types
     Rest.Gen.Utils
   build-depends:
       base >= 4.5 && < 4.8
