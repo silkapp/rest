@@ -1,4 +1,11 @@
-module Rest.Gen.Types where
+module Rest.Gen.Types
+  ( ModuleName (..)
+  , overModuleName
+  , Import (..)
+  , Qualification (..)
+  , QName (..)
+  , Name (..)
+  ) where
 
 import Data.List
 

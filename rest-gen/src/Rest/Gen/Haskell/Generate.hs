@@ -2,13 +2,17 @@
     DoAndIfThenElse
   , TemplateHaskell
   #-}
-module Rest.Gen.Haskell.Generate where
+module Rest.Gen.Haskell.Generate
+  ( HaskellContext (..)
+  , mkHsApi
+  ) where
 
 import Control.Applicative
 import Control.Arrow (first, second)
 import Control.Category
 import Control.Monad
-import Data.Label (mkLabels, modify, set)
+import Data.Label (modify, set)
+import Data.Label.Derive (mkLabelsNamed)
 import Data.List
 import Data.Maybe
 import Prelude hiding (id, (.))
@@ -34,7 +38,7 @@ import Rest.Gen.Utils
 
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 
-$(mkLabels[''Cabal.GenericPackageDescription, ''Cabal.CondTree, ''Cabal.Library])
+mkLabelsNamed ("_" ++) [''Cabal.GenericPackageDescription, ''Cabal.CondTree, ''Cabal.Library]
 
 data HaskellContext =
   HaskellContext
@@ -72,7 +76,7 @@ writeCabalFile path = Cabal.writeUTF8File path . unlines . filter emptyField . l
   where emptyField = (/= "\"\" ") . takeWhile (/= ':') . reverse
 
 updateExposedModules :: [Cabal.ModuleName] -> Cabal.GenericPackageDescription -> Cabal.GenericPackageDescription
-updateExposedModules modules = modify lCondLibrary (Just . maybe (mkCondLibrary modules) (set (lExposedModules . lCondTreeData) modules))
+updateExposedModules modules = modify _condLibrary (Just . maybe (mkCondLibrary modules) (set (_exposedModules . _condTreeData) modules))
 
 mkGenericPackageDescription :: String -> [Cabal.ModuleName] -> Cabal.GenericPackageDescription
 mkGenericPackageDescription name modules = Cabal.GenericPackageDescription pkg [] (Just (mkCondLibrary modules)) [] [] []

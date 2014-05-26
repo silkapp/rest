@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
-
-module Rest.Gen.Base.JSON where
+module Rest.Gen.Base.JSON (showExample) where
 
 import Data.Aeson ((.=))
 import Data.JSON.Schema
 import Data.Text (pack)
-import Rest.Gen.Base.JSON.Pretty
 import Text.PrettyPrint.HughesPJ
-import qualified Data.Aeson as A
+import qualified Data.Aeson  as A
 import qualified Data.Vector as V
+
+import Rest.Gen.Base.JSON.Pretty
 
 showExample :: Schema -> String
 showExample = render . pp_value . showExample'

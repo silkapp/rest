@@ -1,4 +1,8 @@
-module Rest.Gen.Base.XML (getXmlSchema, showSchema, showExample) where
+module Rest.Gen.Base.XML
+  ( getXmlSchema
+  , showSchema
+  , showExample
+  ) where
 
 import Data.List
 import Text.XML.HXT.Arrow.Pickle

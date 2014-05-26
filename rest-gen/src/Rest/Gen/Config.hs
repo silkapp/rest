@@ -1,7 +1,24 @@
-{-# LANGUAGE TemplateHaskell, TypeOperators #-}
-module Rest.Gen.Config where
+{-# LANGUAGE
+    TemplateHaskell
+  , TypeOperators
+  #-}
+module Rest.Gen.Config
+  ( Action (..)
+  , Location (..)
 
-import Prelude hiding ((.), id)
+  , Config
+  , action
+  , source
+  , target
+  , apiVersion
+  , apiPrivate
+
+  , defaultConfig
+  , parseLocation
+  , options
+  ) where
+
+import Prelude hiding (id, (.))
 
 import Control.Category
 import Data.Label
@@ -18,7 +35,7 @@ data Config = Config
   , _apiPrivate :: Bool
   }
 
-$(mkLabels [''Config])
+mkLabels [''Config]
 
 defaultConfig :: Config
 defaultConfig = Config

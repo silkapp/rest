@@ -1,4 +1,14 @@
-module Rest.Gen.Utils where
+module Rest.Gen.Utils
+  ( readContent
+  , copyContent
+  , groupByFirst
+  , fst3
+  , snd3
+  , thd3
+  , upFirst
+  , downFirst
+  , mapHead
+  ) where
 
 import Data.Char
 import Data.List.Split

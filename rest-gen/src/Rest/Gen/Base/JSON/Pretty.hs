@@ -1,4 +1,4 @@
-module Rest.Gen.Base.JSON.Pretty where
+module Rest.Gen.Base.JSON.Pretty (pp_value) where
 
 import Control.Arrow (first)
 import Data.Aeson.Types

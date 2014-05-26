@@ -3,7 +3,25 @@
   , GADTs
   , ScopedTypeVariables
   #-}
-module Rest.Gen.Base.ActionInfo where
+module Rest.Gen.Base.ActionInfo
+  ( Accessor
+  , ActionInfo (..)
+  , ActionType (..)
+  , DataDescription (..)
+  , DataType (..)
+  , ResourceId
+  , accessLink
+  , accessors
+  , chooseType
+  , isAccessor
+  , listGetterActionInfo
+  , mkActionDescription
+  , namedActionInfo
+  , resourceToAccessors
+  , resourceToActionInfo
+  , selectActionInfo
+  , singleActionInfo
+  ) where
 
 import Prelude hiding (id, (.))
 
@@ -15,6 +33,7 @@ import Data.List
 import Data.Maybe
 import Data.Proxy
 import Data.Typeable
+-- TODO Remove CPP
 #if __GLASGOW_HASKELL__ < 704
 import Data.List.Split
 #endif

@@ -1,5 +1,26 @@
-{-# LANGUAGE GADTs #-}
-module Rest.Gen.Base.ApiTree where
+module Rest.Gen.Base.ApiTree
+  ( ApiAction (..)
+  , ApiResource (..)
+  , allResourceIds
+  , allSubResourceIds
+  , allSubResources
+  , allSubTrees
+  , allTrees
+  , apiResources
+  , apiSubtrees
+  , apiTree'
+  , cleanName
+  , defaultTree
+  , foldTree
+  , foldTreeChildren
+  , hasAccessor
+  , mkFuncParts
+  , noPrivate
+  , resIdents
+  , sortTree
+  , subResourceIds
+  , subResourceNames
+  ) where
 
 import Data.Char
 import Data.Function

@@ -1,4 +1,6 @@
-module Rest.Gen where
+module Rest.Gen
+  ( generate
+  ) where
 
 import Data.Char
 import Data.Foldable

@@ -1,4 +1,14 @@
-module Rest.Gen.Base.Link where
+module Rest.Gen.Base.Link
+  ( Link
+  , LinkItem (..)
+  , flattenLast
+  , flattenLastResource
+  , flattenLink
+  , getLinkIds
+  , hasParam
+  , itemString
+  , setLinkIds
+  ) where
 
 -- | Data structure representing Api links
 data LinkItem =

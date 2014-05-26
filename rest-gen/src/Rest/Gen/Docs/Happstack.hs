@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Rest.Gen.Docs.Happstack where
+module Rest.Gen.Docs.Happstack
+  ( apiDocsHandler
+  ) where
 
 import Control.Monad
 import Control.Monad.Trans

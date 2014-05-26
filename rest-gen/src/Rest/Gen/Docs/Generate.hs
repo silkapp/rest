@@ -1,15 +1,26 @@
-{-# LANGUAGE GADTs
-           , TupleSections
-           , ScopedTypeVariables
-           , OverlappingInstances
-           , TemplateHaskell
-           , TypeFamilies
-           , EmptyDataDecls
-           , MultiParamTypeClasses
-           #-}
-module Rest.Gen.Docs.Generate where
+{-# LANGUAGE
+    EmptyDataDecls
+  , GADTs
+  , MultiParamTypeClasses
+  , OverlappingInstances
+  , ScopedTypeVariables
+  , TemplateHaskell
+  , TupleSections
+  , TypeFamilies
+  #-}
+module Rest.Gen.Docs.Generate
+  ( DocsContext (..)
+  , cdiv
+  , cls
+  , mkAllResources
+  , mkSingleResource
+  , resourcesInfo
+  , row
+  , subResourcesInfo
+  , writeDocs
+  ) where
 
-import Prelude hiding (head, id, div, span)
+import Prelude hiding (div, head, id, span)
 import qualified Prelude as P
 
 import Control.Monad hiding (forM_)
@@ -19,16 +30,16 @@ import Data.List hiding (head, span)
 import Data.String
 import System.Directory
 import System.FilePath
+import System.Log.Logger
 import Text.Blaze.Html
-import Text.Blaze.Html.Renderer.String
 import Text.Blaze.Html5 hiding (map)
-import Text.Blaze.Html5.Attributes hiding (title, method, span)
+import Text.Blaze.Html5.Attributes hiding (method, span, title)
+import Text.Blaze.Html.Renderer.String
 import Text.StringTemplate
 
-import Rest.Api (Version, Router)
+import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Utils
-import System.Log.Logger
 
 -- | Information about the context in which a resource is contained
 data DocsContext = DocsContext
