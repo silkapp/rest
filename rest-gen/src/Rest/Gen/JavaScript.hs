@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Rest.Gen.JavaScript.Generate (mkJsApi) where
+module Rest.Gen.JavaScript (mkJsApi) where
 
 import Code.Build
 import Code.Build.JavaScript

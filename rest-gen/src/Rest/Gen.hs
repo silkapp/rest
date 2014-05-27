@@ -13,10 +13,10 @@ import System.Process
 import Rest.Api (Api, Some1 (..), withVersion)
 
 import Rest.Gen.Config
-import Rest.Gen.Docs.Generate (DocsContext (DocsContext), writeDocs)
-import Rest.Gen.Haskell.Generate (HaskellContext (HaskellContext), mkHsApi)
-import Rest.Gen.JavaScript.Generate (mkJsApi)
-import Rest.Gen.Ruby.Generate (mkRbApi)
+import Rest.Gen.Docs (DocsContext (DocsContext), writeDocs)
+import Rest.Gen.Haskell (HaskellContext (HaskellContext), mkHsApi)
+import Rest.Gen.JavaScript (mkJsApi)
+import Rest.Gen.Ruby (mkRbApi)
 import Rest.Gen.Types
 import Rest.Gen.Utils
 
