@@ -140,14 +140,13 @@ mkImports ctx node datImp
 
 mkFunction :: Version -> String -> ApiAction -> (Code, [ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
-  let mInp     = fmap inputInfo $ chooseType $ inputs ai
+  let mInp     = fmap inputInfo . chooseType . inputs $ ai
       defaultErrorConversion = if fmap dataType (chooseType (outputs ai)) == Just JSON then "fromJSON" else "fromXML"
-      (oMod, oType, oCType, oFunc) = maybe ([], "()", "text/plain", "(const ())") outputInfo $ chooseType $ outputs ai
-      (eMod, eType, eFunc) = headDef (([], "()", defaultErrorConversion))
+      output {-(oMod, oType, oCType, oFunc)-} = maybe (Info [] "()" "text/plain" "(const ())") outputInfo $ chooseType $ outputs ai
+      (eMod, eType, eFunc) = headDef ([], "()", defaultErrorConversion)
                            . map errorInfo
-                           . catMaybes
-                           . map (\v -> find ((v ==) . dataType) $ errors ai)
-                           $ maybeToList (fmap dataType $ chooseType (outputs ai)) ++ [XML, JSON]
+                           . mapMaybe (\v -> find ((v ==) . dataType) $ errors ai)
+                           $ maybeToList (dataType <$> chooseType (outputs ai)) ++ [XML, JSON]
       (lUrl, lPars) = linkToURL res lnk
       (ve, url)     = (string $ "v" <+> show ver, lUrl)
       fParams  = map (hsName . cleanName) lPars
@@ -155,17 +154,17 @@ mkFunction ver res (ApiAction _ lnk ai) =
               ++ maybe [] (const ["input"]) mInp
               ++ (if null (params ai) then [] else ["pList"])
       fType    = "ApiStateC m => "
-              ++ (hsType $ map (\p -> (if p == res then "" else modName p ++ ".") ++ "Identifier") lPars
-                       ++ maybe [] (return . Ident.haskellType) (ident ai)
-                       ++ maybe [] (\(_,v,_,_) -> [v]) mInp
-                       ++ (if null (params ai) then [] else ["[(String, String)]"])
-                       ++ ["m (ApiResponse (" ++ eType ++ ") (" ++ oType ++ "))"])
-  in ( mkStack $
+              ++ hsType (map (\p -> (if p == res then "" else modName p ++ ".") ++ "Identifier") lPars
+                      ++ maybe [] (return . Ident.haskellType) (ident ai)
+                      ++ maybe [] ((:[]) . infoType) mInp
+                      ++ (if null (params ai) then [] else ["[(String, String)]"])
+                      ++ ["m (ApiResponse (" ++ eType ++ ") (" ++ infoType output ++ "))"])
+  in ( mkStack
         [ function (mkHsName ai) fType
         , hsDecl (mkHsName ai) fParams $
            hsLet
-              [ "rHeaders" .=. hsArray [ hsTuple [code "hAccept", string oCType]
-                                       , hsTuple [code "hContentType", string (maybe "text/plain" (\(_,_,v,_) -> v) mInp)]
+              [ "rHeaders" .=. hsArray [ hsTuple [code "hAccept", string (infoContentType output)]
+                                       , hsTuple [code "hContentType", string (maybe "text/plain" infoContentType mInp)]
                                        ]
               , "request" .=. "makeReq"
                                   <++> string (show (method ai))
@@ -174,11 +173,11 @@ mkFunction ver res (ApiAction _ lnk ai) =
                                   <++> (if null (params ai) then "[]" else "pList")
                                   <++> "rHeaders"
                                   <++> "$"
-                                  <++> maybe "\"\"" ((++ " input") . (\(_,_,_,v) -> v)) mInp
+                                  <++> maybe "\"\"" ((++ " input") . infoFunc) mInp
               ]
-              $ "doRequest " <++> eFunc <++> oFunc <++> "request"
+              $ "doRequest " <++> eFunc <++> infoFunc output <++> "request"
         ]
-     , eMod ++ oMod ++ maybe [] (\(m,_,_,_) -> m) mInp
+     , eMod ++ infoModules output ++ maybe [] infoModules mInp
      )
 
 linkToURL :: String -> Link -> (Code, [String])
@@ -214,7 +213,7 @@ idData node =
             ]
            )
            mi
-    ls  -> mkStack $
+    ls  -> mkStack
             [ hsData "Identifier" $ map (\(pth,mi) -> dataName pth ++ maybe "" (\x -> " (" ++ Ident.haskellType x ++ ")") mi) ls
             , function "readId" "Identifier -> [String]"
             , mkStack $
@@ -266,23 +265,30 @@ modName = concatMap upFirst . cleanName
 dataName :: String -> String
 dataName = modName
 
-inputInfo :: DataDescription -> ([ModuleName], String, String, String)
+data Info = Info
+  { infoModules     :: [ModuleName]
+  , infoType        :: String
+  , infoContentType :: String
+  , infoFunc        :: String
+  }
+
+inputInfo :: DataDescription -> Info
 inputInfo ds =
   case dataType ds of
-    String -> ([], "String", "text/plain", "fromString")
-    XML    -> (haskellModules ds, haskellType ds, "text/xml", "toXML")
-    JSON   -> (haskellModules ds, haskellType ds, "text/json", "toJSON")
-    File   -> ([], "ByteString", "application/octet-stream", "id")
-    Other  -> ([], "ByteString", "text/plain", "id")
+    String -> Info [] "String" "text/plain" "fromString"
+    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml" "toXML"
+    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json" "toJSON"
+    File   -> Info [] "ByteString" "application/octet-stream" "id"
+    Other  -> Info [] "ByteString" "text/plain" "id"
 
-outputInfo :: DataDescription -> ([ModuleName], String, String, String)
+outputInfo :: DataDescription -> Info
 outputInfo ds =
   case dataType ds of
-    String -> ([], "String", "text/plain", "toString")
-    XML    -> (haskellModules ds, haskellType ds, "text/xml", "fromXML")
-    JSON   -> (haskellModules ds, haskellType ds, "text/json", "fromJSON")
-    File   -> ([], "ByteString", "*", "id")
-    Other  -> ([], "ByteString", "text/plain", "id")
+    String -> Info [] "String" "text/plain" "toString"
+    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml" "fromXML"
+    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json" "fromJSON"
+    File   -> Info [] "ByteString" "*" "id"
+    Other  -> Info [] "ByteString" "text/plain" "id"
 
 errorInfo :: DataDescription -> ([ModuleName], String, String)
 errorInfo ds =
