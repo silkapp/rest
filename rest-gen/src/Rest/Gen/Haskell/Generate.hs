@@ -178,7 +178,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
               ]
               $ "doRequest " <++> eFunc <++> oFunc <++> "request"
         ]
-     , map ModuleName $ eMod ++ oMod ++ maybe [] (\(m,_,_,_) -> m) mInp
+     , eMod ++ oMod ++ maybe [] (\(m,_,_,_) -> m) mInp
      )
 
 linkToURL :: String -> Link -> (Code, [String])
@@ -266,29 +266,29 @@ modName = concatMap upFirst . cleanName
 dataName :: String -> String
 dataName = modName
 
-inputInfo :: DataDescription -> ([String], String, String, String)
+inputInfo :: DataDescription -> ([ModuleName], String, String, String)
 inputInfo ds =
   case dataType ds of
     String -> ([], "String", "text/plain", "fromString")
-    XML    -> (haskellModule ds, haskellType ds, "text/xml", "toXML")
-    JSON   -> (haskellModule ds, haskellType ds, "text/json", "toJSON")
+    XML    -> (haskellModules ds, haskellType ds, "text/xml", "toXML")
+    JSON   -> (haskellModules ds, haskellType ds, "text/json", "toJSON")
     File   -> ([], "ByteString", "application/octet-stream", "id")
     Other  -> ([], "ByteString", "text/plain", "id")
 
-outputInfo :: DataDescription -> ([String], String, String, String)
+outputInfo :: DataDescription -> ([ModuleName], String, String, String)
 outputInfo ds =
   case dataType ds of
     String -> ([], "String", "text/plain", "toString")
-    XML    -> (haskellModule ds, haskellType ds, "text/xml", "fromXML")
-    JSON   -> (haskellModule ds, haskellType ds, "text/json", "fromJSON")
+    XML    -> (haskellModules ds, haskellType ds, "text/xml", "fromXML")
+    JSON   -> (haskellModules ds, haskellType ds, "text/json", "fromJSON")
     File   -> ([], "ByteString", "*", "id")
     Other  -> ([], "ByteString", "text/plain", "id")
 
-errorInfo :: DataDescription -> ([String], String, String)
+errorInfo :: DataDescription -> ([ModuleName], String, String)
 errorInfo ds =
   case dataType ds of
-    String -> (haskellModule ds, haskellType ds, "fromXML")
-    XML    -> (haskellModule ds, haskellType ds, "fromXML")
-    JSON   -> (haskellModule ds, haskellType ds, "fromJSON")
-    File   -> (haskellModule ds, haskellType ds, "fromXML")
-    Other  -> (haskellModule ds, haskellType ds, "fromXML")
+    String -> (haskellModules ds, haskellType ds, "fromXML")
+    XML    -> (haskellModules ds, haskellType ds, "fromXML")
+    JSON   -> (haskellModules ds, haskellType ds, "fromJSON")
+    File   -> (haskellModules ds, haskellType ds, "fromXML")
+    Other  -> (haskellModules ds, haskellType ds, "fromXML")
