@@ -2,6 +2,7 @@
     CPP
   , FlexibleInstances
   , OverlappingInstances
+  , OverloadedStrings
   , UndecidableInstances
   #-}
 module Rest.Client.Internal
@@ -25,6 +26,9 @@ module Rest.Client.Internal
   , toJSON
   , fromXML
   , toXML
+
+  , makeReq
+  , doReq
   ) where
 
 import Control.Arrow
@@ -39,6 +43,7 @@ import Data.String.ToString
 import Network.HTTP.Conduit hiding (method, responseBody, responseHeaders)
 import Network.HTTP.Types hiding (statusCode, statusMessage)
 import Text.XML.HXT.Arrow.Pickle
+import qualified Network.HTTP.Types.Header
 #if MIN_VERSION_http_conduit(2,0,0)
 import Data.Default (def)
 #endif
@@ -81,8 +86,11 @@ defaultTimeout = Just (1000 * 1000 * 60 * 5)
 splitHost :: String -> (String, String)
 splitHost hst = break (== '/') hst
 
-doRequest :: (ApiStateC m, MonadIO m) => ApiRequest -> m (Response L.ByteString)
-doRequest (ApiRequest m ur ps rhds bd) =
+doRequest :: ApiStateC m => (L.ByteString -> Rest.Types.Error.Reason e) -> (L.ByteString -> a) -> ApiRequest -> m (ApiResponse e a)
+doRequest a b = liftM (parseResult a b) . doReq
+
+doReq :: (ApiStateC m, MonadIO m) => ApiRequest -> m (Response L.ByteString)
+doReq (ApiRequest m ur ps rhds bd) =
   do mn  <- fmap manager askApiInfo
      hst <- fmap apiHost askApiInfo
      prt <- fmap apiPort askApiInfo
@@ -134,4 +142,8 @@ instance XmlPickler a => XmlStringToType a where
               ) v
     where err = error ("Error parsing XML in api binding, this should not happen: " ++ L.toString v)
   toXML = L.fromString . P.toXML
+
+
+makeReq :: String -> String -> [[String]] -> [(String, String)] -> Network.HTTP.Types.Header.RequestHeaders -> L.ByteString -> ApiRequest
+makeReq meth v ls pList hs body = ApiRequest meth (intercalate "/" (v : map URI.encode (concat ls))) pList hs body
 
