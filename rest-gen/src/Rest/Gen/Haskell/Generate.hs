@@ -142,11 +142,11 @@ mkFunction :: Version -> String -> ApiAction -> (Code, [ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
   let mInp     = fmap inputInfo . chooseType . inputs $ ai
       defaultErrorConversion = if fmap dataType (chooseType (outputs ai)) == Just JSON then "fromJSON" else "fromXML"
-      output {-(oMod, oType, oCType, oFunc)-} = maybe (Info [] "()" "text/plain" "(const ())") outputInfo $ chooseType $ outputs ai
-      (eMod, eType, eFunc) = headDef ([], "()", defaultErrorConversion)
-                           . map errorInfo
-                           . mapMaybe (\v -> find ((v ==) . dataType) $ errors ai)
-                           $ maybeToList (dataType <$> chooseType (outputs ai)) ++ [XML, JSON]
+      output = maybe (Info [] "()" "text/plain" "(const ())") outputInfo . chooseType . outputs $ ai
+      errorI = headDef (ErrorInfo [] "()" defaultErrorConversion)
+             . map errorInfo
+             . mapMaybe (\v -> find ((v ==) . dataType) $ errors ai)
+             $ maybeToList (dataType <$> chooseType (outputs ai)) ++ [XML, JSON]
       (lUrl, lPars) = linkToURL res lnk
       (ve, url)     = (string $ "v" <+> show ver, lUrl)
       fParams  = map (hsName . cleanName) lPars
@@ -158,7 +158,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                       ++ maybe [] (return . Ident.haskellType) (ident ai)
                       ++ maybe [] ((:[]) . infoType) mInp
                       ++ (if null (params ai) then [] else ["[(String, String)]"])
-                      ++ ["m (ApiResponse (" ++ eType ++ ") (" ++ infoType output ++ "))"])
+                      ++ ["m (ApiResponse (" ++ errorInfoType errorI ++ ") (" ++ infoType output ++ "))"])
   in ( mkStack
         [ function (mkHsName ai) fType
         , hsDecl (mkHsName ai) fParams $
@@ -175,9 +175,9 @@ mkFunction ver res (ApiAction _ lnk ai) =
                                   <++> "$"
                                   <++> maybe "\"\"" ((++ " input") . infoFunc) mInp
               ]
-              $ "doRequest " <++> eFunc <++> infoFunc output <++> "request"
+              $ "doRequest " <++> errorInfoFunc errorI <++> infoFunc output <++> "request"
         ]
-     , eMod ++ infoModules output ++ maybe [] infoModules mInp
+     , errorInfoModules errorI ++ infoModules output ++ maybe [] infoModules mInp
      )
 
 linkToURL :: String -> Link -> (Code, [String])
@@ -270,31 +270,37 @@ data Info = Info
   , infoType        :: String
   , infoContentType :: String
   , infoFunc        :: String
-  }
+  } deriving (Eq, Show)
 
 inputInfo :: DataDescription -> Info
 inputInfo ds =
   case dataType ds of
-    String -> Info [] "String" "text/plain" "fromString"
-    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml" "toXML"
-    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json" "toJSON"
-    File   -> Info [] "ByteString" "application/octet-stream" "id"
-    Other  -> Info [] "ByteString" "text/plain" "id"
+    String -> Info []                  "String"         "text/plain"               "fromString"
+    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml"                 "toXML"
+    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json"                "toJSON"
+    File   -> Info []                  "ByteString"     "application/octet-stream" "id"
+    Other  -> Info []                  "ByteString"     "text/plain"               "id"
 
 outputInfo :: DataDescription -> Info
 outputInfo ds =
   case dataType ds of
-    String -> Info [] "String" "text/plain" "toString"
-    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml" "fromXML"
-    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json" "fromJSON"
-    File   -> Info [] "ByteString" "*" "id"
-    Other  -> Info [] "ByteString" "text/plain" "id"
+    String -> Info []                  "String"         "text/plain" "toString"
+    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml"   "fromXML"
+    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json"  "fromJSON"
+    File   -> Info []                  "ByteString"     "*"          "id"
+    Other  -> Info []                  "ByteString"     "text/plain" "id"
 
-errorInfo :: DataDescription -> ([ModuleName], String, String)
+data ErrorInfo = ErrorInfo
+  { errorInfoModules :: [ModuleName]
+  , errorInfoType    :: String
+  , errorInfoFunc    :: String
+  } deriving (Eq, Show)
+
+errorInfo :: DataDescription -> ErrorInfo
 errorInfo ds =
   case dataType ds of
-    String -> (haskellModules ds, haskellType ds, "fromXML")
-    XML    -> (haskellModules ds, haskellType ds, "fromXML")
-    JSON   -> (haskellModules ds, haskellType ds, "fromJSON")
-    File   -> (haskellModules ds, haskellType ds, "fromXML")
-    Other  -> (haskellModules ds, haskellType ds, "fromXML")
+    String -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
+    XML    -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
+    JSON   -> ErrorInfo (haskellModules ds) (haskellType ds) "fromJSON"
+    File   -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
+    Other  -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
