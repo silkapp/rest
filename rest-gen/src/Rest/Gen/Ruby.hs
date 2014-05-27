@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Rest.Gen.Ruby.Generate (mkRbApi) where
+module Rest.Gen.Ruby (mkRbApi) where
 
 import Data.Char
 import Data.List

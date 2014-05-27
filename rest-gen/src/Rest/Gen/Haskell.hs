@@ -2,7 +2,7 @@
     DoAndIfThenElse
   , TemplateHaskell
   #-}
-module Rest.Gen.Haskell.Generate
+module Rest.Gen.Haskell
   ( HaskellContext (..)
   , mkHsApi
   ) where

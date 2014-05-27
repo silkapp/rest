@@ -8,7 +8,7 @@ import Control.Monad.Trans
 import Happstack.Server
 import Rest.Api
 import Rest.Gen.Base
-import Rest.Gen.Docs.Generate
+import Rest.Gen.Docs
 
 -- | Web interface for documentation
 apiDocsHandler :: (ServerMonad m, MonadPlus m, FilterMonad Response m, MonadIO m) => String -> String -> Api a -> m Response
