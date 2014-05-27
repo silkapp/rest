@@ -149,7 +149,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                            . map (\v -> find ((v ==) . dataType) $ errors ai)
                            $ maybeToList (fmap dataType $ chooseType (outputs ai)) ++ [XML, JSON]
       (lUrl, lPars) = linkToURL res lnk
-      url      = string ("v" <+> show ver <+> "/") <++> "++" <++> lUrl
+      (ve, url)     = (string $ "v" <+> show ver, lUrl)
       fParams  = map (hsName . cleanName) lPars
               ++ maybe [] ((:[]) . hsName . cleanName . description) (ident ai)
               ++ maybe [] (const ["input"]) mInp
@@ -167,21 +167,22 @@ mkFunction ver res (ApiAction _ lnk ai) =
               [ "rHeaders" .=. hsArray [ hsTuple [code "hAccept", string oCType]
                                        , hsTuple [code "hContentType", string (maybe "text/plain" (\(_,_,v,_) -> v) mInp)]
                                        ]
-              , "request" .=. "ApiRequest"
+              , "request" .=. "makeReq"
                                   <++> string (show (method ai))
-                                  <++> parenthesis url
+                                  <++> ve
+                                  <++> url
                                   <++> (if null (params ai) then "[]" else "pList")
                                   <++> "rHeaders"
                                   <++> "$"
                                   <++> maybe "\"\"" ((++ " input") . (\(_,_,_,v) -> v)) mInp
               ]
-              $ "liftM (parseResult" <++> eFunc <++> oFunc <+> ") . doRequest $ request"
+              $ "doRequest " <++> eFunc <++> oFunc <++> "request"
         ]
      , map ModuleName $ eMod ++ oMod ++ maybe [] (\(m,_,_,_) -> m) mInp
      )
 
 linkToURL :: String -> Link -> (Code, [String])
-linkToURL res lnk = first (\v -> "intercalate" <++> string "/" <++> parenthesis ("map encode $ concat" <++> hsArray v)) $ urlParts res lnk ([], [])
+linkToURL res lnk = first hsArray $ urlParts res lnk ([], [])
 
 urlParts :: String -> Link -> ([Code], [String]) -> ([Code], [String])
 urlParts res lnk ac@(rlnk, pars) =
