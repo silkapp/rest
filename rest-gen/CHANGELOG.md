@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.13.1.1
+
+* Allow `attoparsec 0.12.*`
+
 ### 0.13.1
 
 * Derive `Eq, Show` for all types in `Rest.Gen.Types`
