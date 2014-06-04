@@ -4,8 +4,7 @@ module Rest.StringMap.Util
   , mapSchema
   ) where
 
-import Data.JSON.Schema (JSONSchema, Schema, schema)
-import Data.JSON.Schema.Combinators (field)
+import Data.JSON.Schema (JSONSchema, Schema, Value (Map), schema)
 import Data.Proxy (Proxy)
 import Data.String (IsString (..))
 import Data.String.ToString (ToString (..))
@@ -21,4 +20,4 @@ pickleMap :: (XmlPickler m, ToString k, IsString k) => ((String -> k) -> m -> m'
 pickleMap mapKeys mapKeys' = xpWrap (mapKeys fromString, mapKeys' toString) xpickle
 
 mapSchema :: JSONSchema a => Proxy a -> Schema
-mapSchema = field "key" False . schema
+mapSchema = Map . schema
