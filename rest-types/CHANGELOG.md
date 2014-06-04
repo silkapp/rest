@@ -1,5 +1,9 @@
 # Changelog
 
+#### 1.10.0.3
+
+* Use `JSONSchema` `Any` type instead of `Choice []`
+
 #### 1.10.0.2
 
 * Use `rest-stringmap == 0.2.*`

@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.1
+
+* Change `JSONSchema` instances to `Map`
+
 ## 0.2
 
 * Fix loop in ToJSON instances for StringHashMaps

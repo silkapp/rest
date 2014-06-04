@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.30.0.3
+
+* Use `json-schema 0.5.*`
+
 #### 0.30.0.2
 
 * Use `rest-stringmap == 0.2.*`

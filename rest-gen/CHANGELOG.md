@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.13.1.2
+
+* Use `json-schema 0.5.*` and add `showExample` cases for `Map` and `Any`
+
 #### 0.13.1.1
 
 * Allow `attoparsec 0.12.*`
