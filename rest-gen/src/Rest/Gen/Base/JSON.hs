@@ -16,9 +16,11 @@ showExample = render . pp_value . showExample'
     showExample' (Choice [])     = A.Null -- Cannot create zero value
     showExample' (Choice (x:_))  = showExample' x
     showExample' (Object fs)     = A.object $ map (\f -> pack (key f) .= showExample' (content f)) fs
+    showExample' (Map v)         = A.object ["<key>" .= showExample' v]
     showExample' (Tuple vs)      = A.Array $ V.fromList $ map showExample' vs
     showExample' (Array l _ _ v) = A.Array $ V.fromList $ replicate (l `max` 1) (showExample' v)
     showExample' (Value _ _)     = A.String "value"
     showExample' Boolean         = A.Bool True
     showExample' (Number l _)    = A.Number (fromIntegral l)
     showExample' Null            = A.Null
+    showExample' Any             = A.String "<value>"
