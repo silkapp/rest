@@ -21,7 +21,7 @@ module Rest.Types.Error
 
 import Control.Monad.Error
 import Data.Aeson hiding (Success)
-import Data.JSON.Schema
+import Data.JSON.Schema (JSONSchema (..), gSchema)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
@@ -30,6 +30,7 @@ import Generics.Regular.XmlPickler (gxpickle)
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
+import qualified Data.JSON.Schema as JSONSchema
 
 -- Error utilities.
 
@@ -141,4 +142,4 @@ instance XmlPickler SomeReason where
 instance ToJSON SomeReason where toJSON (SomeReason r) = toJSON r
 
 instance JSONSchema SomeReason where
-  schema _ = Choice [] -- TODO: this should be something like Any
+  schema _ = JSONSchema.Any

@@ -21,7 +21,7 @@ module Rest.Types.Container
 import Prelude hiding (mapM)
 
 import Data.Aeson.Types
-import Data.JSON.Schema hiding (Object, Value)
+import Data.JSON.Schema (JSONSchema (..), gSchema)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
@@ -30,6 +30,7 @@ import Generics.Regular.XmlPickler (gxpickle)
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
+import qualified Data.JSON.Schema as JSONSchema
 
 -------------------------------------------------------------------------------
 
@@ -60,8 +61,8 @@ instance XmlPickler SomeOutput where
     (throwMsg "Cannot unpickle SomeOutput.")
     Any
 
-instance ToJSON SomeOutput where toJSON (SomeOutput r) = toJSON r
---  readJSON _ = Error "Cannot read SomeOutput from JSON."
+instance ToJSON SomeOutput where
+  toJSON (SomeOutput r) = toJSON r
 
 instance JSONSchema SomeOutput where
-  schema _ = Choice [] -- TODO: should be something like Any
+  schema _ = JSONSchema.Any
