@@ -26,3 +26,4 @@ type instance PF UserPost = PFUserPost
 instance XmlPickler UserPost where xpickle = gxpickle
 instance JSONSchema UserPost where schema = gSchema
 instance FromJSON   UserPost
+instance ToJSON     UserPost
