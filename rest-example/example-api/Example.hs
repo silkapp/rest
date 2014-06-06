@@ -27,6 +27,7 @@ mockUsers = Set.fromList
 -- | Prepopulated posts
 mockPosts :: Set Post
 mockPosts = Set.fromList
-  [ Post "adam" (read "2014-03-31 15:34:00") "First post" "Hello world!"
+  [ Post 0 "adam" (read "2014-03-31 15:34:00") "First post" "Hello world!"
+  , Post 1 "erik" (read "2014-04-01 13:37:00") "Rest is awesome" "Just wanted to tell the world!"
   ]
 
