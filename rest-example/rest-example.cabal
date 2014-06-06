@@ -79,11 +79,9 @@ executable rest-example-gen
   ghc-options:       -Wall
   main-is:           Gen.hs
   hs-source-dirs:    src
-  other-modules: Paths_rest_example
   build-depends:
       base >= 4.6 && < 4.8
     , aeson
-    , config-opts
     , containers
     , filepath
     , happstack-server
@@ -101,4 +99,3 @@ executable rest-example-gen
     , text
     , time
     , transformers-base
-    , fclabels
