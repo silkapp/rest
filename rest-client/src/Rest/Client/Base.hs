@@ -41,6 +41,7 @@ import Control.Monad.Writer hiding (mapM)
 import Data.ByteString
 import Data.CaseInsensitive
 import Network.HTTP.Conduit hiding (method, responseBody)
+import Control.Monad.Primitive (PrimMonad)
 
 import Rest.Types.Error
 
@@ -62,12 +63,12 @@ newtype ApiT m a = ApiT { unApiT :: StateT ApiState (ReaderT ApiInfo (ResourceT 
 
 type Api = ApiT IO
 
-class (MonadResource m, MonadBaseControl IO m, Monad m, Functor m, MonadUnsafeIO m) => ApiStateC m where
+class (MonadResource m, MonadBaseControl IO m, Monad m, Functor m, MonadBase IO m, PrimMonad IO) => ApiStateC m where
   getApiState     :: m ApiState
   putApiState     :: ApiState -> m ()
   askApiInfo      :: m ApiInfo
 
-instance (MonadBaseControl IO m, Monad m, Functor m, MonadUnsafeIO m, MonadIO m, MonadThrow m) => ApiStateC (ApiT m) where
+instance (MonadBaseControl IO m, Monad m, Functor m, MonadBase IO m, PrimMonad IO, MonadIO m, MonadThrow m) => ApiStateC (ApiT m) where
   getApiState    = ApiT get
   putApiState    = ApiT . put
   askApiInfo     = ApiT (lift ask)
@@ -96,9 +97,9 @@ instance (MonadException m, MonadBaseControl IO m) => MonadException (ApiT m) wh
   throw     = lift . throw
   catch c f = ApiT (unApiT c `catch` (unApiT . f))
 
-instance MonadThrow m => MonadThrow (ApiT m) where monadThrow = ApiT . lift . lift . lift . monadThrow
+instance MonadThrow m => MonadThrow (ApiT m) where throwM = ApiT . lift . lift . lift . throwM
 
-instance (MonadIO m, MonadThrow m, MonadUnsafeIO m, Functor m, Applicative m) => MonadResource (ApiT m) where
+instance (MonadIO m, MonadThrow m, MonadBase IO m, PrimMonad IO, Functor m, Applicative m) => MonadResource (ApiT m) where
   liftResourceT = ApiT . lift . lift . transResourceT liftIO
 
 instance (Error e, ApiStateC m) => ApiStateC (ErrorT e m) where
