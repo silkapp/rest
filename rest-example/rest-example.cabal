@@ -16,12 +16,11 @@ extra-source-files:  LICENSE
 library
   default-language:  Haskell2010
   ghc-options:       -Wall
-  hs-source-dirs:    src
+  hs-source-dirs:    example-api
   exposed-modules:
     Api
     Api.Post
     Api.User
-
     ApiTypes
     Type.CreatePost
     Type.Post
