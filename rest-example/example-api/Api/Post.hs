@@ -1,11 +1,10 @@
 module Api.Post (resource) where
 
-import Control.Applicative ((<$>))
 import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
 import Control.Monad (unless)
 import Control.Monad.Error (ErrorT, throwError)
 import Control.Monad.Reader (ReaderT, asks)
-import Control.Monad.Trans (liftIO)
+import Control.Monad.Trans (lift, liftIO)
 import Data.List (sortBy)
 import Data.Ord (comparing)
 import Data.Set (Set)
@@ -14,7 +13,7 @@ import qualified Data.Foldable as F
 import qualified Data.Set      as Set
 import qualified Data.Text     as T
 
-import Rest (Handler, ListHandler, Range (..), Reason (..), Resource, Void, domainReason, mkInputHandler, mkListing, mkResourceReader, named, singleRead,
+import Rest (Handler, ListHandler, Range (..), Reason (..), Resource, Void, domainReason, mkInputHandler, mkIdHandler, mkListing, mkResourceReader, named, singleRead,
              withListing, xmlJson, xmlJsonE, xmlJsonO)
 import qualified Rest.Resource as R
 
@@ -30,16 +29,25 @@ import qualified Type.User       as User
 
 -- | Post extends the root of the API with a reader containing the ways to identify a Post in our URLs.
 -- Currently only by the title of the post.
-type WithPost = ReaderT Post.Title BlogApi
+type WithPost = ReaderT Int BlogApi
 
 -- | Defines the /post api end-point.
-resource :: Resource BlogApi WithPost Post.Title () Void
+resource :: Resource BlogApi WithPost Int () Void
 resource = mkResourceReader
   { R.name   = "post" -- Name of the HTTP path segment.
-  , R.schema = withListing () $ named [("name", singleRead id)]
+  , R.schema = withListing () $ named [("id", singleRead id)]
   , R.list   = const list -- list is requested by GET /post which gives a listing of posts.
   , R.create = Just create -- PUT /post to create a new Post.
+  , R.get    = Just get
   }
+
+get :: Handler WithPost
+get = mkIdHandler xmlJsonO $ \_ ident -> do
+  psts <- liftIO . atomically . readTVar =<< (lift . lift) (asks posts)
+  let au = filter (\p -> Post.id p == ident) . Set.toList $ psts
+  case au of
+    []    -> throwError NotFound
+    (a:_) -> return a
 
 -- | List Posts with the most recent posts first.
 list :: ListHandler BlogApi
@@ -51,24 +59,26 @@ create :: Handler BlogApi
 create = mkInputHandler (xmlJsonE . xmlJson) $ \(UserPost usr pst) -> do
   -- Make sure the credentials are valid
   checkLogin usr
-  psts <- asks posts
-  post <- liftIO $ toPost usr pst
+  pstsVar <- asks posts
+  psts <- liftIO . atomically . readTVar $ pstsVar
+  post <- liftIO $ toPost (Set.size psts + 1) usr pst
   -- Validate and save the post in the same transaction.
   merr <- liftIO . atomically $ do
-    vt <- validTitle pst <$> readTVar psts
+    let vt = validTitle pst psts
     if not vt
       then return . Just $ domainReason (const 400) InvalidTitle
       else if not (validContent pst)
         then return . Just $ domainReason (const 400) InvalidContent
-        else modifyTVar psts (Set.insert post) >> return Nothing
+        else modifyTVar pstsVar (Set.insert post) >> return Nothing
   maybe (return post) throwError merr
 
 -- | Convert a User and CreatePost into a Post that can be saved.
-toPost :: User -> CreatePost -> IO Post
-toPost u p = do
+toPost :: Int -> User -> CreatePost -> IO Post
+toPost i u p = do
   t <- getCurrentTime
   return Post
-    { Post.author      = User.name u
+    { Post.id          = i
+    , Post.author      = User.name u
     , Post.createdTime = t
     , Post.title       = CreatePost.title p
     , Post.content     = CreatePost.content p
