@@ -16,13 +16,16 @@ module Rest.Gen.Config
   , defaultConfig
   , parseLocation
   , options
+  , configFromArgs
   ) where
 
 import Prelude hiding (id, (.))
 
+import Control.Applicative
 import Control.Category
 import Data.Label
 import System.Console.GetOpt
+import System.Environment (getArgs)
 
 data Action   = MakeDocs String | MakeJS | MakeRb | MakeHS
 data Location = Default | Stream | Location String
@@ -61,3 +64,15 @@ options parent =
   , Option ['v'] ["version"]       (ReqArg (set (apiVersion . parent)) "VERSION") "The version of the API under generation. Default latest."
   , Option ['p'] ["hide-private"]  (NoArg  (set (apiPrivate . parent) False)) "Generate API for the public, hiding private resources. Not default."
   ]
+
+configFromArgs :: String -> IO Config
+configFromArgs name = do
+  let header = "Usage: " ++ name ++ " [OPTIONS...], with the following options:"
+  args <- getArgs
+  fst <$> processArgs defaultConfig (options id) header args
+
+processArgs :: a -> [OptDescr (a -> a)] -> String -> [String] -> IO (a, [String])
+processArgs defConfig opts header args =
+    case getOpt Permute opts args of
+        (oargs, nonopts, []    ) -> return (foldl (flip ($)) defConfig oargs, nonopts)
+        (_    , _      , errors) -> ioError $ userError $ concat errors ++ usageInfo header opts
