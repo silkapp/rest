@@ -34,7 +34,7 @@ toRestInput req =
   do bs <- lazyRequestBody req
      return $ RestInput
        { headers    = HashMap.fromList
-                    . map (string . CI.foldedCase *** string)
+                    . map (string . CI.original *** string)
                     . requestHeaders
                     $ req
 
