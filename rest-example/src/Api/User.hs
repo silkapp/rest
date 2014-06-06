@@ -11,7 +11,7 @@ import qualified Data.Set      as Set
 import qualified Data.Text     as T
 
 import Rest (Handler, ListHandler, Range (count, offset), Resource, Void, domainReason, mkInputHandler, mkListing, mkResourceReader, named, singleRead,
-             withListing, xmlJsonE, xmlJsonI, xmlJsonO)
+             withListing, xmlJsonE, xmlJsonI, xmlJsonO, fayO)
 import qualified Rest.Resource as R
 
 import ApiTypes (BlogApi, ServerData (..))
@@ -35,7 +35,7 @@ resource = mkResourceReader
   }
 
 list :: ListHandler BlogApi
-list = mkListing xmlJsonO $ \r -> do
+list = mkListing (fayO . xmlJsonO) $ \r -> do
   usrs <- liftIO . atomically . readTVar =<< asks users
   return . map toUserInfo . take (count r) . drop (offset r) . Set.toList $ usrs
 

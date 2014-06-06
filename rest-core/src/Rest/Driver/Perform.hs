@@ -27,6 +27,7 @@ import Safe
 import System.IO.Unsafe
 import System.Random (randomIO)
 import Text.Xml.Pickle
+import Fay.Convert (showToFay, readFromFay)
 
 import qualified Control.Monad.Error       as E
 import qualified Data.ByteString.Lazy      as B
@@ -163,6 +164,7 @@ fetchInputs dict =
                 case ct of
                   Just XmlFormat      -> parser XmlFormat     inputs bs
                   Just JsonFormat     -> parser JsonFormat    inputs bs
+                  Just FayFormat      -> parser FayFormat     inputs bs
                   Just StringFormat   -> parser StringFormat  inputs bs
                   Just FileFormat     -> parser FileFormat    inputs bs
                   Just x              -> throwError (UnsupportedFormat (show x))
@@ -178,8 +180,10 @@ parseContentType =
                    case splitOn "/" ty of
                      ["application", "xml"]          -> [XmlFormat]
                      ["application", "json"]         -> [JsonFormat]
+                     ["application", "fay"]          -> [FayFormat]
                      ["text",        "xml"]          -> [XmlFormat]
                      ["text",        "json"]         -> [JsonFormat]
+                     ["text",        "fay"]          -> [FayFormat]
                      ["text",        "plain"]        -> [StringFormat]
                      ["application", "octet-stream"] -> [FileFormat]
                      ["application", _             ] -> [FileFormat]
@@ -210,6 +214,11 @@ parser f        (Dicts ds) v = parserD f ds
     parserD JsonFormat    (JsonI    : _ ) = case eitherDecodeV v of
                                               Right a -> return a
                                               Left  e -> throwError (ParseError e)
+    parserD JsonFormat    (FayI    : _ )  = case eitherDecodeV v of
+                                              Right j -> case readFromFay j of
+                                                  Just a  -> return a
+                                                  Nothing -> throwError (ParseError "Failed to parse fay value")
+                                              Left  e -> throwError (ParseError e)
     parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
     parserD FileFormat    (FileI    : _ ) = return v
     parserD XmlFormat     (RawXmlI  : _ ) = return v
@@ -229,12 +238,14 @@ failureWriter es err =
   where
     tryPrint :: forall m e. Rest m => Reason e -> Errors e -> Format -> MaybeT m UTF8.ByteString
     tryPrint e None JsonFormat = printError JsonFormat (toRespCode e) (encode e)
+    tryPrint e None FayFormat  = printError FayFormat  (toRespCode e) ((encode . showToFay) e)
     tryPrint e None XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
     tryPrint _ None _          = mzero
     tryPrint e (Dicts ds) f = tryPrintD ds f
       where
         tryPrintD :: Rest m => [D.Error e] -> Format -> MaybeT m UTF8.ByteString
         tryPrintD (JsonE   : _ ) JsonFormat = printError JsonFormat (toRespCode e) (encode e)
+        tryPrintD (FayE    : _ ) FayFormat  = printError FayFormat  (toRespCode e) ((encode . showToFay) e)
         tryPrintD (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
         tryPrintD (_       : xs) t          = tryPrintD xs t
         tryPrintD []             _          = mzero
@@ -253,6 +264,7 @@ failureWriter es err =
       case v of
         XmlFormat       -> "xml"
         JsonFormat      -> "json"
+        FayFormat       -> "fay"
         StringFormat    -> "text/plain"
         FileFormat      -> "application/octet-stream"
         MultipartFormat -> "multipart/mixed"
@@ -285,6 +297,7 @@ contentType :: Rest m => Format -> m ()
 contentType c = setHeader "Content-Type" $
   case c of
     JsonFormat -> "application/json; charset=UTF-8"
+    FayFormat  -> "application/fay; charset=UTF-8"
     XmlFormat  -> "application/xml; charset=UTF-8"
     _          -> "text/plain; charset=UTF-8"
 
@@ -297,6 +310,7 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
     try None NoFormat        = return ()
     try None XmlFormat       = return ()
     try None JsonFormat      = return ()
+    try None FayFormat       = return ()
     try None StringFormat    = return ()
     try None MultipartFormat = return ()
     try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
@@ -305,6 +319,7 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
         tryD (XmlO       : _ ) XmlFormat    = return ()
         tryD (RawXmlO    : _ ) XmlFormat    = return ()
         tryD (JsonO      : _ ) JsonFormat   = return ()
+        tryD (FayO       : _ ) FayFormat    = return ()
         tryD (StringO    : _ ) StringFormat = return ()
         tryD (FileO      : _ ) FileFormat   = return ()
         tryD (MultipartO : _ ) _            = return () -- Multipart is always ok, subparts can fail.
@@ -320,6 +335,7 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
     try None NoFormat        = contentType NoFormat >> ok ""
     try None XmlFormat       = contentType NoFormat >> ok "<done/>"
     try None JsonFormat      = contentType NoFormat >> ok "{}"
+    try None FayFormat       = contentType NoFormat >> ok "{}"
     try None StringFormat    = contentType NoFormat >> ok "done"
     try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
     try None MultipartFormat = contentType NoFormat >> ok ""
@@ -328,6 +344,7 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
         tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
         tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
         tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
+        tryD (FayO       : _ ) FayFormat    = contentType FayFormat    >> ok ((encode . showToFay) v)
         tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
         tryD (MultipartO : _ ) _            = outputMultipart v
         tryD (FileO      : _ ) FileFormat   = do let ext = (reverse . takeWhile (/='.') . reverse) $ snd v
@@ -354,6 +371,7 @@ accept =
      let fromQuery =
            case ty of
              "json" -> [JsonFormat]
+             "fay"  -> [FayFormat]
              "xml"  -> [XmlFormat]
              _      -> []
          fromAccept = maybe (allFormats ct) (splitter ct) acceptHeader
@@ -374,13 +392,15 @@ accept =
 
     trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
-    txt "*"     = [XmlFormat, JsonFormat, StringFormat]
+    txt "*"     = [XmlFormat, JsonFormat, FayFormat, StringFormat]
     txt "json"  = [JsonFormat]
+    txt "fay"   = [FayFormat]
     txt "xml"   = [XmlFormat]
     txt "plain" = [StringFormat]
     txt _       = []
-    app "*"     = [XmlFormat, JsonFormat]
+    app "*"     = [XmlFormat, JsonFormat, FayFormat]
     app "xml"   = [XmlFormat]
     app "json"  = [JsonFormat]
+    app "fay"   = [FayFormat]
     app _       = []
     img _       = [FileFormat]

@@ -9,6 +9,7 @@ module Type.UserInfo where
 import Data.Aeson
 import Data.JSON.Schema
 import Data.Typeable
+import Data.Data
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
@@ -18,7 +19,7 @@ import qualified Type.User as User
 
 data UserInfo = UserInfo
   { name :: User.Name
-  } deriving (Generic, Show, Typeable)
+  } deriving (Generic, Show, Typeable, Data)
 
 deriveAll ''UserInfo "PFUserInfo"
 type instance PF UserInfo = PFUserInfo

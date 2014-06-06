@@ -10,6 +10,7 @@ import Data.Aeson
 import Data.JSON.Schema
 import Data.Text (Text)
 import Data.Typeable
+import Data.Data
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
@@ -21,7 +22,7 @@ type Password = Text
 data User = User
   { name     :: Name
   , password :: Password
-  } deriving (Eq, Generic, Ord, Show, Typeable)
+  } deriving (Eq, Generic, Ord, Show, Typeable, Data)
 
 deriveAll ''User "PFUser"
 type instance PF User = PFUser

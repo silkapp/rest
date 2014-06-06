@@ -31,6 +31,7 @@ import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
 import qualified Data.JSON.Schema as JSONSchema
+import Data.Data
 
 -------------------------------------------------------------------------------
 
@@ -38,7 +39,7 @@ data List a = List
   { offset :: Int
   , count  :: Int
   , items  :: [a]
-  } deriving (Generic, Show, Typeable)
+  } deriving (Generic, Show, Typeable, Data)
 
 deriveAll ''List "PFList"
 type instance PF (List a) = PFList a
