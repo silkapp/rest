@@ -46,7 +46,7 @@ import qualified Rest.Driver.Types as Rest
 class (Applicative m, Monad m) => Rest m where
   getHeader       :: String -> m (Maybe String)
   getParameter    :: String -> m (Maybe String)
-  getBody         :: m (UTF8.ByteString)
+  getBody         :: m UTF8.ByteString
   getMethod       :: m Rest.Method
   getPaths        :: m [String]
   lookupMimeType  :: String -> m (Maybe String)
