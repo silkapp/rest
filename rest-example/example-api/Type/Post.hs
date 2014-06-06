@@ -22,7 +22,8 @@ import qualified Type.User as User
 type Title = Text
 
 data Post = Post
-  { author      :: User.Name
+  { id          :: Int
+  , author      :: User.Name
   , createdTime :: UTCTime
   , title       :: Title
   , content     :: Text
