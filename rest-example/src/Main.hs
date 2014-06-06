@@ -28,6 +28,7 @@ main = do
        }
 
   -- Start happstack
+  putStrLn "Starting happstack server on http://localhost:3000"
   tid <- forkIO $ simpleHTTP (Conf 3000 Nothing Nothing 60 Nothing) (handle serverData)
 
   -- Exit gracefully
