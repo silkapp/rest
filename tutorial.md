@@ -43,12 +43,12 @@ import qualified Rest.Resource as R
 
 type Title = String
 
-resource :: Resource IO IO Title () Void
-resource = mkResourceId
+resource :: Resource IO (ReaderT Title IO) Title () Void
+resource = mkResourceReader
   { R.name   = "post"
   , R.schema = withListing () $ named [("title", singleBy id)]
-  , R.list   = list
-  , R.get    = get
+  , R.list   = const list
+  , R.get    = Just get
   }
 ```
 
@@ -73,13 +73,13 @@ request body) which in this case is ignored, and the resource identifier (the po
 
 ``` haskell
 data Post = Post { title :: Title, content :: String }
-instance XmlPickler Post
-instance ToJSON Post
-instance FromJSON Post
-instance JSONSchema Post
+instance XmlPickler Post where ...
+instance ToJSON     Post where ...
+instance FromJSON   Post where ...
+instance JSONSchema Post where ...
 
-get :: Handler IO
-get = mkIdHandler xmlJsonO $ \_ title -> lift $ readPostFromDb title
+get :: Handler (ReaderT Title IO)
+get = mkIdHandler xmlJsonO $ \_ title -> liftIO $ readPostFromDb title
 
 readPostFromDb :: Title -> IO Post
 ```
