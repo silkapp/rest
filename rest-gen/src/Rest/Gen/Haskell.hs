@@ -88,8 +88,12 @@ mkGenericPackageDescription name modules = Cabal.GenericPackageDescription pkg [
 
 mkCondLibrary :: [Cabal.ModuleName] -> Cabal.CondTree Cabal.ConfVar [Cabal.Dependency] Cabal.Library
 mkCondLibrary modules = Cabal.CondNode
-  { Cabal.condTreeData        = Cabal.Library modules True Cabal.emptyBuildInfo
-  , Cabal.condTreeConstraints = []
+  { Cabal.condTreeData        = Cabal.Library modules True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
+  , Cabal.condTreeConstraints =
+     [ Cabal.Dependency (Cabal.PackageName "base")        (Cabal.withinVersion $ Cabal.Version [4]     [])
+     , Cabal.Dependency (Cabal.PackageName "rest-types")  (Cabal.withinVersion $ Cabal.Version [1, 10] [])
+     , Cabal.Dependency (Cabal.PackageName "rest-client") (Cabal.withinVersion $ Cabal.Version [0, 2]  [])
+     ]
   , Cabal.condTreeComponents  = []
   }
 
