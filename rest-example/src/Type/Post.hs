@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     DeriveDataTypeable
+  , StandaloneDeriving
   , DeriveGeneric
   , TemplateHaskell
   , TypeFamilies
@@ -10,8 +11,9 @@ module Type.Post where
 import Data.Aeson
 import Data.JSON.Schema
 import Data.Text (Text)
-import Data.Time (UTCTime)
+import Data.Time (UTCTime(..))
 import Data.Typeable
+import Data.Data
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
@@ -26,7 +28,7 @@ data Post = Post
   , createdTime :: UTCTime
   , title       :: Title
   , content     :: Text
-  } deriving (Eq, Generic, Ord, Show, Typeable)
+  } deriving (Eq, Generic, Ord, Show, Typeable, Data)
 
 deriveAll ''Post "PFPost"
 type instance PF Post = PFPost

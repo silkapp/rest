@@ -9,13 +9,14 @@ module Type.PostError where
 import Data.Aeson
 import Data.JSON.Schema
 import Data.Typeable
+import Data.Data
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
 import Text.XML.HXT.Arrow.Pickle
 
 data PostError = InvalidTitle | InvalidContent
-  deriving (Eq, Generic, Ord, Show, Typeable)
+  deriving (Eq, Generic, Ord, Show, Typeable, Data)
 
 deriveAll ''PostError "PFPostError"
 type instance PF PostError = PFPostError

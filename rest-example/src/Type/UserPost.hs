@@ -9,6 +9,7 @@ module Type.UserPost where
 import Data.Aeson
 import Data.JSON.Schema
 import Data.Typeable
+import Data.Data
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
@@ -18,7 +19,7 @@ import Type.CreatePost (CreatePost)
 import Type.User (User)
 
 data UserPost = UserPost { user :: User, post :: CreatePost }
-  deriving (Eq, Generic, Ord, Show, Typeable)
+  deriving (Eq, Generic, Ord, Show, Typeable, Data)
 
 deriveAll ''UserPost "PFUserPost"
 type instance PF UserPost = PFUserPost

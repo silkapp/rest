@@ -28,6 +28,7 @@ import System.IO.Unsafe
 import System.Random (randomIO)
 import Text.Xml.Pickle
 import Fay.Convert (showToFay, readFromFay)
+import Data.Data
 
 import qualified Control.Monad.Error       as E
 import qualified Data.ByteString.Lazy      as B
@@ -214,7 +215,7 @@ parser f        (Dicts ds) v = parserD f ds
     parserD JsonFormat    (JsonI    : _ ) = case eitherDecodeV v of
                                               Right a -> return a
                                               Left  e -> throwError (ParseError e)
-    parserD JsonFormat    (FayI    : _ )  = case eitherDecodeV v of
+    parserD FayFormat     (FayI    : _ )  = case eitherDecodeV v of
                                               Right j -> case readFromFay j of
                                                   Just a  -> return a
                                                   Nothing -> throwError (ParseError "Failed to parse fay value")
@@ -227,6 +228,7 @@ parser f        (Dicts ds) v = parserD f ds
 
 -------------------------------------------------------------------------------
 -- Failure responses.
+--
 
 failureWriter :: Rest m => Errors e -> Reason e -> m UTF8.ByteString
 failureWriter es err =
@@ -238,14 +240,14 @@ failureWriter es err =
   where
     tryPrint :: forall m e. Rest m => Reason e -> Errors e -> Format -> MaybeT m UTF8.ByteString
     tryPrint e None JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-    tryPrint e None FayFormat  = printError FayFormat  (toRespCode e) ((encode . showToFay) e)
+    tryPrint e None FayFormat  = printError FayFormat  (toRespCode e) ((encode . fromJust . showToFay) e)
     tryPrint e None XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
     tryPrint _ None _          = mzero
     tryPrint e (Dicts ds) f = tryPrintD ds f
       where
         tryPrintD :: Rest m => [D.Error e] -> Format -> MaybeT m UTF8.ByteString
         tryPrintD (JsonE   : _ ) JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-        tryPrintD (FayE    : _ ) FayFormat  = printError FayFormat  (toRespCode e) ((encode . showToFay) e)
+        tryPrintD (FayE    : _ ) FayFormat  = printError FayFormat  (toRespCode e) ((encode . fromJust . showToFay) e)
         tryPrintD (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
         tryPrintD (_       : xs) t          = tryPrintD xs t
         tryPrintD []             _          = mzero
@@ -344,7 +346,7 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
         tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
         tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
         tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
-        tryD (FayO       : _ ) FayFormat    = contentType FayFormat    >> ok ((encode . showToFay) v)
+        tryD (FayO       : _ ) FayFormat    = contentType FayFormat    >> ok ((encode . fromJust . showToFay) v)
         tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
         tryD (MultipartO : _ ) _            = outputMultipart v
         tryD (FileO      : _ ) FileFormat   = do let ext = (reverse . takeWhile (/='.') . reverse) $ snd v

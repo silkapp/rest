@@ -15,7 +15,7 @@ import qualified Data.Set      as Set
 import qualified Data.Text     as T
 
 import Rest (Handler, ListHandler, Range (..), Reason (..), Resource, Void, domainReason, mkInputHandler, mkListing, mkResourceReader, named, singleRead,
-             withListing, xmlJson, xmlJsonE, xmlJsonO)
+             withListing, xmlJson, xmlJsonE, xmlJsonO, fayI, fayO, fayE)
 import qualified Rest.Resource as R
 
 import ApiTypes
@@ -48,7 +48,7 @@ list = mkListing xmlJsonO $ \r -> do
   return . take (count r) . drop (offset r) . sortBy (flip $ comparing Post.createdTime) . Set.toList $ psts
 
 create :: Handler BlogApi
-create = mkInputHandler (xmlJsonE . xmlJson) $ \(UserPost usr pst) -> do
+create = mkInputHandler (fayI . fayO . fayE . xmlJsonE . xmlJson) $ \(UserPost usr pst) -> do
   -- Make sure the credentials are valid
   checkLogin usr
   psts <- asks posts

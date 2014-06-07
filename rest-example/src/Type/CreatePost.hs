@@ -10,6 +10,7 @@ import Data.Aeson
 import Data.JSON.Schema
 import Data.Text (Text)
 import Data.Typeable
+import Data.Data
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
@@ -20,7 +21,7 @@ type Title = Text
 data CreatePost = CreatePost
   { title   :: Title
   , content :: Text
-  } deriving (Eq, Generic, Ord, Show, Typeable)
+  } deriving (Eq, Generic, Ord, Show, Typeable, Data)
 
 deriveAll ''CreatePost "PFCreatePost"
 type instance PF CreatePost = PFCreatePost
