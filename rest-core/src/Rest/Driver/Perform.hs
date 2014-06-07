@@ -180,10 +180,10 @@ parseContentType =
                    case splitOn "/" ty of
                      ["application", "xml"]          -> [XmlFormat]
                      ["application", "json"]         -> [JsonFormat]
-                     ["application", "fay"]          -> [FayFormat]
+                     ["application", "x-fay"]        -> [FayFormat]
                      ["text",        "xml"]          -> [XmlFormat]
                      ["text",        "json"]         -> [JsonFormat]
-                     ["text",        "fay"]          -> [FayFormat]
+                     ["text",        "x-fay"]        -> [FayFormat]
                      ["text",        "plain"]        -> [StringFormat]
                      ["application", "octet-stream"] -> [FileFormat]
                      ["application", _             ] -> [FileFormat]
