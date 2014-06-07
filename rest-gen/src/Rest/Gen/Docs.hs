@@ -8,7 +8,7 @@
   , TupleSections
   , TypeFamilies
   #-}
-module Rest.Gen.Docs.Generate
+module Rest.Gen.Docs
   ( DocsContext (..)
   , cdiv
   , cls

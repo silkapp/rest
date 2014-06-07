@@ -92,12 +92,12 @@ data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
 
 -- | Description of input/output data
 data DataDescription = DataDescription
-  { dataType      :: DataType
-  , dataTypeDesc  :: String
-  , dataSchema    :: String
-  , dataExample   :: String
-  , haskellType   :: String
-  , haskellModule :: [String]
+  { dataType       :: DataType
+  , dataTypeDesc   :: String
+  , dataSchema     :: String
+  , dataExample    :: String
+  , haskellType    :: String
+  , haskellModules :: [ModuleName]
   } deriving (Show, Eq)
 
 defaultDescription :: DataDescription
@@ -293,7 +293,7 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dict
                                                      , dataSchema   = X.showSchema  . X.getXmlSchema $ d
                                                      , dataExample  = X.showExample . X.getXmlSchema $ d
                                                      , haskellType  = typeString d
-                                                     , haskellModule = modString d
+                                                     , haskellModules = modString d
                                                      }
         handlerInput _ XmlTextI = defaultDescription { dataType     = XML
                                                      , dataTypeDesc = "XML"
@@ -307,7 +307,7 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dict
                                                      , dataTypeDesc = "JSON"
                                                      , dataExample  = J.showExample . J.schema $ d
                                                      , haskellType  = typeString d
-                                                     , haskellModule = modString d
+                                                     , haskellModules = modString d
                                                      }
         handlerInput _ FileI    = defaultDescription { dataType     = File
                                                      , dataTypeDesc = "File"
@@ -325,7 +325,7 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.di
                                                       , dataSchema    = X.showSchema  . X.getXmlSchema $ d
                                                       , dataExample   = X.showExample . X.getXmlSchema $ d
                                                       , haskellType   = typeString d
-                                                      , haskellModule = modString d
+                                                      , haskellModules = modString d
                                                       }
         handlerOutput _ RawXmlO  = defaultDescription { dataType     = XML
                                                       , dataTypeDesc = "XML"
@@ -335,7 +335,7 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.di
                                                       , dataTypeDesc  = "JSON"
                                                       , dataExample   = J.showExample . J.schema $ d
                                                       , haskellType   = typeString d
-                                                      , haskellModule = modString d
+                                                      , haskellModules = modString d
                                                       }
         handlerOutput _ FileO    = defaultDescription { dataType      = File
                                                       , dataTypeDesc  = "File"
@@ -350,13 +350,13 @@ handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (L.get (Dict.dicts
                                                     , dataSchema    = X.showSchema  . X.getXmlSchema $ d
                                                     , dataExample   = X.showExample . X.getXmlSchema $ d
                                                     , haskellType   = typeString d
-                                                    , haskellModule = modString d
+                                                    , haskellModules = modString d
                                                     }
         handleError d JsonE    = defaultDescription { dataType      = JSON
                                                     , dataTypeDesc  = "JSON"
                                                     , dataExample   = J.showExample . J.schema $ d
                                                     , haskellType   = typeString d
-                                                    , haskellModule = modString d
+                                                    , haskellModules = modString d
                                                     }
 #if __GLASGOW_HASKELL__ >= 704
 typeString :: forall a. Typeable a => Proxy a -> String
@@ -371,8 +371,8 @@ typeString _ = typeString' . typeOf $ (undefined :: a)
                         (tyConName tyCon)
                         (concatMap (\t -> " (" ++ typeString' t ++ ")") subs)
 
-modString :: forall a. Typeable a => Proxy a -> [String]
-modString _ = filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf $ (undefined :: a)
+modString :: forall a. Typeable a => Proxy a -> [ModuleName]
+modString _ = map ModuleName . filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf $ (undefined :: a)
   where modString' tr =
           let (tyCon, subs) = splitTyConApp tr
           in  tyConModule tyCon : concatMap modString' subs
@@ -380,8 +380,8 @@ modString _ = filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf
 typeString :: Typeable a => a -> String
 typeString = show . typeOf
 
-modString :: Typeable a => a -> [String]
-modString = filter (/= "") . modString' . typeOf
+modString :: Typeable a => a -> [ModuleName]
+modString = map ModuleName . filter (/= "") . modString' . typeOf
   where modString' tr =
           let (tyCon, subs) = splitTyConApp tr
           in (intercalate "." . init . splitOn "." . tyConString $ tyCon) : concatMap modString' subs
@@ -400,8 +400,8 @@ actionIdent Dict.StringId
 actionIdent Dict.ReadId
   = Ident
     { Ident.description    = describe proxy_
-    , Ident.haskellType    =  typeString proxy_
-    , Ident.haskellModules = map ModuleName $ modString proxy_
+    , Ident.haskellType    = typeString proxy_
+    , Ident.haskellModules = modString proxy_
     }
   where
     proxy_ :: Proxy a

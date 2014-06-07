@@ -2,7 +2,7 @@
     DoAndIfThenElse
   , TemplateHaskell
   #-}
-module Rest.Gen.Haskell.Generate
+module Rest.Gen.Haskell
   ( HaskellContext (..)
   , mkHsApi
   ) where
@@ -125,7 +125,7 @@ mkImports ctx node datImp
     idImports     = concat . mapMaybe (return . map qualImp . Ident.haskellModules <=< snd) . resAccessors $ node
     -- We need the `as' name to be explicit here even though it's the same, see comment below.
     qualImp v     = Import Qualified v (Just v) Nothing
-    mkImport p    = Import Qualified (ModuleName . qualModName $ namespace ctx ++ p) (Just . ModuleName . modName . last $ p) Nothing
+    mkImport p    = Import Qualified (ModuleName . qualModName $ namespace ctx ++ p) (fmap (ModuleName . modName) . lastMay $ p) Nothing
     rewriteImport :: [(ModuleName, ModuleName)] -> Import -> Import
     rewriteImport rws i = case i of
       -- We don't rewrite the `as` part of the import so if you have a
@@ -140,48 +140,48 @@ mkImports ctx node datImp
 
 mkFunction :: Version -> String -> ApiAction -> (Code, [ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
-  let mInp     = fmap inputInfo $ chooseType $ inputs ai
+  let mInp     = fmap inputInfo . chooseType . inputs $ ai
       defaultErrorConversion = if fmap dataType (chooseType (outputs ai)) == Just JSON then "fromJSON" else "fromXML"
-      (oMod, oType, oCType, oFunc) = maybe ([], "()", "text/plain", "(const ())") outputInfo $ chooseType $ outputs ai
-      (eMod, eType, eFunc) = headDef (([], "()", defaultErrorConversion))
-                           . map errorInfo
-                           . catMaybes
-                           . map (\v -> find ((v ==) . dataType) $ errors ai)
-                           $ maybeToList (fmap dataType $ chooseType (outputs ai)) ++ [XML, JSON]
+      output = maybe (Info [] "()" "text/plain" "(const ())") outputInfo . chooseType . outputs $ ai
+      errorI = headDef (ErrorInfo [] "()" defaultErrorConversion)
+             . map errorInfo
+             . mapMaybe (\v -> find ((v ==) . dataType) $ errors ai)
+             $ maybeToList (dataType <$> chooseType (outputs ai)) ++ [XML, JSON]
       (lUrl, lPars) = linkToURL res lnk
-      url      = string ("v" <+> show ver <+> "/") <++> "++" <++> lUrl
+      (ve, url)     = (string $ "v" <+> show ver, lUrl)
       fParams  = map (hsName . cleanName) lPars
               ++ maybe [] ((:[]) . hsName . cleanName . description) (ident ai)
               ++ maybe [] (const ["input"]) mInp
               ++ (if null (params ai) then [] else ["pList"])
       fType    = "ApiStateC m => "
-              ++ (hsType $ map (\p -> (if p == res then "" else modName p ++ ".") ++ "Identifier") lPars
-                       ++ maybe [] (return . Ident.haskellType) (ident ai)
-                       ++ maybe [] (\(_,v,_,_) -> [v]) mInp
-                       ++ (if null (params ai) then [] else ["[(String, String)]"])
-                       ++ ["m (ApiResponse (" ++ eType ++ ") (" ++ oType ++ "))"])
-  in ( mkStack $
+              ++ hsType (map (\p -> (if p == res then "" else modName p ++ ".") ++ "Identifier") lPars
+                      ++ maybe [] (return . Ident.haskellType) (ident ai)
+                      ++ maybe [] ((:[]) . infoType) mInp
+                      ++ (if null (params ai) then [] else ["[(String, String)]"])
+                      ++ ["m (ApiResponse (" ++ errorInfoType errorI ++ ") (" ++ infoType output ++ "))"])
+  in ( mkStack
         [ function (mkHsName ai) fType
         , hsDecl (mkHsName ai) fParams $
            hsLet
-              [ "rHeaders" .=. hsArray [ hsTuple [code "hAccept", string oCType]
-                                       , hsTuple [code "hContentType", string (maybe "text/plain" (\(_,_,v,_) -> v) mInp)]
+              [ "rHeaders" .=. hsArray [ hsTuple [code "hAccept", string (infoContentType output)]
+                                       , hsTuple [code "hContentType", string (maybe "text/plain" infoContentType mInp)]
                                        ]
-              , "request" .=. "ApiRequest"
+              , "request" .=. "makeReq"
                                   <++> string (show (method ai))
-                                  <++> parenthesis url
+                                  <++> ve
+                                  <++> url
                                   <++> (if null (params ai) then "[]" else "pList")
                                   <++> "rHeaders"
                                   <++> "$"
-                                  <++> maybe "\"\"" ((++ " input") . (\(_,_,_,v) -> v)) mInp
+                                  <++> maybe "\"\"" ((++ " input") . infoFunc) mInp
               ]
-              $ "liftM (parseResult" <++> eFunc <++> oFunc <+> ") . doRequest $ request"
+              $ "doRequest " <++> errorInfoFunc errorI <++> infoFunc output <++> "request"
         ]
-     , map ModuleName $ eMod ++ oMod ++ maybe [] (\(m,_,_,_) -> m) mInp
+     , errorInfoModules errorI ++ infoModules output ++ maybe [] infoModules mInp
      )
 
 linkToURL :: String -> Link -> (Code, [String])
-linkToURL res lnk = first (\v -> "intercalate" <++> string "/" <++> parenthesis ("map encode $ concat" <++> hsArray v)) $ urlParts res lnk ([], [])
+linkToURL res lnk = first hsArray $ urlParts res lnk ([], [])
 
 urlParts :: String -> Link -> ([Code], [String]) -> ([Code], [String])
 urlParts res lnk ac@(rlnk, pars) =
@@ -213,7 +213,7 @@ idData node =
             ]
            )
            mi
-    ls  -> mkStack $
+    ls  -> mkStack
             [ hsData "Identifier" $ map (\(pth,mi) -> dataName pth ++ maybe "" (\x -> " (" ++ Ident.haskellType x ++ ")") mi) ls
             , function "readId" "Identifier -> [String]"
             , mkStack $
@@ -265,29 +265,42 @@ modName = concatMap upFirst . cleanName
 dataName :: String -> String
 dataName = modName
 
-inputInfo :: DataDescription -> ([String], String, String, String)
+data Info = Info
+  { infoModules     :: [ModuleName]
+  , infoType        :: String
+  , infoContentType :: String
+  , infoFunc        :: String
+  } deriving (Eq, Show)
+
+inputInfo :: DataDescription -> Info
 inputInfo ds =
   case dataType ds of
-    String -> ([], "String", "text/plain", "fromString")
-    XML    -> (haskellModule ds, haskellType ds, "text/xml", "toXML")
-    JSON   -> (haskellModule ds, haskellType ds, "text/json", "toJSON")
-    File   -> ([], "ByteString", "application/octet-stream", "id")
-    Other  -> ([], "ByteString", "text/plain", "id")
+    String -> Info []                  "String"         "text/plain"               "fromString"
+    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml"                 "toXML"
+    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json"                "toJSON"
+    File   -> Info []                  "ByteString"     "application/octet-stream" "id"
+    Other  -> Info []                  "ByteString"     "text/plain"               "id"
 
-outputInfo :: DataDescription -> ([String], String, String, String)
+outputInfo :: DataDescription -> Info
 outputInfo ds =
   case dataType ds of
-    String -> ([], "String", "text/plain", "toString")
-    XML    -> (haskellModule ds, haskellType ds, "text/xml", "fromXML")
-    JSON   -> (haskellModule ds, haskellType ds, "text/json", "fromJSON")
-    File   -> ([], "ByteString", "*", "id")
-    Other  -> ([], "ByteString", "text/plain", "id")
+    String -> Info []                  "String"         "text/plain" "toString"
+    XML    -> Info (haskellModules ds) (haskellType ds) "text/xml"   "fromXML"
+    JSON   -> Info (haskellModules ds) (haskellType ds) "text/json"  "fromJSON"
+    File   -> Info []                  "ByteString"     "*"          "id"
+    Other  -> Info []                  "ByteString"     "text/plain" "id"
 
-errorInfo :: DataDescription -> ([String], String, String)
+data ErrorInfo = ErrorInfo
+  { errorInfoModules :: [ModuleName]
+  , errorInfoType    :: String
+  , errorInfoFunc    :: String
+  } deriving (Eq, Show)
+
+errorInfo :: DataDescription -> ErrorInfo
 errorInfo ds =
   case dataType ds of
-    String -> (haskellModule ds, haskellType ds, "fromXML")
-    XML    -> (haskellModule ds, haskellType ds, "fromXML")
-    JSON   -> (haskellModule ds, haskellType ds, "fromJSON")
-    File   -> (haskellModule ds, haskellType ds, "fromXML")
-    Other  -> (haskellModule ds, haskellType ds, "fromXML")
+    String -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
+    XML    -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
+    JSON   -> ErrorInfo (haskellModules ds) (haskellType ds) "fromJSON"
+    File   -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
+    Other  -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"

@@ -23,6 +23,7 @@ import Control.Monad.Error
 import Data.Aeson hiding (Success)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
 import Data.Typeable
+import Data.Data
 import GHC.Generics
 import Generics.Generic.Aeson
 import Generics.Regular (PF, deriveAll)
@@ -39,9 +40,9 @@ data DataError
   | PrintError        String
   | MissingField      String
   | UnsupportedFormat String
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Generic, Show, Typeable, Data)
 
-data DomainReason a = DomainReason { responseCode :: Int, reason :: a } deriving (Eq, Generic)
+data DomainReason a = DomainReason { responseCode :: Int, reason :: a } deriving (Eq, Generic, Typeable, Data)
 
 instance Show a => Show (DomainReason a) where
   showsPrec a (DomainReason _ e) = showParen (a >= 11) (showString "Domain " . showsPrec 11 e)
@@ -58,7 +59,7 @@ instance FromJSON a => FromJSON (DomainReason a) where
 instance JSONSchema a => JSONSchema (DomainReason a) where
   schema = schema . fmap reason
 
-data Status a b = Failure a | Success b deriving (Generic, Typeable)
+data Status a b = Failure a | Success b deriving (Generic, Typeable, Data)
 
 $(deriveAll ''Status "PFStatus")
 type instance PF (Status a b) = PFStatus a b
@@ -103,7 +104,7 @@ data Reason a
 
   -- Custom domain reasons.
   | CustomReason (DomainReason a)
-  deriving (Eq, Generic, Show, Typeable)
+  deriving (Eq, Generic, Show, Typeable, Data)
 
 instance Error DataError
 

@@ -13,12 +13,11 @@ cabal-version:       >=1.10
 
 extra-source-files:  LICENSE
 
-executable rest-example
+library
   default-language:  Haskell2010
   ghc-options:       -Wall
-  main-is:           Main.hs
   hs-source-dirs:    src
-  other-modules:
+  exposed-modules:
     Api
     Api.Post
     Api.User
@@ -44,6 +43,57 @@ executable rest-example
     , regular
     , regular-xmlpickler
     , rest-core
+    , rest-happstack
+    , stm
+    , text
+    , time
+    , transformers-base
+
+executable rest-example
+  default-language:  Haskell2010
+  ghc-options:       -Wall
+  main-is:           Main.hs
+  hs-source-dirs:    src
+  build-depends:
+      base >= 4.6 && < 4.8
+    , aeson
+    , containers
+    , filepath
+    , happstack-server
+    , hxt
+    , json-schema
+    , monad-control
+    , mtl
+    , regular
+    , regular-xmlpickler
+    , rest-core
+    , rest-example
+    , rest-happstack
+    , stm
+    , text
+    , time
+    , transformers-base
+
+executable rest-example-gen
+  default-language:  Haskell2010
+  ghc-options:       -Wall
+  main-is:           Gen.hs
+  hs-source-dirs:    src
+  build-depends:
+      base >= 4.6 && < 4.8
+    , aeson
+    , containers
+    , filepath
+    , happstack-server
+    , hxt
+    , json-schema
+    , monad-control
+    , mtl
+    , regular
+    , regular-xmlpickler
+    , rest-core
+    , rest-example
+    , rest-gen
     , rest-happstack
     , stm
     , text

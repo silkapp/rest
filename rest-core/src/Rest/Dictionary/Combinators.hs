@@ -35,6 +35,9 @@ module Rest.Dictionary.Combinators
   , xmlJsonO
   , xmlJsonE
   , xmlJson
+  , fayO
+  , fayI
+  , fayE
 
   -- ** Header dictionaries
 
@@ -57,6 +60,7 @@ import Data.Typeable
 import Network.Multipart (BodyPart)
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.Label.Total as L
+import Data.Data
 
 import Rest.Dictionary.Types
 import Rest.Info
@@ -117,6 +121,11 @@ rawXmlI = L.set inputs (Dicts [RawXmlI])
 jsonI :: (Typeable i, FromJSON i, JSONSchema i) => Dict h p i o e -> Dict h p i o e
 jsonI = L.modify (dicts . inputs) (JsonI:)
 
+-- | The input can be read into some instance of Fay `Json`.
+
+fayI :: (Data i) => Dict h p i o e -> Dict h p i o e
+fayI = L.modify (dicts . inputs) (FayI:)
+
 -- | Open up output type for extension with custom dictionaries.
 
 someO :: Dict h p i () e -> Dict h p i o e
@@ -147,6 +156,11 @@ rawXmlO = L.set outputs (Dicts [RawXmlO])
 jsonO :: (Typeable o, ToJSON o, JSONSchema o) => Dict h p i o e -> Dict h p i o e
 jsonO = L.modify (dicts . outputs) (JsonO:)
 
+-- | Allow output as Fay JSON using the `Json` type class.
+
+fayO :: (Data o) => Dict h p i o e -> Dict h p i o e
+fayO = L.modify (dicts . outputs) (FayO:)
+
 -- | Allow output as multipart. Writes out the ByteStrings separated
 -- by boundaries, with content type 'multipart/mixed'.
 
@@ -162,6 +176,11 @@ someE = L.set errors (Dicts [])
 
 jsonE :: (Typeable e, ToJSON e, JSONSchema e) => Dict h p i o e -> Dict h p i o e
 jsonE = L.modify (dicts . errors) (JsonE:)
+
+-- | Allow error output as Fay JSON using the `Json` type class.
+
+fayE :: (Data e) => Dict h p i o e -> Dict h p i o e
+fayE = L.modify (dicts . errors) (FayE:)
 
 -- | Allow error output as XML using the `XmlPickler` type class.
 

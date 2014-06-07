@@ -54,6 +54,7 @@ import Data.Text.Lazy (Text)
 import Data.Typeable
 import Network.Multipart (BodyPart)
 import Text.XML.HXT.Arrow.Pickle
+import Data.Data
 
 import Rest.Error
 import Rest.Info
@@ -63,6 +64,7 @@ import Rest.Info
 data Format
   = XmlFormat
   | JsonFormat
+  | FayFormat
   | StringFormat
   | FileFormat
   | MultipartFormat
@@ -131,6 +133,7 @@ instance Show (Param p) where
 
 data Input i where
   JsonI    :: (Typeable i, FromJSON i, JSONSchema i) => Input i
+  FayI     :: (Data i)                               => Input i
   ReadI    :: (Info i, Read i, Show i)               => Input i
   StringI  ::                                           Input String
   FileI    ::                                           Input ByteString
@@ -150,6 +153,7 @@ data Output o where
   FileO      ::                                         Output (ByteString, String)
   RawXmlO    ::                                         Output ByteString
   JsonO      :: (Typeable o, ToJSON o, JSONSchema o) => Output o
+  FayO       :: (Data o)                             => Output o
   XmlO       :: (Typeable o, XmlPickler o)           => Output o
   StringO    ::                                         Output String
   MultipartO ::                                         Output [BodyPart]
@@ -163,6 +167,7 @@ deriving instance Ord  (Output o)
 
 data Error e where
   JsonE   :: (Typeable e, ToJSON e, JSONSchema e) => Error e
+  FayE    :: (Data e)                             => Error e
   XmlE    :: (Typeable e, XmlPickler e)           => Error e
 
 deriving instance Show (Error e)

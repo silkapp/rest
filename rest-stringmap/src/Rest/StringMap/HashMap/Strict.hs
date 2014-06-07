@@ -19,13 +19,14 @@ import Data.JSON.Schema
 import Data.String
 import Data.String.ToString
 import Data.Typeable
+import Data.Data
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.HashMap.Strict as H
 
 import Rest.StringMap.Util
 
 newtype StringHashMap a b = StringHashMap { unH :: HashMap a b }
-  deriving (Eq, Show, Typeable)
+  deriving (Eq, Show, Typeable, Data)
 
 fromHashMap :: HashMap a b -> StringHashMap a b
 fromHashMap = StringHashMap

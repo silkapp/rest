@@ -30,11 +30,11 @@ library
   exposed-modules:
     Rest.Gen
     Rest.Gen.Config
-    Rest.Gen.Docs.Generate
+    Rest.Gen.Docs
     Rest.Gen.Docs.Happstack
-    Rest.Gen.Haskell.Generate
-    Rest.Gen.JavaScript.Generate
-    Rest.Gen.Ruby.Generate
+    Rest.Gen.Haskell
+    Rest.Gen.JavaScript
+    Rest.Gen.Ruby
     Rest.Gen.Types
   other-modules:
     Paths_rest_gen
