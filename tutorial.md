@@ -172,10 +172,58 @@ handle = apiToHandler' liftIO api
 And that's it! You now have a runnable REST API supporting both XML and JSON. Next, we'll look at
 how to generate documentation and client libraries.
 
+## Generating documentation and client code
+
+The 'rest-gen' package contains code to generate documentation and client code from your Haskell
+APIs. The easiest way to use this package is to create an executable to generate your documentation
+and client code. We provide a set of command line flags to customize generation, and a configurable
+function to generate the code:
+
+``` haskell
+main = do
+  config <- Gen.configFromArgs "rest-example-gen"
+  Gen.generate config "RestExample" Api.api [] [] []
+```
+
+The `configFromArgs` function takes the name of your executable, and parses a set of command line
+options configuring the code generation. Using this configuration, you call `generate` to generate
+the code. In addition to the configuration, you pass a name used for the generated API object in
+e.g. Javascript, and the actual API code.
+
+When running your generetion executable, you can now pass several flags:
+
+```
+  -d URLROOT   --documentation=URLROOT  Generate API documentation, available under the provided URL root.
+  -j           --javascript             Generate Javascript bindings.
+  -r           --ruby                   Generate Ruby bindings.
+  -h           --haskell                Generate Haskell bindings.
+  -s LOCATION  --source=LOCATION        The location of additional sources.
+  -t LOCATION  --target=LOCATION        The target location for generation.
+  -v VERSION   --version=VERSION        The version of the API under generation. Default latest.
+  -p           --hide-private           Generate API for the public, hiding private resources. Not default.
+```
+
+There are three additional arguments that you can pass to `generate` to customize it further. The
+first is a list of modules that are added to the `exposed-modules` for the generated Haskell client.
+This can be useful if you add some custom hand-written modules to your automatically generated
+client. The second one contains a list of extra imports added to every generated modules. The third
+is a list of rewrites to perform on the imported modules, replacing the first by the second. This
+can be needed for packages that have `Internal` modules, to rewrite those imports to the
+non-internal versions.
+
+### Serving documentation
+
+You can use the generation code to produce static documentation files and serve those, but there is
+another option. The API server running your API can also dynamically serve the corresponding
+documentation as well. Currently this is only supported for the happstack driver, but it should be
+easy to implement for other frameworks as well.
+
+To serve the documentation, just call `apiDocsHandler` with a root url where the documentation will
+be served, a template directory and your API. This gives you a happstack handler that you can mount
+in your server where you want.
+
+#### Explain ReaderT etc
 #### Error reporting
 #### Different kinds of handlers
-## Documentation and clients
-### Generation
-### Serving the documentation
 ### Using the Javascript client
 ### Using the Haskell client
