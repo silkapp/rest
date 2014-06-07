@@ -206,6 +206,11 @@ When running your generetion executable, you can now pass several flags:
   -p           --hide-private           Generate API for the public, hiding private resources. Not default.
 ```
 
+To run the generator, pass `--documentation=<root>`, where `<root>` is the root that your API runs
+on. This is used to generate links between resources. You also need to pass
+`--source=<template-dir>` pointing to a directory of templates. A default set is included in the
+'rest-gen' package, in `files/Docs/`.
+
 There are three additional arguments that you can pass to `generate` to customize it further. The
 first is a list of modules that are added to the `exposed-modules` for the generated Haskell client.
 This can be useful if you add some custom hand-written modules to your automatically generated
