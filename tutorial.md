@@ -26,14 +26,17 @@ data Resource m s sid mid aid where
 ```
 
 The first two type parameters represent the context that the handlers for this resource will run in.
-For now, let's just assume they are both IO. The last three type parameters are identifiers for this
-resource: one for a single item, one for listings, and one for top-level actions. We'll get to these
-later.
+The first represents the context you get from your parent resource. The second one is the context
+you get after a single resource has been identified. It can be used to pass data to subresources.
+We'll see an example of this soon. The last three type parameters are identifiers for this resource:
+one for a single item, one for listings, and one for top-level actions. We'll get to these later.
 
 Let's define a resource for blog posts. The easiest way to create a resource is using one of the
 smart constructors: `mkResourceId`, `mkResourceReader` and `mkResourceReaderWith`. Which one you use
-depends on what the types `m` and `s` are in your resource. Since we define both to be `IO`, we'll
-use `mkResourceId`:
+depends on what the types `m` and `s` are in your resource. Since this is a top level resource and
+we don't do anything special, we'll have the first one be `IO`. We'll define the second, which is
+the context for subhandlers, to contain the `Title` of the post using `ReaderT Title IO`. This means
+we'll use `mkResourceReader`:
 
 ``` haskell
 module Api.Post (resource) where
@@ -222,7 +225,6 @@ To serve the documentation, just call `apiDocsHandler` with a root url where the
 be served, a template directory and your API. This gives you a happstack handler that you can mount
 in your server where you want.
 
-#### Explain ReaderT etc
 #### Error reporting
 #### Different kinds of handlers
 ### Using the Javascript client
