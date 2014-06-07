@@ -1,5 +1,6 @@
 language: haskell
 install:
+  - "travis_retry cabal install 'cpphs >= 1.18.3'"
   - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ --dry-run -v3 --max-backjumps=-1 --reorder-goals"
 script:
   - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ --max-backjumps=-1 --reorder-goals"
