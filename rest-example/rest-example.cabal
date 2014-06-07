@@ -98,6 +98,33 @@ executable rest-example-wai
     , wai  == 2.1.0.*
     , warp == 2.1.5.*
 
+executable rest-example-snap
+  default-language:  Haskell2010
+  ghc-options:       -Wall
+  main-is:           Main.hs
+  hs-source-dirs:    snap
+  build-depends:
+      base >= 4.6 && < 4.8
+    , aeson
+    , containers
+    , http-types == 0.8.*
+    , hxt
+    , json-schema
+    , mtl
+    , regular
+    , regular-xmlpickler
+    , rest-core
+    , rest-example
+    , rest-wai
+    , stm
+    , text
+    , time
+
+    , rest-snap
+    , snap-core
+    , snap-server
+
+
 executable rest-example-gen
   default-language:  Haskell2010
   ghc-options:       -Wall
@@ -123,3 +150,4 @@ executable rest-example-gen
     , text
     , time
     , transformers-base
+
