@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Rest.Gen.Docs.Happstack
+module Rest.Driver.Happstack.Docs
   ( apiDocsHandler
   ) where
 
@@ -23,7 +23,6 @@ serveDocs ctx tree =
     [ nullDir >> allDocsHandler ctx tree
     , docHandlers ctx tree
     ]
-
 
 allDocsHandler :: (ServerMonad m, MonadPlus m, FilterMonad Response m, MonadIO m) => DocsContext -> ApiResource -> m Response
 allDocsHandler ctx tree =

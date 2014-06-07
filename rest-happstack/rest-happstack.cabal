@@ -20,7 +20,9 @@ source-repository head
 library
   ghc-options:       -Wall
   hs-source-dirs:    src
-  exposed-modules:   Rest.Driver.Happstack
+  exposed-modules:
+    Rest.Driver.Happstack
+    Rest.Driver.Happstack.Docs
   build-depends:
       base             == 4.*
     , containers       >= 0.4    && < 0.6
@@ -30,4 +32,5 @@ library
     , transformers     >= 0.3 && < 0.5
     , utf8-string      == 0.3.*
     , rest-core        >= 0.28 && < 0.31
+    , rest-gen         == 0.13.*
 
