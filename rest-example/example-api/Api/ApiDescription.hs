@@ -29,6 +29,9 @@ import qualified Type.UserInfo as UserInfo
 import Control.Monad.Reader
 import Rest.Gen.Base
 import Rest.Api (Router)
+import Control.Applicative
+import Data.Function (on)
+import Data.List hiding (head, span)
 
 -- | Defines the /apis end-point.
 
@@ -38,17 +41,30 @@ resource router = mkResourceReader
   , R.schema = withListing () $ named [("name", singleBy T.pack)]
   , R.list   = const (list router) -- requested by GET /apis, gives a paginated listing of apis.
   , R.create = Nothing
-  , R.get = Just get
+  , R.get = Just $ get router
   }
+
+apiDescriptionFromApiResource :: ApiResource -> ApiDescription
+apiDescriptionFromApiResource =
+    ApiDescription <$> ((T.pack . resName))
+                   <*> (linkText . resLink)
+                   <*> ((map apiDescriptionFromApiResource) . subResources)
+
+linkText :: Link -> T.Text
+linkText = (T.intercalate ", ") . (map linkItem)
+  where linkItem (LParam idf)   = T.pack ("/<" ++ idf ++ ">")
+        linkItem (LAccess lnks) = T.concat $ map linkText $ reverse $ sortBy (compare `on` length) lnks
+        linkItem x              = T.pack ("/" ++ itemString x)
 
 list :: Router BlogApi BlogApi -> ListHandler BlogApi
 list router = mkListing xmlJsonO $ \r -> do
-  let all = allTrees . apiSubtrees $ router
-  let apilisting = map (ApiDescription . T.pack . resName) all
+  let apiresource = apiSubtrees $ router
+  let apilisting = [ apiDescriptionFromApiResource $ apiresource]
   return . take (count r) . drop (offset r) $ apilisting
 
-get :: Handler (ReaderT T.Text BlogApi)
-get = mkHandler xmlJsonO $ \_ -> do
+get :: Router BlogApi BlogApi -> Handler (ReaderT T.Text BlogApi)
+get router = mkHandler xmlJsonO $ \_ -> do
     name <- ask
-    return $ ApiDescription name
+    -- TODO: traverse the apiTree and find the ApiResource
+    return $ ApiDescription name "" []
 
