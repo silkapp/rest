@@ -52,7 +52,7 @@ toRestInput req =
                         "DELETE" -> Rest.DELETE
                         other    -> Rest.Unknown (string other)
 
-       , paths      = text <$> pathInfo req
+       , paths      = text <$> filter (not . Text.null) (pathInfo req)
 
        , mimeTypes  = HashMap.fromList
                     . fmap (text *** string)
