@@ -106,6 +106,23 @@ handler, which is passed by two GET parameters `offset` and `count`. We then que
 of posts. The `ListHandler` actually requires the returned type to be a list; returning a non-list
 value will cause a type error.
 
+### Other kinds of handlers
+
+In addition to `get` and `list`, there are several more fields for defining handlers on your
+resources:
+
+* `statics`: These are top-level POST actions. An example would be `/user/login`. They are
+  identified by the fifth type parameter in the `Resource` type. In the schema, they are created by
+  `action`.
+* `update`: Allows creating and updating an identified resource. This is done with a PUT to the same
+  url as the single getter.
+* `delete`: Allows deleting an identified resource. This is done with a DELETE to the same url as
+  the single getter.
+* `create`: Allows creating a new resource. This is done with a POST to the root of the resource.
+* `actions`: POST Actions on an identified resource. An example would be `/user/id/1/signout`.
+* `selects`: Small subobjects of an identified resource. These could be a singleton subresource, but
+  sometimes having them on their parent is easier.
+
 ## Composing resources into an API
 
 Now that we have a resource, we want to combine it with other resources into an API. Let's assume we
@@ -306,4 +323,3 @@ api.Post.list().then(function (posts) { console.log(posts); });
 ```
 
 #### Error reporting
-#### Different kinds of handlers
