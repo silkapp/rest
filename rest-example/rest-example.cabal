@@ -35,7 +35,6 @@ library
     , aeson
     , containers
     , filepath
-    , happstack-server
     , hxt
     , json-schema
     , monad-control
@@ -43,7 +42,6 @@ library
     , regular
     , regular-xmlpickler
     , rest-core
-    , rest-happstack
     , stm
     , text
     , time
@@ -79,16 +77,16 @@ executable rest-example-happstack
   hs-source-dirs:    happstack
   if flag(happstack)
     buildable: True
+    build-depends:
+        base >= 4.6 && < 4.8
+      , happstack-server
+      , mtl
+      , rest-core
+      , rest-example
+      , rest-example
+      , rest-happstack
   else
     buildable: False
-  build-depends:
-      base >= 4.6 && < 4.8
-    , happstack-server
-    , mtl
-    , rest-core
-    , rest-example
-    , rest-example
-    , rest-happstack
 
 executable rest-example-wai
   default-language:  Haskell2010
@@ -97,16 +95,16 @@ executable rest-example-wai
   hs-source-dirs:    wai
   if flag(wai)
     buildable: True
+    build-depends:
+        base >= 4.6 && < 4.8
+      , mtl
+      , rest-core
+      , rest-example
+      , rest-wai
+      , wai
+      , warp
   else
     buildable: False
-  build-depends:
-      base >= 4.6 && < 4.8
-    , mtl
-    , rest-core
-    , rest-example
-    , rest-wai
-    , wai
-    , warp
 
 executable rest-example-snap
   default-language:  Haskell2010
@@ -115,16 +113,16 @@ executable rest-example-snap
   hs-source-dirs:    snap
   if flag(snap)
     buildable: True
+    build-depends:
+        base >= 4.6 && < 4.8
+      , mtl
+      , rest-core
+      , rest-example
+      , rest-snap
+      , snap-core
+      , snap-server
   else
     buildable: False
-  build-depends:
-      base >= 4.6 && < 4.8
-    , mtl
-    , rest-core
-    , rest-example
-    , rest-snap
-    , snap-core
-    , snap-server
 
 executable rest-example-gen
   default-language:  Haskell2010
@@ -133,13 +131,12 @@ executable rest-example-gen
   hs-source-dirs:    generate
   if flag(gen)
     buildable: True
+    build-depends:
+        base >= 4.6 && < 4.8
+      , mtl
+      , rest-core
+      , rest-example
+      , rest-gen
   else
     buildable: False
-  build-depends:
-      base >= 4.6 && < 4.8
-    , happstack-server
-    , mtl
-    , rest-core
-    , rest-example
-    , rest-gen
 
