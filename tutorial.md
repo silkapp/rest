@@ -271,11 +271,39 @@ which are the second argument. To list the posts, we would do something like:
 run "my.local.example" (Post.list [])
 ```
 
-This gives us back an `ApiResponse` containing a `List Post`. The `ApiResponse` contains information
-about the response: the response code, the headers and the body. The body is either an error, or the
-actual result. That result is a `List`, which in addition to the actual results also contains a
-count and an offset. This type is defined in the 'rest-types' package.
+The list argument can contain query parameters, like 'count' and 'limit'. Running this gives us back
+an `ApiResponse` containing a `List Post`. The `ApiResponse` contains information about the
+response: the response code, the headers and the body. The body is either an error, or the actual
+result. That result is a `List`, which in addition to the actual results also contains a count and
+an offset. This type is defined in the 'rest-types' package.
+
+### Generating a Javascript client
+
+To generate a Javascript library, pass `--javascript` to the program. This will output the client
+code to standard out. To output to a file instead, you can use `--target=<output-file>`.
+
+To use the client library, include it and [jQuery](http://jquery.com) in a page. Note that due to
+cross domain restrictions, in browsers you can only access the API if it runs on the same domain as
+your client application, or if you set the [appropriate
+headers](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing).
+
+To use the client, first instantiate the API object:
+
+``` javascript
+var api = new RestExampleApi(apiHost);
+```
+
+This object contains properties for all top level resources in your API. These properties contain
+functions for calling actions on this resource. The functions take a success and an error handler,
+but they also return a [jQuery Deferred](http://api.jquery.com/category/deferred-object/) of the
+AJAX call, so you can also chain using e.g. `.then()`. Calls that need input data take it as the
+first argument. After the callbacks, you can also pass additional query parameters.
+
+For example, to list all posts and print them to the console, we could do:
+
+``` javascript
+api.Post.list().then(function (posts) { console.log(posts); });
+```
 
 #### Error reporting
 #### Different kinds of handlers
-### Using the Javascript client
