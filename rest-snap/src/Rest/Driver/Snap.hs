@@ -31,7 +31,7 @@ instance Rest Snap where
   getParameter  nm   = getsRequest (fmap UTF8.toString . (>>= headMay) . rqParam (UTF8.fromString nm))
   getBody            = readRequestBody (1 * 1024 * 1024)
   getMethod          = getsRequest (toRestMethod . rqMethod)
-  getPaths           = getsRequest (map (UTF8.toString . URI.decodeByteString) . Char8.split '/' . rqPathInfo)
+  getPaths           = getsRequest (map (UTF8.toString . URI.decodeByteString) . filter (not . Char8.null) . Char8.split '/' . rqPathInfo)
   lookupMimeType     = return . fmap UTF8.toString . flip M.lookup defaultMimeTypes
   setHeader nm v     = modifyResponse (Snap.setHeader (CI.mk . UTF8.fromString $ nm) (UTF8.fromString v))
   setResponseCode cd = modifyResponse (Snap.setResponseCode cd)
