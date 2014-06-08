@@ -21,6 +21,7 @@ library
     Api
     Api.Post
     Api.User
+    Api.ApiDescription
     ApiTypes
     Example
     Type.CreatePost
