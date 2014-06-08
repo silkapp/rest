@@ -7,13 +7,14 @@ import Code.Build.JavaScript
 import Control.Monad
 import Data.Maybe
 import Text.StringTemplate
+import qualified Language.Haskell.Exts.Syntax as H
 
 import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
 
-mkJsApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
+mkJsApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =
   do prelude <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/base.js")
      let cod = showCode $ mkStack
