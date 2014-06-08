@@ -28,21 +28,23 @@ import qualified Type.User     as User
 import qualified Type.UserInfo as UserInfo
 import Control.Monad.Reader
 import Rest.Gen.Base
+import Rest.Api (Router)
 
 -- | Defines the /apis end-point.
 
 resource :: Router BlogApi BlogApi -> Resource BlogApi (ReaderT T.Text BlogApi) T.Text () Void
-resource _router = mkResourceReader
+resource router = mkResourceReader
   { R.name   = "apis" -- Name of the HTTP path segment.
   , R.schema = withListing () $ named [("name", singleBy T.pack)]
-  , R.list   = const list -- requested by GET /apis, gives a paginated listing of apis.
+  , R.list   = const (list router) -- requested by GET /apis, gives a paginated listing of apis.
   , R.create = Nothing
   , R.get = Just get
   }
 
-list :: ListHandler BlogApi
-list = mkListing xmlJsonO $ \r -> do
-  let apilisting = [ApiDescription "user", ApiDescription "post"]
+list :: Router BlogApi BlogApi -> ListHandler BlogApi
+list router = mkListing xmlJsonO $ \r -> do
+  let all = allTrees . apiSubtrees $ router
+  let apilisting = map (ApiDescription . T.pack . resName) all
   return . take (count r) . drop (offset r) $ apilisting
 
 get :: Handler (ReaderT T.Text BlogApi)
