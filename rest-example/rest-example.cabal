@@ -31,6 +31,7 @@ library
     Type.UserInfo
     Type.UserPost
     Type.UserSignupError
+    Type.ApiDescription
   build-depends:
       base >= 4.6 && < 4.8
     , aeson
@@ -43,6 +44,7 @@ library
     , regular
     , regular-xmlpickler
     , rest-core
+    , rest-gen
     , stm
     , text
     , time

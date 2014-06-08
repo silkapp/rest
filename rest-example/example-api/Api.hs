@@ -20,7 +20,7 @@ blog :: Router BlogApi BlogApi
 blog =
   root  -/ user
         -/ post
-        -/ route ApiDescription.resource blog
+        -/ route (ApiDescription.resource blog)
   where
     user = route User.resource
     post = route Post.resource
