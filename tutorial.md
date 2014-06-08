@@ -206,11 +206,6 @@ When running your generetion executable, you can now pass several flags:
   -p           --hide-private           Generate API for the public, hiding private resources. Not default.
 ```
 
-To run the generator, pass `--documentation=<root>`, where `<root>` is the root that your API runs
-on. This is used to generate links between resources. You also need to pass
-`--source=<template-dir>` pointing to a directory of templates. A default set is included in the
-'rest-gen' package, in `files/Docs/`.
-
 There are three additional arguments that you can pass to `generate` to customize it further. The
 first is a list of modules that are added to the `exposed-modules` for the generated Haskell client.
 This can be useful if you add some custom hand-written modules to your automatically generated
@@ -219,7 +214,13 @@ is a list of rewrites to perform on the imported modules, replacing the first by
 can be needed for packages that have `Internal` modules, to rewrite those imports to the
 non-internal versions.
 
-### Serving documentation
+### Generating documentation
+
+To generate documentation, run the generator passing `--documentation=<root>`, where `<root>` is the
+root that your API runs on. This is used to generate links between resources. You also need to pass
+`--source=<template-dir>` pointing to a directory of templates. A default set is included in the
+'rest-gen' package, in `files/Docs/`. This will output documentation files to `./docs`. You can
+change the output directory using `--target=<output-dir>`.
 
 You can use the generation code to produce static documentation files and serve those, but there is
 another option. The API server running your API can also dynamically serve the corresponding
@@ -230,7 +231,51 @@ To serve the documentation, just call `apiDocsHandler` with a root url where the
 be served, a template directory and your API. This gives you a happstack handler that you can mount
 in your server where you want.
 
+### Generating a Haskell client
+
+The same generation executable can also build a Haskell client. Pass `--haskell` to the program,
+which will output client code to `./client`. You can change the output directory using
+`--target=<output-dir>`.
+
+This will generate a client library. It has a module for each resource in the API, as well as a
+cabal file exposing these modules and depending on a few needed libraries. You will have to add your
+own dependencies as well to get your domain types in scope. It is a good design to have three
+packages: 'something-api' containing the runnabe API, 'something-client' for talking to this API,
+and 'something-types' which contains shared types between the two.
+
+Let's look at the generated code for the 'post' API resource:
+
+``` haskell
+list :: ApiStateC m
+     => [(String, String)]
+     -> m (ApiResponse () (List Post))
+
+byId :: ApiStateC m
+     => Int
+     -> m (ApiResponse () Post)
+```
+
+For each action ('list' and 'get') a client function was created. These run in the context of
+`ApiStateC`. This type is defined in the 'rest-client' package. It represents the context to make
+HTTP calls in: it has a cookie jar to track (login) cookies, and the host and port to connect to the
+API. The simplest instance is the `ApiT` transformer, which you can easily run:
+
+``` haskell
+run :: String -> ApiT IO a -> IO a
+```
+
+You pass in the url of the API as the first argument (port 80 is used) and then runs the API calls
+which are the second argument. To list the posts, we would do something like:
+
+``` haskell
+run "my.local.example" (Post.list [])
+```
+
+This gives us back an `ApiResponse` containing a `List Post`. The `ApiResponse` contains information
+about the response: the response code, the headers and the body. The body is either an error, or the
+actual result. That result is a `List`, which in addition to the actual results also contains a
+count and an offset. This type is defined in the 'rest-types' package.
+
 #### Error reporting
 #### Different kinds of handlers
 ### Using the Javascript client
-### Using the Haskell client
