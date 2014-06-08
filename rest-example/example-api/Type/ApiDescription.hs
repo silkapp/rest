@@ -20,6 +20,8 @@ type Name = Text
 
 data ApiDescription = ApiDescription
   { name     :: Name
+  , link     :: Text
+  , subapis  :: [ApiDescription]
   } deriving (Eq, Generic, Ord, Show, Typeable, Read)
 
 deriveAll ''ApiDescription "PFApiDescription"
