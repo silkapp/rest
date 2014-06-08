@@ -123,6 +123,36 @@ resources:
 * `selects`: Small subobjects of an identified resource. These could be a singleton subresource, but
   sometimes having them on their parent is easier.
 
+### Error handling in handlers
+
+The body of a handler of type `Handler m` doesn't run directly in `m`. Instead, it runs in an
+`ErrorT (Reason e) m`. This allows handlers to throw errors with `throwError`. The `Reason` data
+type contains common errors, like `NotFound` and `NotAllowed`. Additionally, you can instantiate the
+type variable `e` to your own error data type. If you do this, you need to specify the serialization
+format(s) of your data type in a dictionary, just like we did for the input and output.
+
+As an example, we can have the `get` handler sometimes throw an error:
+
+``` haskell
+data CustomError = CustomError
+instance XmlPickler CustomError where ...
+instance ToJSON     CustomError where ...
+instance FromJSON   CustomError where ...
+instance JSONSchema CustomError where ...
+
+get :: Handler (ReaderT Title IO)
+get = mkIdHandler (xmlJsonE . xmlJsonO) $ \_ title ->
+  case title of
+    "notfound" -> throwError NotFound
+    "custom"   -> throwError $ domainReason (const 500) CustomError
+    _          -> liftIO $ readPostFromDb title
+```
+
+Here we throw two errors in the body of the handler. The `NotFound` error comes from 'rest-types'.
+We also define a custom error, that we throw with `domainReason`. The first argument gives a
+function mapping the custom error type to an HTTP status code.
+
+
 ## Composing resources into an API
 
 Now that we have a resource, we want to combine it with other resources into an API. Let's assume we
@@ -321,5 +351,3 @@ For example, to list all posts and print them to the console, we could do:
 ``` javascript
 api.Post.list().then(function (posts) { console.log(posts); });
 ```
-
-#### Error reporting
