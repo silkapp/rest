@@ -22,17 +22,17 @@ library
   hs-source-dirs:    src
   exposed-modules:   Rest.Driver.Wai
   build-depends:
-      base                 == 4.*
-    , bytestring           == 0.10.*
-    , case-insensitive     == 1.2.*
-    , containers           >= 0.4    && < 0.6
-    , http-types           == 0.8.*
-    , mime-types           == 0.1.*
-    , mtl                  >= 2.0  && < 2.3
-    , rest-core            >= 0.28 && < 0.31
-    , rest-types           == 1.10.*
-    , text                 == 1.1.*
+      base == 4.*
+    , bytestring == 0.10.*
+    , case-insensitive == 1.2.*
+    , containers >= 0.4 && < 0.6
+    , http-types == 0.8.*
+    , mime-types == 0.1.*
+    , mtl >= 2.0 && < 2.3
+    , rest-core >= 0.28 && < 0.31
+    , rest-types == 1.10.*
+    , text == 1.1.*
     , unordered-containers == 0.2.*
-    , utf8-string          == 0.3.*
-    , wai                  == 2.1.*
+    , utf8-string == 0.3.*
+    , wai == 2.1.*
 
