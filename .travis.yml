@@ -9,6 +9,8 @@ script:
   - "cabal install rest-example/ -fsnap --jobs=1"
   - "cabal install rest-example/ -fwai --only-dependencies"
   - "cabal install rest-example/ -fwai --jobs=1"
+  - "rest-example-gen --haskell --target rest-example/client"
+  - "cabal install rest-example/client"
 notifications:
   email:
     recipients: travis@silk.co
