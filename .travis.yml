@@ -10,7 +10,8 @@ script:
   - "cabal install rest-example/ -fwai --only-dependencies"
   - "cabal install rest-example/ -fwai --jobs=1"
   - "rest-example-gen --haskell --target rest-example/client"
-  - "cabal install rest-example/client"
+  - "rest-example-gen --javascript --target rest-example/client.js"
+  - "cabal install rest-example/client --jobs=1"
 notifications:
   email:
     recipients: travis@silk.co
