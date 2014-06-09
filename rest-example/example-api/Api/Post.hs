@@ -1,4 +1,4 @@
-module Api.Post (resource) where
+module Api.Post (resource, WithPost) where
 
 import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
 import Control.Monad (unless)

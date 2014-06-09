@@ -19,10 +19,11 @@ import Text.XML.HXT.Arrow.Pickle
 
 import qualified Type.User as User
 
+type Id = Int
 type Title = Text
 
 data Post = Post
-  { id          :: Int
+  { id          :: Id
   , author      :: User.Name
   , createdTime :: UTCTime
   , title       :: Title

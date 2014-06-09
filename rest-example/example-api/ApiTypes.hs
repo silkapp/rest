@@ -5,14 +5,18 @@ import Control.Applicative (Applicative)
 import Control.Concurrent.STM (TVar)
 import Control.Monad.Reader (MonadReader, ReaderT (..))
 import Control.Monad.Trans (MonadIO)
+import Data.HashMap.Strict (HashMap)
 import Data.Set (Set)
 
+import Type.Comment (Comment)
 import Type.Post (Post)
 import Type.User (User)
+import qualified Type.Post as Post
 
 data ServerData = ServerData
-  { users :: TVar (Set User)
-  , posts :: TVar (Set Post)
+  { users    :: TVar (Set User)
+  , posts    :: TVar (Set Post)
+  , comments :: TVar (HashMap Post.Id (Set Comment))
   }
 
 newtype BlogApi a = BlogApi { unBlogApi :: ReaderT ServerData IO a }
