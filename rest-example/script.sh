@@ -22,3 +22,11 @@ echo "-------------"
 echo "# Creating post with the same title:"
 echo ""
 curl -s -X POST 'http://localhost:3000/v1.0/post' -H "Content-Type:application/json" -d '{"user":{"name":"adam","password":"1234"},"post":{"title":"Interesting Blog Post","content":"I will finish this later"}}' | python -mjson.tool
+echo "-------------"
+echo "# Commenting"
+echo ""
+curl -s -X POST 'http://localhost:3000/v1.0/post/id/0/comment' -H "Content-Type:application/json" -d '{"user":{"name":"adam","password":"1234"},"comment":"I really outdid myself this time!?"}' | python -mjson.tool
+echo "-------------"
+echo "# Listing a posts comments"
+echo ""
+curl 'http://localhost:3000/v1.0/post/id/0/comment' -H "Content-Type:application/json" | python -mjson.tool

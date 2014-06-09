@@ -20,13 +20,16 @@ library
   exposed-modules:
     Api
     Api.Post
+    Api.Post.Comment
     Api.User
     ApiTypes
     Example
+    Type.Comment
     Type.CreatePost
     Type.Post
     Type.PostError
     Type.User
+    Type.UserComment
     Type.UserInfo
     Type.UserPost
     Type.UserSignupError
@@ -46,6 +49,7 @@ library
     , text
     , time
     , transformers-base
+    , unordered-containers
 
 -------------------------------------------------------------------------------
 -- Executables linking against the rest-example library.
