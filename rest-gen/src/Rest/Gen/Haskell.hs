@@ -260,9 +260,9 @@ idData node =
                        (H.UnGuardedRhs $ H.List $ pp [ showURLx ]) noBinds] ]
     ls ->
       let ctor (pth,mi) =
-            H.QualConDecl noLoc [] [] (H.ConDecl (H.Ident pth) $ maybe [] f mi)
+            H.QualConDecl noLoc [] [] (H.ConDecl (H.Ident (dataName pth)) $ maybe [] f mi)
               where f ty = [H.UnBangedTy $ Ident.haskellType ty]
-          fun (pth, mi) = [H.TypeSig noLoc [funName] fType,
+          fun (pth, mi) = [
                            H.FunBind [H.Match noLoc funName fparams Nothing rhs noBinds]]
             where (fparams, rhs) =
                     case mi of
@@ -270,9 +270,11 @@ idData node =
                         ([H.PVar $ H.Ident pth],
                          (H.UnGuardedRhs $ H.List [H.Lit (H.String pth)]))
                       Just{}  ->  -- Pattern match with data constructor
-                        ([H.PParen $ H.PApp (H.UnQual $ H.Ident pth) [H.PVar x]],
+                        ([H.PParen $ H.PApp (H.UnQual $ H.Ident (dataName pth)) [H.PVar x]],
                          (H.UnGuardedRhs $ H.List [H.Lit $ H.String pth, showURLx]))
-      in H.DataDecl noLoc H.DataType [] tyIdent [] (map ctor ls) [] : concatMap fun ls
+      in [ H.DataDecl noLoc H.DataType [] tyIdent [] (map ctor ls) []
+         , H.TypeSig noLoc [funName] fType
+         ] ++ concatMap fun ls
     where
       x        = H.Ident "x"
       fType    = H.TyFun (H.TyCon $ H.UnQual tyIdent) (H.TyList haskellStringType)
@@ -316,6 +318,9 @@ qualModName = intercalate "." . map modName
 
 modPath :: ResourceId -> String
 modPath = intercalate "/" . map modName
+
+dataName :: String -> String
+dataName = modName
 
 modName :: String -> String
 modName = concatMap upFirst . cleanName
