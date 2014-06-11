@@ -118,20 +118,17 @@ buildHaskellModule ctx node pragmas warningText = rewriteModuleNames (rewrites c
   where
     name = H.ModuleName $ qualModName $ namespace ctx ++ resId node
     exportSpecs = Nothing
-    importDecls = nub $ map rewriteImport $
-                            namedImport "Rest.Client.Internal" : extraImports
-                         ++ parentImports
-                         ++ dataImports
-                         ++ idImports
+    importDecls = nub $ namedImport "Rest.Client.Internal"
+                      : extraImports
+                     ++ parentImports
+                     ++ dataImports
+                     ++ idImports
     decls = idData node ++ concat funcs
 
     extraImports = imports ctx
     parentImports = map mkImport . tail . inits . resParents $ node
     dataImports = map (qualImport . unModuleName) datImp
     idImports = concat . mapMaybe (return . map (qualImport . unModuleName) . Ident.haskellModules <=< snd) . resAccessors $ node
-
-    rewriteImport imp = imp { H.importModule = look (H.importModule imp) }
-      where look m = lookupJustDef m m (rewrites ctx)
 
     (funcs, datImp) = second (nub . concat) . unzip . map (mkFunction (apiVersion ctx) . resName $ node) $ resItems node
     mkImport p = (namedImport importName) { H.importQualified = True,
@@ -140,9 +137,7 @@ buildHaskellModule ctx node pragmas warningText = rewriteModuleNames (rewrites c
             importAs = fmap (H.ModuleName . modName) . lastMay $ p
 
 rewriteModuleNames :: [(H.ModuleName, H.ModuleName)] -> H.Module -> H.Module
-rewriteModuleNames rews = U.transformBi $ \qn -> case qn of
-  H.Qual m n -> H.Qual (lookupJustDef m m rews) n
-  _ -> qn
+rewriteModuleNames rews = U.transformBi $ \m -> lookupJustDef m m rews
 
 noBinds :: H.Binds
 noBinds = H.BDecls []
