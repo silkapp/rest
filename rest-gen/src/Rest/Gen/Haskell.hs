@@ -105,11 +105,11 @@ writeRes ctx node =
      writeFile (targetPath ctx </> "src" </> modPath (namespace ctx ++ resId node) ++ ".hs") (mkRes ctx node)
 
 mkRes :: HaskellContext -> ApiResource -> String
-mkRes ctx node = H.prettyPrint $ buildHaskellModule ctx node pragmas warningText
+mkRes ctx node = H.prettyPrint $ buildHaskellModule ctx node pragmas Nothing
   where
     pragmas = [ H.LanguagePragma noLoc [H.Ident "OverloadedStrings"],
                 H.OptionsPragma noLoc (Just H.GHC) "-fno-warn-unused-imports"]
-    warningText = Just $ H.WarnText "Warning!! This is automatically generated code, do not modify!"
+    _warningText = "Warning!! This is automatically generated code, do not modify!"
 
 buildHaskellModule :: HaskellContext -> ApiResource ->
                       [H.ModulePragma] -> Maybe H.WarningText ->
@@ -164,7 +164,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
          where cls = H.Ident "ApiStateC"
                m = H.TyVar $ H.Ident "m"
                fTypify :: [H.Type] -> H.Type
-               fTypify [] = error "Rest.Gen.Haskell.mkFunction.fTypify - expects at least two types"
+               fTypify [] = error "Rest.Gen.Haskell.mkFunction.fTypify - expects at least one type"
                fTypify [ty1] = ty1
                fTypify [ty1, ty2] = H.TyFun ty1 ty2
                fTypify (ty1 : tys) = H.TyFun ty1 (fTypify tys)
@@ -270,7 +270,7 @@ idData node =
             where (fparams, rhs) =
                     case mi of
                       Nothing ->
-                        ([H.PVar $ H.Ident pth],
+                        ([H.PWildCard],
                          (H.UnGuardedRhs $ H.List [H.Lit (H.String pth)]))
                       Just{}  ->  -- Pattern match with data constructor
                         ([H.PParen $ H.PApp (H.UnQual $ H.Ident (dataName pth)) [H.PVar x]],
