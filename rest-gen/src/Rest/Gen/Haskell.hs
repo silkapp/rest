@@ -1,7 +1,7 @@
 {-# LANGUAGE
     DoAndIfThenElse
-  , TemplateHaskell
   , PatternGuards
+  , TemplateHaskell
   #-}
 module Rest.Gen.Haskell
   ( HaskellContext (..)
@@ -28,8 +28,8 @@ import qualified Distribution.PackageDescription.PrettyPrint as Cabal
 import qualified Distribution.Simple.Utils                   as Cabal
 import qualified Distribution.Verbosity                      as Cabal
 import qualified Distribution.Version                        as Cabal
-import qualified Language.Haskell.Exts.Syntax as H
-import qualified Language.Haskell.Exts.Pretty as H
+import qualified Language.Haskell.Exts.Pretty                as H
+import qualified Language.Haskell.Exts.Syntax                as H
 
 import Rest.Api (Router, Version)
 
@@ -134,9 +134,9 @@ buildHaskellModule ctx node pragmas warningText = H.Module noLoc name pragmas wa
 
     (funcs, datImp) = second (nub . concat) . unzip . map (mkFunction (apiVersion ctx) . resName $ node) $ resItems node
     mkImport p = (namedImport importName) { H.importQualified = True,
-                                            H.importPkg = packageName }
+                                            H.importAs = importAs }
       where importName = qualModName $ namespace ctx ++ p
-            packageName = (fmap modName . lastMay $ p)
+            importAs = fmap (H.ModuleName . modName) . lastMay $ p
 
 noBinds :: H.Binds
 noBinds = H.BDecls []
