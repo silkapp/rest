@@ -160,14 +160,14 @@ mkFunction ver res (ApiAction _ lnk ai) =
                            ++ (if null (params ai) then [] else [pList])
        (lUrl, lPars) = linkToURL res lnk
        mInp    = fmap inputInfo . chooseType . inputs $ ai
-       fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]]
-                 (fTypify tyParts)
+       fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]] $ fTypify tyParts
          where cls = H.Ident "ApiStateC"
                m = H.TyVar $ H.Ident "m"
                fTypify :: [H.Type] -> H.Type
+               fTypify [] = error "Rest.Gen.Haskell.mkFunction.fTypify - expects at least two types"
+               fTypify [ty1] = ty1
                fTypify [ty1, ty2] = H.TyFun ty1 ty2
                fTypify (ty1 : tys) = H.TyFun ty1 (fTypify tys)
-               fTypify [] = H.TyApp m (H.TyCon (H.Special H.UnitCon))
                tyParts = map qualIdent lPars
                          ++ maybe [] (return . Ident.haskellType) (ident ai)
                          ++ inp
