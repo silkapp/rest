@@ -3,11 +3,14 @@ version: 0.1
 cabal-version: >=1.8
 build-type: Simple
 license: AllRightsReserved
-
+ 
 library
-    build-depends: base ==4.*, rest-types ==1.10.*, rest-client ==0.2.*, text >= 0.10 && < 1.2, rest-example
+    build-depends: base ==4.*, rest-types ==1.10.*,
+                   rest-client ==0.2.*, text >=0.10 && <1.2, rest-example -any
     exposed-modules: Restexample.Client.Post
                      Restexample.Client.Post.Comment Restexample.Client.User
     exposed: True
     buildable: True
     hs-source-dirs: src
+ 
+ 
