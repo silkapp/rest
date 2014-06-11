@@ -1,4 +1,4 @@
-PROJECTS=rest-stringmap/ rest-gen/ rest-core/ rest-types/ rest-happstack/ rest-wai/ rest-snap/ code-builder/ rest-example/
+PROJECTS=rest-stringmap/ rest-gen/ rest-core/ rest-types/ rest-happstack/ rest-wai/ rest-snap/ code-builder/ rest-example/ rest-client/
 INSTALL=cabal install $(PROJECTS)
 
 all:
