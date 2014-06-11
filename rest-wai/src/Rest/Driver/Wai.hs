@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings, RankNTypes #-}
+{-# LANGUAGE CPP, GeneralizedNewtypeDeriving, OverloadedStrings, RankNTypes #-}
 module Rest.Driver.Wai (apiToApplication) where
 
 import Control.Applicative
@@ -25,9 +25,16 @@ import qualified Rest.Driver.Types as Rest
 
 apiToApplication :: Run m IO -> Api m -> Application
 apiToApplication run api req =
+#if MIN_VERSION_wai(3,0,0)
+  \cont ->
   do ri <- toRestInput req
      (bs, ro) <- runRestM ri (Rest.apiToHandler' (lift . run) api)
-     return (fromRestOutput ro bs)
+     cont (fromRestOutput ro bs)
+#else
+  do ri <- toRestInput req
+     (bs, ro) <- runRestM ri (Rest.apiToHandler' (lift . run) api)
+     return $ fromRestOutput ro bs
+#endif
 
 toRestInput :: Request -> IO RestInput
 toRestInput req =
