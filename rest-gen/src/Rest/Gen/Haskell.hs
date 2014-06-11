@@ -20,6 +20,7 @@ import Prelude hiding (id, (.))
 import Safe
 import System.Directory
 import System.FilePath
+import qualified Data.Generics.Uniplate.Data                 as U
 import qualified Distribution.ModuleName                     as Cabal
 import qualified Distribution.Package                        as Cabal
 import qualified Distribution.PackageDescription             as Cabal
@@ -113,7 +114,7 @@ mkRes ctx node = H.prettyPrint $ buildHaskellModule ctx node pragmas warningText
 buildHaskellModule :: HaskellContext -> ApiResource ->
                       [H.ModulePragma] -> Maybe H.WarningText ->
                       H.Module
-buildHaskellModule ctx node pragmas warningText = H.Module noLoc name pragmas warningText exportSpecs importDecls decls
+buildHaskellModule ctx node pragmas warningText = rewriteModuleNames (rewrites ctx) $ H.Module noLoc name pragmas warningText exportSpecs importDecls decls
   where
     name = H.ModuleName $ qualModName $ namespace ctx ++ resId node
     exportSpecs = Nothing
@@ -138,6 +139,11 @@ buildHaskellModule ctx node pragmas warningText = H.Module noLoc name pragmas wa
       where importName = qualModName $ namespace ctx ++ p
             importAs = fmap (H.ModuleName . modName) . lastMay $ p
 
+rewriteModuleNames :: [(H.ModuleName, H.ModuleName)] -> H.Module -> H.Module
+rewriteModuleNames rews = U.transformBi $ \qn -> case qn of
+  H.Qual m n -> H.Qual (lookupJustDef m m rews) n
+  _ -> qn
+
 noBinds :: H.Binds
 noBinds = H.BDecls []
 
@@ -160,11 +166,11 @@ mkFunction ver res (ApiAction _ lnk ai) =
        fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]]
                  (fTypify tyParts)
          where cls = H.Ident "ApiStateC"
-               m = H.TyVar $ H.Ident $ "m"
+               m = H.TyVar $ H.Ident "m"
                fTypify :: [H.Type] -> H.Type
                fTypify [ty1, ty2] = H.TyFun ty1 ty2
                fTypify (ty1 : tys) = H.TyFun ty1 (fTypify tys)
-               fTypify _ = error "Rest.Gen.Haskell.mkFunction.fTypify - expects at least two types"
+               fTypify [] = H.TyApp m (H.TyCon (H.Special H.UnitCon))
                tyParts = map qualIdent lPars
                          ++ maybe [] (return . Ident.haskellType) (ident ai)
                          ++ inp
