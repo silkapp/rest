@@ -114,7 +114,9 @@ mkRes ctx node = H.prettyPrint $ buildHaskellModule ctx node pragmas warningText
 buildHaskellModule :: HaskellContext -> ApiResource ->
                       [H.ModulePragma] -> Maybe H.WarningText ->
                       H.Module
-buildHaskellModule ctx node pragmas warningText = rewriteModuleNames (rewrites ctx) $ H.Module noLoc name pragmas warningText exportSpecs importDecls decls
+buildHaskellModule ctx node pragmas warningText =
+  rewriteModuleNames (rewrites ctx) $
+     H.Module noLoc name pragmas warningText exportSpecs importDecls decls
   where
     name = H.ModuleName $ qualModName $ namespace ctx ++ resId node
     exportSpecs = Nothing
