@@ -8,12 +8,14 @@ import Data.Maybe
 import Code.Build
 import Code.Build.Ruby
 
+import qualified Language.Haskell.Exts.Syntax as H
+
 import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
 
-mkRbApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
+mkRbApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =
   do prelude <- readContent "Ruby/base.rb"
      let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
