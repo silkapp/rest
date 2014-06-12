@@ -76,6 +76,7 @@ library
     , split >= 0.1 && < 0.3
     , tagged >= 0.2 && < 0.8
     , text >= 0.11 && < 1.2
+    , uniplate >= 1.6.12 && < 1.7
     , unordered-containers == 0.2.*
     , utf8-string == 0.3.*
     , vector == 0.10.*
