@@ -2,8 +2,7 @@
 module Api.Post.Comment (resource) where
 
 import Control.Concurrent.STM (atomically, modifyTVar', readTVar)
-import Control.Monad.Reader (ask, asks)
-import Control.Monad.Trans (lift, liftIO)
+import Control.Monad.Reader
 import Data.List
 import Data.Monoid
 import Data.Ord
@@ -21,13 +20,17 @@ import Type.UserComment (UserComment (UserComment))
 import qualified Type.Comment as Comment
 import qualified Type.User    as User
 
+type Identifier = String
 
-resource :: Resource WithPost WithPost Void () Void
-resource = mkResourceId
+type WithComment = ReaderT Identifier WithPost
+
+resource :: Resource WithPost WithComment Identifier () Void
+resource = mkResourceReader
   { R.name   = "comment"
-  , R.schema = withListing () $ named []
+  , R.schema = withListing () $ named [("id", singleRead id)]
   , R.list   = const list
   , R.create = Just create -- PUT /post to create a new Post.
+  , R.remove = Just remove
   }
 
 list :: ListHandler WithPost
@@ -46,6 +49,9 @@ create = mkInputHandler (xmlJson) $ \ucomm -> do
   liftIO . atomically $
     modifyTVar' comms (H.insertWith (<>) post (Set.singleton comm))
   return comm
+
+remove :: Handler WithComment
+remove = mkConstHandler xmlJsonO $ return ()
 
 userCommentToComment :: UserComment -> IO Comment
 userCommentToComment (UserComment u content) = do
