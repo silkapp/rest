@@ -39,7 +39,7 @@ Library
     , mtl >= 2.0 && < 2.3
     , resourcet == 1.1.*
     , primitive == 0.5.*
-    , exceptions == 0.5.*
+    , exceptions >= 0.5 && < 0.7
     , rest-types == 1.10.*
     , tostring == 0.2.*
     , transformers-base == 0.4.*
