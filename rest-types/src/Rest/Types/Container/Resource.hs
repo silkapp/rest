@@ -2,6 +2,8 @@
     DeriveDataTypeable
   , DeriveGeneric
   , EmptyDataDecls
+  , GeneralizedNewtypeDeriving
+  , StandaloneDeriving
   , TemplateHaskell
   , TypeFamilies
   #-}
@@ -22,20 +24,20 @@ import Generics.Regular (PF, deriveAll)
 import Generics.Regular.XmlPickler (gxpickle)
 import Rest.StringMap.HashMap.Strict (StringHashMap)
 import Text.XML.HXT.Arrow.Pickle
-import qualified Data.JSON.Schema as Json
+import qualified Data.JSON.Schema.Combinators as Json
 
 type KeyValues = StringHashMap String Value
 
-newtype Value = Value { unValue :: String } deriving (Show, Typeable)
+newtype Value = Value { unValue :: String }
+  deriving (Show, Typeable)
+
+deriving instance ToJSON Value
+deriving instance FromJSON Value
+instance JSONSchema Value where
+  schema _ = Json.value
 
 instance XmlPickler Value where
   xpickle = xpElem "value" $ xpWrap (Value, unValue) xpText0
-
-instance ToJSON   Value where toJSON    = toJSON . unValue
-instance FromJSON Value where parseJSON = fmap Value . parseJSON
-
-instance JSONSchema Value where
-  schema _ = Json.Value 0 (-1)
 
 data Resource = Resource
   { uri        :: String

@@ -4,7 +4,7 @@ module Rest.StringMap.Util
   , mapSchema
   ) where
 
-import Data.JSON.Schema (JSONSchema, Schema, Value (Map), schema)
+import Data.JSON.Schema (JSONSchema, Schema (Map), schema)
 import Data.Proxy (Proxy)
 import Data.String (IsString (..))
 import Data.String.ToString (ToString (..))

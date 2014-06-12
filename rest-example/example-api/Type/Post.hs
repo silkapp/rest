@@ -9,6 +9,7 @@ module Type.Post where
 
 import Data.Aeson
 import Data.JSON.Schema
+import Data.JSON.Schema.Combinators
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Typeable
@@ -39,4 +40,4 @@ instance ToJSON     Post
 instance FromJSON   Post
 
 instance XmlPickler UTCTime where xpickle = xpPrim
-instance JSONSchema UTCTime where schema _ = Value 0 (-1)
+instance JSONSchema UTCTime where schema _ = value
