@@ -55,9 +55,9 @@ resource = mkResourceReader
   }
 ```
 
-The first field we update just sets the string that will be used for this resource in urls. The
-second field is more interesting. It defines the routes that are available on this resource. In this
-case, we define a top level listing, and a way to get a single post by title. The listing will be
+The 'name' field just sets the string that will be used for this resource in urls. The 'schema'
+field is more interesting. It defines the routes that are available on this resource. In this case,
+we define a top level listing, and a way to get a single post by title. The listing will be
 available on the path `/post`, and the indiviual items on paths like `/post/title/<title>`.
 
 The argument to `withListing` is the identifier for the type of listing, corresponding to the type
@@ -87,9 +87,9 @@ get = mkIdHandler xmlJsonO $ \_ title -> liftIO $ readPostFromDb title
 readPostFromDb :: Title -> IO Post
 ```
 
-The `mkIdHander` constructor takes two arguments. The first argument is the I/O dictionary. It
-describes the types of inputs and outputs accepted by your handler. In this case we allow output in
-either XML or JSON format. To do this, our output type `Post` needs instances for the `XmlPicker`
+The `mkIdHandler` smart constructor takes two arguments. The first argument is the I/O dictionary.
+It describes the types of inputs and outputs accepted by your handler. In this case we allow output
+in either XML or JSON format. To do this, our output type `Post` needs instances for the `XmlPicker`
 and `ToJSON`, `FromJSON` and `JSONSchema` classes.
 
 The code for listings is very similar:
@@ -194,7 +194,7 @@ The last component indicates an incremental change that doesn't break API client
 An actual API is a list of versioned routers. This means that if you add a new version, clients can
 still keep accessing the old version until they upgrade their code. For minor upgrade, if a client
 requests version `x.y.z` we will serve `x.y.w` where `w` is the largest available version larger
-than `z`.
+than or equal to `z`.
 
 ``` haskell
 api :: Api IO
@@ -207,7 +207,7 @@ You can run your API in several different web frameworks. At this moment there a
 [happstack](http://hackage.haskell.org/package/rest-happstack),
 [snap](http://hackage.haskell.org/package/rest-happstack) and
 [wai](http://hackage.haskell.org/package/rest-wai). In this tutorial I'll show how to run the API in
-happstack, but code for other frameworks is very similar.
+happstack, but the code for other frameworks is very similar.
 
 To run your api, you need to convert from the monad your API is running in (`IO` in our case) to the
 monad used for the web framework (`ServerPartT IO` for happstack). In this case, that's just
@@ -256,7 +256,7 @@ When running your generetion executable, you can now pass several flags:
 There are three additional arguments that you can pass to `generate` to customize it further. The
 first is a list of modules that are added to the `exposed-modules` for the generated Haskell client.
 This can be useful if you add some custom hand-written modules to your automatically generated
-client. The second one contains a list of extra imports added to every generated modules. The third
+client. The second one contains a list of extra imports added to every generated module. The third
 is a list of rewrites to perform on the imported modules, replacing the first by the second. This
 can be needed for packages that have `Internal` modules, to rewrite those imports to the
 non-internal versions.
@@ -272,7 +272,8 @@ change the output directory using `--target=<output-dir>`.
 You can use the generation code to produce static documentation files and serve those, but there is
 another option. The API server running your API can also dynamically serve the corresponding
 documentation as well. Currently this is only supported for the happstack driver, but it should be
-easy to implement for other frameworks as well.
+easy to implement for other frameworks as well (see [ticket
+#16](https://github.com/silkapp/rest/issues/16)).
 
 To serve the documentation, just call `apiDocsHandler` with a root url where the documentation will
 be served, a template directory and your API. This gives you a happstack handler that you can mount
@@ -311,11 +312,11 @@ API. The simplest instance is the `ApiT` transformer, which you can easily run:
 run :: String -> ApiT IO a -> IO a
 ```
 
-You pass in the url of the API as the first argument (port 80 is used) and then runs the API calls
-which are the second argument. To list the posts, we would do something like:
+You pass in the url (host and path) of the API as the first argument (port 80 is used) and then runs
+the API calls which are the second argument. To list the posts, we would do something like:
 
 ``` haskell
-run "my.local.example" (Post.list [])
+run "my.local.example/api" (Post.list [])
 ```
 
 The list argument can contain query parameters, like 'count' and 'limit'. Running this gives us back
