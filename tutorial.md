@@ -329,8 +329,8 @@ change the output directory using `--target=<output-dir>`.
 You can use the generation code to produce static documentation files and serve those, but there is
 another option. The API server running your API can also dynamically serve the corresponding
 documentation as well. Currently this is only supported for the happstack driver, but it should be
-easy to implement for other frameworks as well (see [ticket
-#16](https://github.com/silkapp/rest/issues/16)).
+easy to implement for other frameworks as well (see
+[ticket&nbsp;#16](https://github.com/silkapp/rest/issues/16)).
 
 To serve the documentation, just call `apiDocsHandler` with a root url where the documentation will
 be served, a template directory and your API. This gives you a happstack handler that you can mount
