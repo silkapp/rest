@@ -58,7 +58,7 @@ resource = mkResourceReader
 The 'name' field just sets the string that will be used for this resource in urls. The 'schema'
 field is more interesting. It defines the routes that are available on this resource. In this case,
 we define a top level listing, and a way to get a single post by title. The listing will be
-available on the path `/post`, and the indiviual items on paths like `/post/title/<title>`.
+available on the path `/post`, and the individual items on paths like `/post/title/<title>`.
 
 The argument to `withListing` is the identifier for the type of listing, corresponding to the type
 parameter `mid` that we saw before. Later we'll see when you would use a different type here.
@@ -242,11 +242,11 @@ function. They just have different precedences to make composing them without pa
 ## Versioning your API
 
 To turn the `Router` we just made into a runnable API, there's one more step to take: we have to add
-a verion to our API. All APIs build with the 'rest' packages have a version string that is prepended
-to all urls. It contains three components, which have the same semantics as the [Haskell package
-versioning policy] and are also similary to [semantic versioning] in general: a change in the first two
-components indicates a breaking change, where clients of your API would have to change their code.
-The last component indicates an incremental change that doesn't break API clients.
+a version to our API. All APIs build with the 'rest' packages have a version string that is
+prepended to all urls. It contains three components, which have the same semantics as the [Haskell
+package versioning policy] and are also similarly to [semantic versioning] in general: a change in
+the first two components indicates a breaking change, where clients of your API would have to change
+their code.  The last component indicates an incremental change that doesn't break API clients.
 
 An actual API is a list of versioned routers. This means that if you add a new version, clients can
 still keep accessing the old version until they upgrade their code. For minor upgrade, if a client
@@ -297,7 +297,7 @@ options configuring the code generation. Using this configuration, you call `gen
 the code. In addition to the configuration, you pass a name used for the generated API object in
 e.g. Javascript, and the actual API code.
 
-When running your generetion executable, you can now pass several flags:
+When running your generation executable, you can now pass several flags:
 
 ```
   -d URLROOT   --documentation=URLROOT  Generate API documentation, available under the provided URL root.
@@ -345,7 +345,7 @@ which will output client code to `./client`. You can change the output directory
 This will generate a client library. It has a module for each resource in the API, as well as a
 cabal file exposing these modules and depending on a few needed libraries. You will have to add your
 own dependencies as well to get your domain types in scope. It is a good design to have three
-packages: 'something-api' containing the runnabe API, 'something-client' for talking to this API,
+packages: 'something-api' containing the runnable API, 'something-client' for talking to this API,
 and 'something-types' which contains shared types between the two.
 
 Let's look at the generated code for the 'post' API resource:
