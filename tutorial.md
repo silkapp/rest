@@ -123,6 +123,63 @@ resources:
 * `selects`: Small subobjects of an identified resource. These could be a singleton subresource, but
   sometimes having them on their parent is easier.
 
+### More complex identifiers
+
+So far, the identifiers (`sid`, `mid` and `aid`) have been very simple: `Void` indicating nothing to
+identify, `()` for a single listing with no extra data, or a simple type like `String` to identify a
+single resource. But we can use these types in more advanced ways, to have multiple listings or
+identify a single resource in multiple ways.
+
+Let's say we're defining a resource for user objects. We might want to identify these users either
+by email address, or by a unique (integer) ID assigned on creation. To do this, we define a sum type
+representing this choice:
+
+```
+data UserId = ByEmail String | ById Int
+```
+
+Now we use this type as the single resource identifier. In the schema, we define two urls: one for
+selecting users by email (`/user/email/<email>`), and one for selecting users by id
+(`/user/id/<id>`).  The `get` handler then gets this identifier as input, and can pattern match on
+it to find the user in the correct way.
+
+```
+resource :: Resource IO (ReaderT UserId IO) UserId Void Void
+resource = mkResourceReader
+  { R.name   = "post"
+  , R.schema = noListing $ named [ ( "email", singleBy   ByEmail )
+                                 , ( "id"   , singleRead ById    )
+                                 ]
+  , R.get    = Just get
+  }
+
+get :: Handler (ReaderT UserId IO)
+get = mkIdHandler xmlJsonO $ \_ userId -> liftIO $ findUser userId
+
+findUser :: UserId -> IO User
+findUser (ByEmail email) = ...
+findUser (ById    id_  ) = ...
+```
+
+We can use the listing identifier in a similar way. For example, in our handler for posts, we might
+want to have a full listing, as well as a listing by author. To do this, we define another sum type,
+use it as the listing identifier, and pattern match on it in the list handler.
+
+```
+data ListId = All | ByAuthorId Int
+
+resource :: Resource IO (ReaderT Title IO) Title ListId Void
+resource = mkResourceReader
+  { R.name   = "post"
+  , R.schema = withListing All $ named [("author", listingRead ByAuthorId)]
+  , R.list   = list
+  }
+
+list :: ListId -> ListHandler IO
+list All              = ...
+list (ByAuthorId id_) = ...
+```
+
 ### Error handling in handlers
 
 The body of a handler of type `Handler m` doesn't run directly in `m`. Instead, it runs in an
