@@ -1,7 +1,6 @@
 module Main (main) where
 
-import Language.Haskell.Exts
-
+import Rest.Gen.Types
 import qualified Rest.Gen        as Gen
 import qualified Rest.Gen.Config as Gen
 

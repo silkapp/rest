@@ -140,7 +140,6 @@ executable rest-example-gen
     buildable: True
     build-depends:
         base >= 4.6 && < 4.8
-      , haskell-src-exts
       , mtl
       , rest-core
       , rest-example
