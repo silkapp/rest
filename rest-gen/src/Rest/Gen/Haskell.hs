@@ -134,9 +134,9 @@ buildHaskellModule ctx node pragmas warningText =
 
     (funcs, datImp) = second (nub . concat) . unzip . map (mkFunction (apiVersion ctx) . resName $ node) $ resItems node
     mkImport p = (namedImport importName) { H.importQualified = True,
-                                            H.importAs = importAs }
+                                            H.importAs = importAs' }
       where importName = qualModName $ namespace ctx ++ p
-            importAs = fmap (H.ModuleName . modName) . lastMay $ p
+            importAs' = fmap (H.ModuleName . modName) . lastMay $ p
 
 rewriteModuleNames :: [(H.ModuleName, H.ModuleName)] -> H.Module -> H.Module
 rewriteModuleNames rews = U.transformBi $ \m -> lookupJustDef m m rews

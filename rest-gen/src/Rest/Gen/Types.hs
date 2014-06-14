@@ -8,41 +8,44 @@ module Rest.Gen.Types
   , haskellUnitType
   , haskellSimpleType
   , noLoc
+  , ModuleName (..)
+  , ImportDecl (..)
   ) where
 
--- import Code.Build
-import qualified Language.Haskell.Exts.Syntax as H
 import Language.Haskell.Exts.SrcLoc (noLoc)
+import Language.Haskell.Exts.Syntax (ImportDecl (..), ModuleName (..), Name (..), QName (..), SpecialCon (..), Type (..))
 
-unModuleName :: H.ModuleName -> String
-unModuleName (H.ModuleName name) = name
+unModuleName :: ModuleName -> String
+unModuleName (ModuleName name) = name
 
-overModuleName :: (String -> String) -> H.ModuleName -> H.ModuleName
-overModuleName f = H.ModuleName . f . unModuleName
+overModuleName :: (String -> String) -> ModuleName -> ModuleName
+overModuleName f = ModuleName . f . unModuleName
 
 -- | Create a simple named basic import, to be updated with other fields
 --   as needed.
-namedImport :: String -> H.ImportDecl
-namedImport name = H.ImportDecl { H.importLoc       = noLoc,
-                                  H.importQualified = False,
-                                  H.importModule    = H.ModuleName name,
-                                  H.importSrc       = False,
-                                  H.importPkg       = Nothing,
-                                  H.importAs        = Nothing,
-                                  H.importSpecs     = Nothing }
+namedImport :: String -> ImportDecl
+namedImport name = ImportDecl
+  { importLoc       = noLoc
+  , importQualified = False
+  , importModule    = ModuleName name
+  , importSrc       = False
+  , importPkg       = Nothing
+  , importAs        = Nothing
+  , importSpecs     = Nothing
+  }
 
 -- | Qualified import with given name
-qualImport :: String -> H.ImportDecl
-qualImport name = (namedImport name) { H.importQualified = True }
+qualImport :: String -> ImportDecl
+qualImport name = (namedImport name) { importQualified = True }
 
-haskellStringType :: H.Type
+haskellStringType :: Type
 haskellStringType = haskellSimpleType "String"
 
-haskellByteStringType :: H.Type
+haskellByteStringType :: Type
 haskellByteStringType = haskellSimpleType "ByteString"
 
-haskellSimpleType :: String -> H.Type
-haskellSimpleType = H.TyCon . H.UnQual . H.Ident
+haskellSimpleType :: String -> Type
+haskellSimpleType = TyCon . UnQual . Ident
 
-haskellUnitType :: H.Type
-haskellUnitType = H.TyCon (H.Special H.UnitCon)
+haskellUnitType :: Type
+haskellUnitType = TyCon (Special UnitCon)
