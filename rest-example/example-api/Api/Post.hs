@@ -5,7 +5,8 @@ module Api.Post
   , resource
   ) where
 
-import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
+import Control.Applicative
+import Control.Concurrent.STM (STM, TVar, atomically, modifyTVar, readTVar)
 import Control.Monad (unless)
 import Control.Monad.Error (ErrorT, throwError)
 import Control.Monad.Reader (ReaderT, asks)
@@ -15,6 +16,7 @@ import Data.Ord (comparing)
 import Data.Set (Set)
 import Data.Time
 import Data.Typeable
+import Safe
 import qualified Data.Foldable as F
 import qualified Data.Set      as Set
 import qualified Data.Text     as T
@@ -61,14 +63,19 @@ resource = mkResourceReader
   , R.get    = Just get
   }
 
+postFromIdentifier :: Identifier -> TVar (Set Post) -> STM (Maybe Post)
+postFromIdentifier i pv = finder <$> readTVar pv
+  where
+    finder = case i of
+      ById ident -> F.find ((== ident) . Post.id) . Set.toList
+      Latest     -> headMay . sortBy (flip $ comparing Post.createdTime) . Set.toList
+
 get :: Handler WithPost
-get = mkIdHandler xmlJsonO $ \_ i -> case i of
-    ById ident -> do
-      psts <- liftIO . atomically . readTVar =<< (lift . lift) (asks posts)
-      let au = filter (\p -> Post.id p == ident) . Set.toList $ psts
-      case au of
-        []    -> throwError NotFound
-        (a:_) -> return a
+get = mkIdHandler xmlJsonO $ \_ i -> do
+  mpost <- liftIO . atomically . postFromIdentifier i =<< (lift . lift) (asks posts)
+  case mpost of
+    Nothing -> throwError NotFound
+    Just a  -> return a
 
 -- | List Posts with the most recent posts first.
 list :: ListHandler BlogApi

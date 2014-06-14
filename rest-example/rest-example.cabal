@@ -46,6 +46,7 @@ library
     , regular-xmlpickler
     , rest-core
     , rest-types
+    , safe
     , stm
     , text
     , time
