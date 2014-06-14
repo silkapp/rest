@@ -37,23 +37,20 @@ resource = mkResourceReader
 
 list :: ListHandler WithPost
 list = mkListing xmlJsonO $ \r -> do
-  mpostId <- getPostId
-  case mpostId of
-    Nothing -> throwError NotFound
-    Just postId -> do
-      comms <- liftIO . atomically . readTVar
-           =<< (lift . lift) (asks comments)
-      return . take (count r) . drop (offset r)
-             . sortBy (flip $ comparing Comment.createdTime)
-             . maybe [] Set.toList . H.lookup postId $ comms
+  postId <- getPostId `orThrow` NotFound
+  comms <- liftIO . atomically . readTVar
+       =<< (lift . lift) (asks comments)
+  return . take (count r) . drop (offset r)
+         . sortBy (flip $ comparing Comment.createdTime)
+         . maybe [] Set.toList . H.lookup postId $ comms
 
 create :: Handler WithPost
 create = mkInputHandler (xmlJson) $ \ucomm -> do
-  post  <- undefined -- ask
-  comm  <- liftIO $ userCommentToComment ucomm
-  comms <- lift . lift $ asks comments
+  postId <- getPostId `orThrow` NotFound
+  comm   <- liftIO $ userCommentToComment ucomm
+  comms  <- lift . lift $ asks comments
   liftIO . atomically $
-    modifyTVar' comms (H.insertWith (<>) post (Set.singleton comm))
+    modifyTVar' comms (H.insertWith (<>) postId (Set.singleton comm))
   return comm
 
 remove :: Handler WithComment
