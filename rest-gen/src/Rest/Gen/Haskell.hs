@@ -275,7 +275,7 @@ idData node =
             where (fparams, rhs) =
                     case mi of
                       Nothing ->
-                        ([H.PWildCard],
+                        ([H.PVar $ H.Ident (dataName pth)],
                          (H.UnGuardedRhs $ H.List [H.Lit (H.String pth)]))
                       Just{}  ->  -- Pattern match with data constructor
                         ([H.PParen $ H.PApp (H.UnQual $ H.Ident (dataName pth)) [H.PVar x]],
