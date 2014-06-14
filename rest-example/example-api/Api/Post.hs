@@ -1,4 +1,9 @@
-module Api.Post (resource, WithPost) where
+{-# LANGUAGE DeriveDataTypeable #-}
+module Api.Post
+  ( Identifier (..)
+  , WithPost
+  , resource
+  ) where
 
 import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
 import Control.Monad (unless)
@@ -9,12 +14,14 @@ import Data.List (sortBy)
 import Data.Ord (comparing)
 import Data.Set (Set)
 import Data.Time
+import Data.Typeable
 import qualified Data.Foldable as F
 import qualified Data.Set      as Set
 import qualified Data.Text     as T
 
-import Rest (Handler, ListHandler, Range (..), Reason (..), Resource, Void, domainReason, mkInputHandler, mkIdHandler, mkListing, mkResourceReader, named, singleRead,
-             withListing, xmlJson, xmlJsonE, xmlJsonO)
+import Rest
+import Rest.Info
+import Rest.Types.ShowUrl
 import qualified Rest.Resource as R
 
 import ApiTypes
@@ -27,27 +34,41 @@ import qualified Type.CreatePost as CreatePost
 import qualified Type.Post       as Post
 import qualified Type.User       as User
 
+data Identifier
+  = Latest
+  | ById Int
+  deriving (Eq, Show, Read, Typeable)
+
+instance Info Identifier where
+  describe _ = "identifier"
+
+instance ShowUrl Identifier where
+  showUrl Latest = "latest"
+  showUrl (ById i) = show i
+
+
 -- | Post extends the root of the API with a reader containing the ways to identify a Post in our URLs.
 -- Currently only by the title of the post.
-type WithPost = ReaderT Int BlogApi
+type WithPost = ReaderT Identifier BlogApi
 
 -- | Defines the /post api end-point.
-resource :: Resource BlogApi WithPost Int () Void
+resource :: Resource BlogApi WithPost Identifier () Void
 resource = mkResourceReader
   { R.name   = "post" -- Name of the HTTP path segment.
-  , R.schema = withListing () $ named [("id", singleRead id)]
+  , R.schema = withListing () $ named [("id", singleRead ById), ("latest", single Latest)]
   , R.list   = const list -- list is requested by GET /post which gives a listing of posts.
   , R.create = Just create -- PUT /post to create a new Post.
   , R.get    = Just get
   }
 
 get :: Handler WithPost
-get = mkIdHandler xmlJsonO $ \_ ident -> do
-  psts <- liftIO . atomically . readTVar =<< (lift . lift) (asks posts)
-  let au = filter (\p -> Post.id p == ident) . Set.toList $ psts
-  case au of
-    []    -> throwError NotFound
-    (a:_) -> return a
+get = mkIdHandler xmlJsonO $ \_ i -> case i of
+    ById ident -> do
+      psts <- liftIO . atomically . readTVar =<< (lift . lift) (asks posts)
+      let au = filter (\p -> Post.id p == ident) . Set.toList $ psts
+      case au of
+        []    -> throwError NotFound
+        (a:_) -> return a
 
 -- | List Posts with the most recent posts first.
 list :: ListHandler BlogApi

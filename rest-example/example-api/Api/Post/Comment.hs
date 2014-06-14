@@ -35,7 +35,7 @@ resource = mkResourceReader
 
 list :: ListHandler WithPost
 list = mkListing xmlJsonO $ \r -> do
-  post  <- ask
+  post  <- undefined -- ask
   comms <- liftIO . atomically . readTVar =<< (lift . lift) (asks comments)
   return . take (count r) . drop (offset r)
          . sortBy (flip $ comparing Comment.createdTime)
@@ -43,7 +43,7 @@ list = mkListing xmlJsonO $ \r -> do
 
 create :: Handler WithPost
 create = mkInputHandler (xmlJson) $ \ucomm -> do
-  post  <- ask
+  post  <- undefined -- ask
   comm  <- liftIO $ userCommentToComment ucomm
   comms <- lift . lift $ asks comments
   liftIO . atomically $
