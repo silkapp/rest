@@ -37,10 +37,7 @@ resource = mkResourceReader
 
 list :: ListHandler WithPost
 list = mkListing xmlJsonO $ \r -> do
-  postIdent <- ask
-  mpostId <- return . fmap Post.id
-         =<< liftIO . atomically . postFromIdentifier postIdent
-         =<< (lift . lift) (asks posts)
+  mpostId <- getPostId
   case mpostId of
     Nothing -> throwError NotFound
     Just postId -> do
@@ -61,6 +58,13 @@ create = mkInputHandler (xmlJson) $ \ucomm -> do
 
 remove :: Handler WithComment
 remove = mkConstHandler xmlJsonO $ return ()
+
+getPostId :: ErrorT (Reason ()) WithPost (Maybe Post.Id)
+getPostId = do
+  postIdent <- ask
+  return . fmap Post.id
+        =<< liftIO . atomically . postFromIdentifier postIdent
+        =<< (lift . lift) (asks posts)
 
 userCommentToComment :: UserComment -> IO Comment
 userCommentToComment (UserComment u content) = do
