@@ -45,4 +45,4 @@ haskellSimpleType :: String -> H.Type
 haskellSimpleType = H.TyCon . H.UnQual . H.Ident
 
 haskellUnitType :: H.Type
-haskellUnitType = H.TyTuple H.Boxed []
+haskellUnitType = H.TyCon (H.Special H.UnitCon)
