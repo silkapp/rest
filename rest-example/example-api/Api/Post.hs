@@ -49,7 +49,6 @@ instance ShowUrl Identifier where
   showUrl Latest = "latest"
   showUrl (ById i) = show i
 
-
 -- | Post extends the root of the API with a reader containing the ways to identify a Post in our URLs.
 -- Currently only by the title of the post.
 type WithPost = ReaderT Identifier BlogApi
@@ -62,6 +61,7 @@ resource = mkResourceReader
   , R.list   = const list -- list is requested by GET /post which gives a listing of posts.
   , R.create = Just create -- PUT /post to create a new Post.
   , R.get    = Just get
+  , R.remove = Just remove
   }
 
 postFromIdentifier :: Identifier -> TVar (Set Post) -> STM (Maybe Post)
@@ -100,6 +100,16 @@ create = mkInputHandler (xmlJsonE . xmlJson) $ \(UserPost usr pst) -> do
         then return . Just $ domainReason (const 400) InvalidContent
         else modifyTVar pstsVar (Set.insert post) >> return Nothing
   maybe (return post) throwError merr
+
+remove :: Handler WithPost
+remove = mkIdHandler id $ \_ i -> do
+  pstsVar <- lift . lift $ asks posts
+  merr <- liftIO . atomically $ do
+    mpost <- postFromIdentifier i pstsVar
+    case mpost of
+      Nothing -> return . Just $ NotFound
+      Just post -> modifyTVar pstsVar (Set.delete post) >> return Nothing
+  maybe (return ()) throwError merr
 
 -- | Convert a User and CreatePost into a Post that can be saved.
 toPost :: Int -> User -> CreatePost -> IO Post

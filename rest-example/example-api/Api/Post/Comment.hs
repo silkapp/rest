@@ -32,7 +32,6 @@ resource = mkResourceReader
   , R.schema = withListing () $ named [("id", singleRead id)]
   , R.list   = const list
   , R.create = Just create -- PUT /post to create a new Post.
-  , R.remove = Just remove
   }
 
 list :: ListHandler WithPost
@@ -52,9 +51,6 @@ create = mkInputHandler (xmlJson) $ \ucomm -> do
   liftIO . atomically $
     modifyTVar' comms (H.insertWith (<>) postId (Set.singleton comm))
   return comm
-
-remove :: Handler WithComment
-remove = mkConstHandler xmlJsonO $ return ()
 
 getPostId :: ErrorT (Reason ()) WithPost (Maybe Post.Id)
 getPostId = do
