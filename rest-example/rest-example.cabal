@@ -47,6 +47,7 @@ library
     , rest-core
     , rest-types
     , safe
+    , transformers
     , stm
     , text
     , time
