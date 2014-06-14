@@ -147,6 +147,10 @@ noBinds = H.BDecls []
 use :: H.Name -> H.Exp
 use = H.Var . H.UnQual
 
+useMQual :: (Maybe H.ModuleName) -> H.Name -> H.Exp
+useMQual Nothing = use
+useMQual (Just qual) = H.Var . (H.Qual $ qual)
+
 mkFunction :: Version -> String -> ApiAction -> ([H.Decl], [H.ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
   ([H.TypeSig noLoc [funName] fType,
@@ -242,9 +246,10 @@ urlParts res lnk ac@(rlnk, pars) =
       | not (hasParam a) -> urlParts res xs (rlnk ++ [H.List [H.Lit $ H.String r]], pars)
       | otherwise -> urlParts res xs (rlnk', pars ++ [H.Ident r])
            where rlnk' = rlnk ++ (H.List [H.Lit $ H.String $ r] : tailed)
-                 tailed | r == res = []
-                        | otherwise = [H.App (use $ H.Ident $ modName r ++ "." ++ "readId")
-                                          (use $ hsName (cleanName r))]
+                 tailed = [H.App (useMQual qual $ H.Ident "readId")
+                                 (use $ hsName (cleanName r))]
+                   where qual | r == res = Nothing
+                              | otherwise = Just $ H.ModuleName $ modName r
     (LParam p : xs) -> urlParts res xs (rlnk ++ [H.List [H.App (use $ H.Ident "showUrl")
                                                           (use $ hsName (cleanName p))]], pars)
     (i : xs) -> urlParts res xs (rlnk ++ [H.List [H.Lit $ H.String $ itemString i]], pars)
