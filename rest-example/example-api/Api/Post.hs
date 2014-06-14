@@ -1,6 +1,13 @@
-module Api.Post (resource, WithPost) where
+{-# LANGUAGE DeriveDataTypeable #-}
+module Api.Post
+  ( Identifier (..)
+  , WithPost
+  , resource
+  , postFromIdentifier
+  ) where
 
-import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
+import Control.Applicative
+import Control.Concurrent.STM (STM, TVar, atomically, modifyTVar, readTVar)
 import Control.Monad (unless)
 import Control.Monad.Error (ErrorT, throwError)
 import Control.Monad.Reader (ReaderT, asks)
@@ -9,12 +16,15 @@ import Data.List (sortBy)
 import Data.Ord (comparing)
 import Data.Set (Set)
 import Data.Time
+import Data.Typeable
+import Safe
 import qualified Data.Foldable as F
 import qualified Data.Set      as Set
 import qualified Data.Text     as T
 
-import Rest (Handler, ListHandler, Range (..), Reason (..), Resource, Void, domainReason, mkInputHandler, mkIdHandler, mkListing, mkResourceReader, named, singleRead,
-             withListing, xmlJson, xmlJsonE, xmlJsonO)
+import Rest
+import Rest.Info
+import Rest.Types.ShowUrl
 import qualified Rest.Resource as R
 
 import ApiTypes
@@ -27,27 +37,46 @@ import qualified Type.CreatePost as CreatePost
 import qualified Type.Post       as Post
 import qualified Type.User       as User
 
+data Identifier
+  = Latest
+  | ById Int
+  deriving (Eq, Show, Read, Typeable)
+
+instance Info Identifier where
+  describe _ = "identifier"
+
+instance ShowUrl Identifier where
+  showUrl Latest = "latest"
+  showUrl (ById i) = show i
+
 -- | Post extends the root of the API with a reader containing the ways to identify a Post in our URLs.
 -- Currently only by the title of the post.
-type WithPost = ReaderT Int BlogApi
+type WithPost = ReaderT Identifier BlogApi
 
 -- | Defines the /post api end-point.
-resource :: Resource BlogApi WithPost Int () Void
+resource :: Resource BlogApi WithPost Identifier () Void
 resource = mkResourceReader
   { R.name   = "post" -- Name of the HTTP path segment.
-  , R.schema = withListing () $ named [("id", singleRead id)]
+  , R.schema = withListing () $ named [("id", singleRead ById), ("latest", single Latest)]
   , R.list   = const list -- list is requested by GET /post which gives a listing of posts.
   , R.create = Just create -- PUT /post to create a new Post.
   , R.get    = Just get
+  , R.remove = Just remove
   }
 
+postFromIdentifier :: Identifier -> TVar (Set Post) -> STM (Maybe Post)
+postFromIdentifier i pv = finder <$> readTVar pv
+  where
+    finder = case i of
+      ById ident -> F.find ((== ident) . Post.id) . Set.toList
+      Latest     -> headMay . sortBy (flip $ comparing Post.createdTime) . Set.toList
+
 get :: Handler WithPost
-get = mkIdHandler xmlJsonO $ \_ ident -> do
-  psts <- liftIO . atomically . readTVar =<< (lift . lift) (asks posts)
-  let au = filter (\p -> Post.id p == ident) . Set.toList $ psts
-  case au of
-    []    -> throwError NotFound
-    (a:_) -> return a
+get = mkIdHandler xmlJsonO $ \_ i -> do
+  mpost <- liftIO . atomically . postFromIdentifier i =<< (lift . lift) (asks posts)
+  case mpost of
+    Nothing -> throwError NotFound
+    Just a  -> return a
 
 -- | List Posts with the most recent posts first.
 list :: ListHandler BlogApi
@@ -71,6 +100,16 @@ create = mkInputHandler (xmlJsonE . xmlJson) $ \(UserPost usr pst) -> do
         then return . Just $ domainReason (const 400) InvalidContent
         else modifyTVar pstsVar (Set.insert post) >> return Nothing
   maybe (return post) throwError merr
+
+remove :: Handler WithPost
+remove = mkIdHandler id $ \_ i -> do
+  pstsVar <- lift . lift $ asks posts
+  merr <- liftIO . atomically $ do
+    mpost <- postFromIdentifier i pstsVar
+    case mpost of
+      Nothing -> return . Just $ NotFound
+      Just post -> modifyTVar pstsVar (Set.delete post) >> return Nothing
+  maybe (return ()) throwError merr
 
 -- | Convert a User and CreatePost into a Post that can be saved.
 toPost :: Int -> User -> CreatePost -> IO Post

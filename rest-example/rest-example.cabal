@@ -45,6 +45,9 @@ library
     , regular
     , regular-xmlpickler
     , rest-core
+    , rest-types
+    , safe
+    , transformers
     , stm
     , text
     , time
@@ -137,6 +140,7 @@ executable rest-example-gen
     buildable: True
     build-depends:
         base >= 4.6 && < 4.8
+      , haskell-src-exts
       , mtl
       , rest-core
       , rest-example

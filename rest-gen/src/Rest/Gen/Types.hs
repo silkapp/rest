@@ -1,64 +1,48 @@
 module Rest.Gen.Types
-  ( ModuleName (..)
+  ( unModuleName
   , overModuleName
-  , Import (..)
-  , Qualification (..)
-  , QName (..)
-  , Name (..)
+  , namedImport
+  , qualImport
+  , haskellStringType
+  , haskellByteStringType
+  , haskellUnitType
+  , haskellSimpleType
+  , noLoc
   ) where
 
-import Data.List
+-- import Code.Build
+import qualified Language.Haskell.Exts.Syntax as H
+import Language.Haskell.Exts.SrcLoc (noLoc)
 
-import Code.Build
+unModuleName :: H.ModuleName -> String
+unModuleName (H.ModuleName name) = name
 
-newtype ModuleName = ModuleName { unModuleName :: String }
-  deriving (Eq, Show)
+overModuleName :: (String -> String) -> H.ModuleName -> H.ModuleName
+overModuleName f = H.ModuleName . f . unModuleName
 
-instance Codeable ModuleName where
-  code = code . unModuleName
+-- | Create a simple named basic import, to be updated with other fields
+--   as needed.
+namedImport :: String -> H.ImportDecl
+namedImport name = H.ImportDecl { H.importLoc       = noLoc,
+                                  H.importQualified = False,
+                                  H.importModule    = H.ModuleName name,
+                                  H.importSrc       = False,
+                                  H.importPkg       = Nothing,
+                                  H.importAs        = Nothing,
+                                  H.importSpecs     = Nothing }
 
-overModuleName :: (String -> String) -> ModuleName -> ModuleName
-overModuleName f = ModuleName . f . unModuleName
+-- | Qualified import with given name
+qualImport :: String -> H.ImportDecl
+qualImport name = (namedImport name) { H.importQualified = True }
 
-newtype Name = Name { unName :: String }
-  deriving (Eq, Show)
+haskellStringType :: H.Type
+haskellStringType = haskellSimpleType "String"
 
-instance Codeable Name where
-  code = code . unName
+haskellByteStringType :: H.Type
+haskellByteStringType = haskellSimpleType "ByteString"
 
-data QName
-  = Qual ModuleName Name
-  | UnQual Name
-  deriving (Eq, Show)
+haskellSimpleType :: String -> H.Type
+haskellSimpleType = H.TyCon . H.UnQual . H.Ident
 
-instance Codeable QName where
-  code (UnQual n) = code n
-  code (Qual m n) = code m <+> "." <+> code n
-
-data Qualification = Qualified | UnQualified
-  deriving (Eq, Show)
-
-instance Codeable Qualification where
-  code Qualified   = code "qualified"
-  code UnQualified = code ""
-
-data Import
-  = Import Qualification ModuleName (Maybe ModuleName) (Maybe [QName])
-  deriving (Eq, Show)
-
-instance Codeable Import where
-  code i = case i of
-    Import q m mas ids
-      -> "import"
-      <++> q
-      <++> m
-      <++> qualAs
-      <++> maybe (code "") (\v -> "(" <+> impList v <+> ")") ids
-      where
-        qualAs = case mas of
-          Just as
-            | as == m   -> code ""
-            | otherwise -> "as" <++> as
-          Nothing       -> code ""
-        impList :: [QName] -> Code
-        impList = foldl' (<++>) (code "") . intersperse (code ",") . map code
+haskellUnitType :: H.Type
+haskellUnitType = H.TyCon (H.Special H.UnitCon)
