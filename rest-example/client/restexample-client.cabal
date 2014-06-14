@@ -6,7 +6,8 @@ license: AllRightsReserved
  
 library
     build-depends: base ==4.*, rest-types ==1.10.*,
-                   rest-client ==0.2.*, text >=0.10 && <1.2, rest-example -any
+                   rest-client ==0.2.*, text >=0.10 && <1.2, rest-example -any,
+                   rest-stringmap ==0.2.*
     exposed-modules: Restexample.Client.Post
                      Restexample.Client.Post.Comment Restexample.Client.User
     exposed: True
