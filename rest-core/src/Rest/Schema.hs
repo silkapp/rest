@@ -2,8 +2,8 @@
 -- | This module contains data types and combinators for defining a
 -- 'Schema' for your 'Resource'. A 'Schema' has three type parameters,
 -- specifying the identifiers for a single resource, a listing, and a
--- top-level action. After routing, these identifiers will be passed
--- to the 'Handler'.
+-- top-level (static) action. After routing, these identifiers will be
+-- passed to the 'Handler'.
 module Rest.Schema
   ( -- * A set of combinators for creating schemas.
 
@@ -13,7 +13,7 @@ module Rest.Schema
   , singleton
     -- ** Named endpoints
   , named
-  , action
+  , static
   , single
   , singleBy
   , singleRead
@@ -65,10 +65,10 @@ singleton sid = Schema (Just (Single sid))
 named :: [(String, Endpoint sid mid aid)] -> Step sid mid aid
 named = Named
 
--- | An action endpoint.
+-- | A top level endpoint for this resource.
 
-action :: aid -> Endpoint sid mid aid
-action = Left
+static :: aid -> Endpoint sid mid aid
+static = Left
 
 -- | A singleton resource endpoint.
 
@@ -145,7 +145,7 @@ unnamedListingIdent ident = Unnamed . Many . Id ident
 
 -- | A 'Schema' describes how (part of the) route to a resource looks,
 -- and returns an identifier for a single resource ('sid'), many
--- resources ('mid') or an action ('aid').
+-- resources ('mid') or a static action ('aid').
 -- The first argument specifies the top level resource (no path
 -- segments). The second specifies a what happens at the first step in
 -- the path.
@@ -154,7 +154,7 @@ data Schema sid mid aid = Schema (Maybe (Cardinality sid mid)) (Step sid mid aid
 
 -- | A step in the routing of a resource. A part of the uri either
 -- identifies a 'Named' resource, or an 'Unnamed' resource. Named
--- resources can be actions ('Left') or one or many singletons or
+-- resources can be static actions ('Left') or one or many singletons or
 -- by's.
 
 data Step sid mid aid = Named   [(String, Endpoint sid mid aid)]
@@ -176,6 +176,6 @@ data Getter id = Singleton id | By (Id id)
 
 data Id id = forall a. Id (Ident a) (a -> id)
 
--- | A named endpoint: an action, a single item of many items.
+-- | A named endpoint: an static action, a single item of many items.
 
 type Endpoint sid mid aid = Either aid (Cardinality (Getter sid) (Getter mid))
