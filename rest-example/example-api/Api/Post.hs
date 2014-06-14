@@ -3,6 +3,7 @@ module Api.Post
   ( Identifier (..)
   , WithPost
   , resource
+  , postFromIdentifier
   ) where
 
 import Control.Applicative

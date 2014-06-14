@@ -3,6 +3,7 @@ module Api.Post.Comment (resource) where
 
 import Control.Concurrent.STM (atomically, modifyTVar', readTVar)
 import Control.Monad.Reader
+import Control.Monad.Trans.Error
 import Data.List
 import Data.Monoid
 import Data.Ord
@@ -13,11 +14,12 @@ import qualified Data.Set            as Set
 import Rest
 import qualified Rest.Resource as R
 
-import Api.Post (WithPost)
+import Api.Post (WithPost, postFromIdentifier)
 import ApiTypes
 import Type.Comment (Comment (Comment))
 import Type.UserComment (UserComment (UserComment))
 import qualified Type.Comment as Comment
+import qualified Type.Post    as Post
 import qualified Type.User    as User
 
 type Identifier = String
@@ -35,11 +37,18 @@ resource = mkResourceReader
 
 list :: ListHandler WithPost
 list = mkListing xmlJsonO $ \r -> do
-  post  <- undefined -- ask
-  comms <- liftIO . atomically . readTVar =<< (lift . lift) (asks comments)
-  return . take (count r) . drop (offset r)
-         . sortBy (flip $ comparing Comment.createdTime)
-         . maybe [] Set.toList . H.lookup post $ comms
+  postIdent <- ask
+  mpostId <- return . fmap Post.id
+         =<< liftIO . atomically . postFromIdentifier postIdent
+         =<< (lift . lift) (asks posts)
+  case mpostId of
+    Nothing -> throwError NotFound
+    Just postId -> do
+      comms <- liftIO . atomically . readTVar
+           =<< (lift . lift) (asks comments)
+      return . take (count r) . drop (offset r)
+             . sortBy (flip $ comparing Comment.createdTime)
+             . maybe [] Set.toList . H.lookup postId $ comms
 
 create :: Handler WithPost
 create = mkInputHandler (xmlJson) $ \ucomm -> do
