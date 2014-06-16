@@ -65,7 +65,7 @@ singleton sid = Schema (Just (Single sid))
 named :: [(String, Endpoint sid mid aid)] -> Step sid mid aid
 named = Named
 
--- | A top level endpoint for this resource.
+-- | A top level action endpoint for this resource.
 
 static :: aid -> Endpoint sid mid aid
 static = Left
