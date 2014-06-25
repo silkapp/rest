@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0.0
+
+* Replace runT' -> runT, use runResourceT (runT ...) if you want the old behavior
+
+* Allow `http-conduit == 2.1.*
+
 #### 0.2.3.5
 
 * Allow `mtl == 2.2.*`
