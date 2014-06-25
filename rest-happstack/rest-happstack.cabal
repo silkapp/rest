@@ -24,13 +24,10 @@ library
     Rest.Driver.Happstack
     Rest.Driver.Happstack.Docs
   build-depends:
-      base             == 4.*
-    , containers       >= 0.4    && < 0.6
-    , happstack-server >= 7.0.5  && < 7.4
-    , mtl              >= 2.0    && < 2.3
-    , rest-types       == 1.10.*
-    , transformers     >= 0.3 && < 0.5
-    , utf8-string      == 0.3.*
-    , rest-core        >= 0.28 && < 0.31
-    , rest-gen         == 0.13.*
-
+      base == 4.*
+    , containers >= 0.4 && < 0.6
+    , happstack-server >= 7.0.5 && < 7.4
+    , mtl >= 2.0 && < 2.3
+    , rest-core >= 0.28 && < 0.31
+    , rest-gen == 0.13.*
+    , utf8-string == 0.3.*
