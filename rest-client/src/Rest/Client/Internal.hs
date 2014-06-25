@@ -1,6 +1,5 @@
 {-# LANGUAGE
-    CPP
-  , FlexibleInstances
+    FlexibleInstances
   , OverlappingInstances
   , OverloadedStrings
   , UndecidableInstances
@@ -35,6 +34,7 @@ import Control.Arrow
 import Control.Monad
 import Control.Monad.Cont
 import Data.Aeson.Utils (FromJSON, ToJSON, decodeV, encode)
+import Data.Default (def)
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -42,23 +42,17 @@ import Data.String
 import Data.String.ToString
 import Network.HTTP.Conduit hiding (method, responseBody, responseHeaders)
 import Network.HTTP.Types hiding (statusCode, statusMessage)
+import Rest.Types.Error
+import Rest.Types.ShowUrl
 import Text.XML.HXT.Arrow.Pickle
-import qualified Network.HTTP.Types.Header
-#if MIN_VERSION_http_conduit(2,0,0)
-import Data.Default (def)
-#endif
-
 import qualified Data.ByteString.Char8     as CH
 import qualified Data.ByteString.Lazy      as L
 import qualified Data.ByteString.Lazy.UTF8 as L
 import qualified Network.HTTP.Conduit      as HTTP
 import qualified Network.HTTP.Types        as HTTP
-
-import Rest.Types.Error
-import Rest.Types.ShowUrl
-
-import qualified Network.URI.Encode as URI
-import qualified Text.Xml.Pickle    as P
+import qualified Network.HTTP.Types.Header
+import qualified Network.URI.Encode        as URI
+import qualified Text.Xml.Pickle           as P
 
 import Rest.Client.Base
 
