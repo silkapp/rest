@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.2
+
+* Use `json-schema == 0.6.*`
+
 #### 0.2.0.1
 
 * Change `JSONSchema` instances to `Map`
