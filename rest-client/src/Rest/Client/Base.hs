@@ -32,6 +32,7 @@ import Control.Monad.Cont hiding (mapM)
 import Control.Monad.Error hiding (mapM)
 import Control.Monad.Exception
 import Control.Monad.List hiding (mapM)
+import Control.Monad.Primitive (PrimMonad)
 import Control.Monad.RWS hiding (mapM)
 import Control.Monad.Reader hiding (mapM)
 import Control.Monad.State hiding (mapM)
@@ -41,7 +42,6 @@ import Control.Monad.Writer hiding (mapM)
 import Data.ByteString
 import Data.CaseInsensitive
 import Network.HTTP.Conduit hiding (method, responseBody)
-import Control.Monad.Primitive (PrimMonad)
 
 import Rest.Types.Error
 
@@ -132,11 +132,8 @@ instance ApiStateC m => ApiStateC (StateT s m) where
   askApiInfo  = lift askApiInfo
   putApiState = lift . putApiState
 
-runT :: (MonadBaseControl IO m, Monad m) => ApiInfo -> ApiState -> ApiT m a -> m a
-runT inf st api = runResourceT $ runT' inf st api
-
-runT' :: (MonadBaseControl IO m, Monad m) => ApiInfo -> ApiState -> ApiT m a -> ResourceT m a
-runT' inf st api = runReaderT (evalStateT (unApiT api) st) inf
+runT :: (MonadBaseControl IO m, Monad m) => ApiInfo -> ApiState -> ApiT m a -> ResourceT m a
+runT inf st api = runReaderT (evalStateT (unApiT api) st) inf
 
 run :: String -> ApiT IO a -> IO a
 run = flip runWithPort 80
@@ -144,7 +141,7 @@ run = flip runWithPort 80
 runWithPort :: String -> Int -> ApiT IO a -> IO a
 runWithPort hst prt api =
   withManager $ \m ->
-    runT' (ApiInfo m hst prt []) (ApiState (createCookieJar [])) api
+    runT (ApiInfo m hst prt []) (ApiState (createCookieJar [])) api
 
 data ApiResponse e a  =
   ApiResponse
