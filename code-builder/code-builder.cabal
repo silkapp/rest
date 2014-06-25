@@ -29,4 +29,3 @@ library
     Code.Build.Ruby
   build-depends:
       base == 4.*
-    , containers >= 0.3 && < 0.6
