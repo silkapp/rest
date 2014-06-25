@@ -51,34 +51,25 @@ library
     , Cabal >= 1.18 && < 1.22
     , HStringTemplate >= 0.6 && < 0.8
     , aeson >= 0.7 && < 0.8
-    , attoparsec >= 0.10 && < 0.13
     , blaze-html >= 0.5 && < 0.8
-    , bytestring >= 0.9 && < 0.11
     , code-builder == 0.1.*
-    , containers >= 0.4 && < 0.6
     , directory >= 1.1 && < 1.3
     , fclabels >= 1.0.4 && < 2.1
     , filepath >= 1.2 && < 1.4
-    , generic-aeson == 0.1.*
     , hashable >= 1.1 && < 1.3
     , haskell-src-exts >= 1.15.0 && < 1.16.0
     , hslogger >= 1.1 && < 1.3
     , hxt >= 9.2 && < 9.4
     , json-schema == 0.6.*
-    , mtl >= 2.0 && < 2.3
     , pretty >= 1.0 && < 1.2
     , process >= 1.0 && < 1.3
-    , regular == 0.3.*
     , rest-core >= 0.29 && < 0.31
-    , rest-types == 1.10.*
     , safe >= 0.2 && < 0.4
     , scientific >= 0.3.2 && < 0.4
     , split >= 0.1 && < 0.3
-    , tagged >= 0.2 && < 0.8
     , text >= 0.11 && < 1.2
     , uniplate >= 1.6.12 && < 1.7
     , unordered-containers == 0.2.*
-    , utf8-string == 0.3.*
     , vector == 0.10.*
 
 test-suite rest-gen-tests
