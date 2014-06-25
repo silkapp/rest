@@ -94,7 +94,7 @@ mkCondLibrary modules = Cabal.CondNode
   , Cabal.condTreeConstraints =
      [ Cabal.Dependency (Cabal.PackageName "base")        (Cabal.withinVersion $ Cabal.Version [4]     [])
      , Cabal.Dependency (Cabal.PackageName "rest-types")  (Cabal.withinVersion $ Cabal.Version [1, 10] [])
-     , Cabal.Dependency (Cabal.PackageName "rest-client") (Cabal.withinVersion $ Cabal.Version [0, 3]  [])
+     , Cabal.Dependency (Cabal.PackageName "rest-client") (Cabal.withinVersion $ Cabal.Version [0,  4] [])
      ]
   , Cabal.condTreeComponents  = []
   }
