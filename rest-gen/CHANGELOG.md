@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14
+
+* Abstracted generated code into rest-client, you should regenerate haskell clients
+* haskell code generation is now done using `haskell-src-exts`
+* When using module name rewrites their qualification are now also rewritten.
+* Add `hs-source-dirs` and `build-depends` when generating cabal files
+* Moved `Rest.Gen.Docs.Happstack` to `rest-happstack:Rest.Driver.Happstack.Docs`
+* Expose `Rest.Gen.Base`
+* Flattened module hierarchy, `Rest.Gen.Haskell.Generate` is now `Rest.Gen.Haskell` etc.
+
 #### 0.13.1.2
 
 * Use `json-schema 0.5.*` and add `showExample` cases for `Map` and `Any`

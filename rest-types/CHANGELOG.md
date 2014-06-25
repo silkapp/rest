@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.10.1
+
+* Added `ShowUrl` instance for strict and lazy `Text`.
+
 #### 1.10.0.3
 
 * Use `JSONSchema` `Any` type instead of `Choice []`

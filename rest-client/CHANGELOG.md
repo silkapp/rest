@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4
+
+* Moved functionality from rest-gen into this package, you should regenerate haskell clients
+
 ## 0.3.0.0
 
 * Replace runT' -> runT, use runResourceT (runT ...) if you want the old behavior

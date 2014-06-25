@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.31
+
+* Schema: `action` has been renamed to `static` since it is tied to `statics` and to disambiguate it from the unrelated `actions`.
+
 #### 0.30.0.3
 
 * Use `json-schema 0.5.*`
