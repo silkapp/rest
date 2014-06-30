@@ -146,7 +146,7 @@ it to find the user in the correct way.
 ```
 resource :: Resource IO (ReaderT UserId IO) UserId Void Void
 resource = mkResourceReader
-  { R.name   = "post"
+  { R.name   = "user"
   , R.schema = noListing $ named [ ( "email", singleBy   ByEmail )
                                  , ( "id"   , singleRead ById    )
                                  ]
