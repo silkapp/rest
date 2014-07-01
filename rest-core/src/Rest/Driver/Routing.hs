@@ -17,6 +17,7 @@ module Rest.Driver.Routing
   , mkMultiHandler
 
   , UriParts
+  , splitUriString
   ) where
 
 import Prelude hiding (id, (.))

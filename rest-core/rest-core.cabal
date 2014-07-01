@@ -1,5 +1,5 @@
 name:                rest-core
-version:             0.31
+version:             0.31.0.1
 description:         Rest API library.
 synopsis:            Rest API library.
 maintainer:          code@silk.co
@@ -75,3 +75,4 @@ test-suite rest-tests
     , rest-core
     , test-framework == 0.8.*
     , test-framework-hunit == 0.3.*
+    , unordered-containers == 0.2.*

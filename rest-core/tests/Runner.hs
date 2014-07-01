@@ -11,7 +11,6 @@ import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertEqual, assertFailure)
 
-import qualified Data.ByteString.Char8 as Char8
 import qualified Data.HashMap.Strict   as H
 
 import Rest.Api hiding (route)
@@ -166,6 +165,8 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
 testMultiGet :: Assertion
 testMultiGet = checkRouteSuccess GET "" (Rest.root :: Rest.Router IO IO)
 
+type Uri = String
+
 checkSingleRoute :: (Applicative m, Monad m, Monad s)
                  => Uri -> Resource m s sid mid aid -> Handler s -> Assertion
 checkSingleRoute uri resource handler_ =
@@ -190,14 +191,14 @@ checkRouteWithIgnoredMethods ignoredMethods router method uri =
 
 checkRouteFailure :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteFailure method uri router =
-  case route method (splitUri $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
+  case route method (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
     Left _  -> return ()
-    Right _ -> assertFailure ("Should be no route to " ++ show method ++ " " ++ Char8.unpack uri ++ ".")
+    Right _ -> assertFailure ("Should be no route to " ++ show method ++ " " ++ uri ++ ".")
 
 checkRouteSuccess :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteSuccess method uri router =
-  case route method (splitUri $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
-    Left e  -> assertFailure ("No route to " ++ show method ++ " " ++ Char8.unpack uri ++ ": " ++ show e)
+  case route method (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
+    Left e  -> assertFailure ("No route to " ++ show method ++ " " ++ uri ++ ": " ++ show e)
     Right _ -> return ()
 
 allMethods :: [Method]
