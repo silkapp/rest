@@ -1,9 +1,15 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 
+import Data.String
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertEqual)
 
+import qualified Language.Haskell.Exts.Parser as H
+import qualified Language.Haskell.Exts.Syntax as H
+
+import Rest.Api
 import Rest.Gen.Base.ActionInfo
 import Rest.Gen.Base.ApiTree
 import Rest.Dictionary (xmlJsonO)
@@ -24,7 +30,7 @@ testListingParams = assertEqual "Parameters" ["offset", "count"] (params actionI
   where
     [actionInfo] = resourceToActionInfo resource
     resource :: Resource IO IO Void () Void
-    resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
+    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     listHandler () = mkListing id $ \_ -> return []
 
 testSingleSelect :: Assertion
@@ -32,7 +38,7 @@ testSingleSelect = assertEqual "Number of select ActionInfos." 1 (length actionI
   where
     actionInfos = filter isSelect $ resourceToActionInfo resource
     resource :: Resource IO IO ServerId Void Void
-    resource = mkResource
+    resource = mkResourceId
       { name   = "resource"
       , schema = noListing $
                    named
@@ -50,7 +56,7 @@ testSingleRemove = assertEqual "Number of remove ActionInfos." 1 (length actionI
   where
     actionInfos = filter isRemove $ resourceToActionInfo resource
     resource :: Resource IO IO ServerId Void Void
-    resource = mkResource
+    resource = mkResourceId
       { name   = "resource"
       , schema = noListing $
                    named
@@ -67,10 +73,13 @@ data ServerId = ById String | ByIp String
 testListingType :: Assertion
 testListingType =
   assertEqual "Listing should have List type"
-    "Rest.Types.Container.List (())"
+    (Just "Rest.Types.Container.List (())")
     (haskellType . head . outputs . itemInfo . head . resItems $ api)
   where
     api = apiTree (route resource)
     resource :: Resource IO IO Void () Void
-    resource = mkResource { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
+    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     listHandler () = mkListing xmlJsonO $ \_ -> return [()]
+
+instance IsString H.Type where
+  fromString = H.fromParseResult . H.parse
