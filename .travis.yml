@@ -1,8 +1,10 @@
 language: haskell
 install:
-  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --dry-run -v3 --max-backjumps=-1 --reorder-goals"
+  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --dry-run -v3 --max-backjumps=-1 --reorder-goals --enable-tests"
 script:
-  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --max-backjumps=-1 --reorder-goals"
+  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --max-backjumps=-1 --reorder-goals --enable-tests"
+  - "(cd rest-core && cabal configure && cabal test)"
+  - "(cd rest-gen  && cabal configure && cabal test)"
   - "cabal install rest-example/ -fhappstack --only-dependencies"
   - "cabal install rest-example/ -fhappstack --jobs=1"
   - "cabal install rest-example/ -fsnap --only-dependencies"
