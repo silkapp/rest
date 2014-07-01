@@ -8,6 +8,7 @@ module Rest.Gen.Base.ApiTree
   , allTrees
   , apiResources
   , apiSubtrees
+  , apiTree
   , apiTree'
   , cleanName
   , defaultTree

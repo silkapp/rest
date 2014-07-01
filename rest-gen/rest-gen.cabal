@@ -30,6 +30,8 @@ library
   exposed-modules:
     Rest.Gen
     Rest.Gen.Base
+    Rest.Gen.Base.ActionInfo
+    Rest.Gen.Base.ApiTree
     Rest.Gen.Config
     Rest.Gen.Docs
     Rest.Gen.Haskell
@@ -38,9 +40,7 @@ library
     Rest.Gen.Types
   other-modules:
     Paths_rest_gen
-    Rest.Gen.Base.ActionInfo
     Rest.Gen.Base.ActionInfo.Ident
-    Rest.Gen.Base.ApiTree
     Rest.Gen.Base.JSON
     Rest.Gen.Base.JSON.Pretty
     Rest.Gen.Base.Link

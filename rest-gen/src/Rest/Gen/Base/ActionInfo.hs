@@ -7,6 +7,7 @@ module Rest.Gen.Base.ActionInfo
   ( Accessor
   , ActionInfo (..)
   , ActionType (..)
+  , ActionTarget (..)
   , DataDescription (..)
   , DataType (..)
   , ResourceId
