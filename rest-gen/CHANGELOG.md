@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.14.1
+
+* Expose modules Rest.Gen.Base.ActionInfo and Rest.Gen.Base.ApiTree
+  again.
+* Make test cases compile again.
+
 ## 0.14
 
 * Abstracted generated code into rest-client, you should regenerate haskell clients

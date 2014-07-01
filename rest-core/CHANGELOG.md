@@ -1,6 +1,11 @@
 # Changelog
 
-### 0.31
+### 0.31.1
+
+* Expose `Rest.Driver.Routing.splitUriString`.
+* Make test cases compile again.
+
+## 0.31
 
 * Schema: `action` has been renamed to `static` since it is tied to `statics` and to disambiguate it from the unrelated `actions`.
 
