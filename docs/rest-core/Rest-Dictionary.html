@@ -1,0 +1,14 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Rest.Dictionary</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
+window.onload = function () {pageLoad();setSynopsis("mini_Rest-Dictionary.html");};
+//]]>
+</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="src/Rest-Dictionary.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">rest-core-0.31: Rest API library.</p></div><div id="content"><div id="module-header"><table class="info"><tr><th>Safe Haskell</th><td>None</td></tr><tr><th>Language</th><td>Haskell98</td></tr></table><p class="caption">Rest.Dictionary</p></div><div id="description"><p class="caption">Description</p><div class="doc"><p>A dictionary (<code><a href="Rest-Dictionary-Types.html#t:Dict">Dict</a></code>) describes how to convert Haskell values to and from a web
+representation. Rest resources internally use plain Haskell datatypes, while
+communication to the outside world mostly happens using XML, JSON, plain text,
+query parameters, etc. The <code><a href="Rest-Dictionary-Types.html#t:Dict">Dict</a></code> datatype describes how to convert resource
+<em>indentifiers, input, request parameters, request headers, output, and errors</em>
+to and from a Haskell representation.</p><p>The <code><a href="Rest-Dictionary-Types.html#t:Dict">Dict</a></code> datatype and most functions working on it take a type parameters for
+every aspect of its communication, which can grow quickly. This module and
+most code that depend on it uses the implicit convention of using the type
+variable <code><a href="http://hackage.haskell.org/packages/archive/base/4.7.0.0/doc/html/Prelude.html#v:id">id</a></code> for the resource identifier, the <code>h</code> for the request headers, the
+<code>p</code> for the request parameters, the <code>i</code> for the request body, the <code>o</code> for the
+response body, and the <code>e</code> for a possible error.</p></div></div><div id="interface"><h1>Documentation</h1><div class="top"><p class="src">module <a href="Rest-Dictionary-Types.html">Rest.Dictionary.Types</a></p></div><div class="top"><p class="src">module <a href="Rest-Dictionary-Combinators.html">Rest.Dictionary.Combinators</a></p></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.14.2</p></div></body></html>
