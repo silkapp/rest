@@ -44,7 +44,7 @@ initialState = newIORef [0]
 messageResource :: Resource ApiState ApiState Int () Void
 messageResource = mkResourceId
   { R.name   = "message"
-  , R.schema = withListing () $ named [("name", singleRead id)]
+  , R.schema = withListing () $ named []
   , R.list   = const getList
   , R.create = Just setMessage
   }
