@@ -3,6 +3,7 @@ module Rest.Gen.Ruby (mkRbApi) where
 
 import Data.Char
 import Data.List
+import Data.List.Utils (replace)
 import Data.Maybe
 
 import Code.Build
@@ -17,9 +18,10 @@ import Rest.Gen.Utils
 
 mkRbApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =
-  do prelude <- readContent "Ruby/base.rb"
+  do rawPrelude <- readContent "Ruby/base.rb"
+     let prelude = replace "SilkApi" (unModuleName ns) rawPrelude
      let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
-     return $ cod ++ prelude
+     return $ cod ++ "\n" ++ prelude
 
 mkRb :: String -> Version -> ApiResource -> Code
 mkRb ns ver node =

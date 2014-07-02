@@ -72,6 +72,7 @@ library
     , uniplate >= 1.6.12 && < 1.7
     , unordered-containers == 0.2.*
     , vector == 0.10.*
+    , MissingH >= 1.2.1.0
 
 test-suite rest-gen-tests
   hs-source-dirs:    tests
