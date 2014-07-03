@@ -1,16 +1,11 @@
 {-# LANGUAGE
     OverloadedStrings
   #-}
-module Api.ApiDescription (resource) where
+module Rest.Discovery.Api.ApiDescription (resource) where
 
 import Control.Applicative ((<$>))
-import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
-import Control.Monad.Error (throwError)
 import Control.Monad.Reader (ReaderT, asks)
-import Control.Monad.Trans (liftIO)
-import Data.Set (Set)
 import qualified Data.Foldable as F
-import qualified Data.Set      as Set
 import qualified Data.Text     as T
 
 import Rest (Handler, ListHandler, Range (count, offset),
@@ -19,13 +14,7 @@ import Rest (Handler, ListHandler, Range (count, offset),
 import qualified Rest.Resource as R
 import Rest.Schema (singleBy)
 
-import ApiTypes (BlogApi, ServerData (..))
-import Type.User (User)
-import Type.ApiDescription (ApiDescription(..))
-import Type.UserInfo (UserInfo (..))
-import Type.UserSignupError (UserSignupError (..))
-import qualified Type.User     as User
-import qualified Type.UserInfo as UserInfo
+import Rest.Discovery.Type.ApiDescription (ApiDescription(..))
 import Control.Monad.Reader
 import Rest.Gen.Base
 import Rest.Api (Router)
@@ -35,7 +24,7 @@ import Data.List hiding (head, span)
 
 -- | Defines the /apis end-point.
 
-resource :: Router BlogApi BlogApi -> Resource BlogApi (ReaderT T.Text BlogApi) T.Text () Void
+resource :: (Applicative m, Monad m) => Router m m -> Resource m (ReaderT T.Text m) T.Text () Void
 resource router = mkResourceReader
   { R.name   = "apis" -- Name of the HTTP path segment.
   , R.schema = withListing () $ named [("name", singleBy T.pack)]
@@ -56,13 +45,13 @@ linkText = (T.intercalate ", ") . (map linkItem)
         linkItem (LAccess lnks) = T.concat $ map linkText $ reverse $ sortBy (compare `on` length) lnks
         linkItem x              = T.pack ("/" ++ itemString x)
 
-list :: Router BlogApi BlogApi -> ListHandler BlogApi
+list :: (Applicative m, Monad m) => Router m m -> ListHandler m
 list router = mkListing xmlJsonO $ \r -> do
   let apiresource = apiSubtrees $ router
   let apilisting = [ apiDescriptionFromApiResource $ apiresource]
   return . take (count r) . drop (offset r) $ apilisting
 
-get :: Router BlogApi BlogApi -> Handler (ReaderT T.Text BlogApi)
+get :: (Applicative m, Monad m) => Router m m -> Handler (ReaderT T.Text m)
 get router = mkHandler xmlJsonO $ \_ -> do
     name <- ask
     -- TODO: traverse the apiTree and find the ApiResource

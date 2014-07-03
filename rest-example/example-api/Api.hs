@@ -4,7 +4,7 @@ module Api where
 import Rest.Api
 
 import ApiTypes (BlogApi)
-import qualified Api.ApiDescription as ApiDescription
+import qualified Rest.Discovery.Api.ApiDescription as ApiDescription
 import qualified Api.Post as Post
 import qualified Api.User as User
 import qualified Api.Post.Comment as Post.Comment

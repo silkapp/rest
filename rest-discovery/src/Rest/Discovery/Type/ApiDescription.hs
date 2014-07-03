@@ -3,8 +3,9 @@
   , DeriveGeneric
   , TemplateHaskell
   , TypeFamilies
+  , EmptyDataDecls
   #-}
-module Type.ApiDescription where
+module Rest.Discovery.Type.ApiDescription where
 
 import Data.Aeson
 import Data.JSON.Schema

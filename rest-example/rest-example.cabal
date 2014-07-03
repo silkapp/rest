@@ -22,7 +22,6 @@ library
     Api.Post
     Api.Post.Comment
     Api.User
-    Api.ApiDescription
     ApiTypes
     Example
     Type.Comment
@@ -34,7 +33,6 @@ library
     Type.UserInfo
     Type.UserPost
     Type.UserSignupError
-    Type.ApiDescription
   build-depends:
       base >= 4.6 && < 4.8
     , aeson == 0.7.*
@@ -47,6 +45,7 @@ library
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*
     , rest-core == 0.31.*
+    , rest-discovery
     , rest-gen
     , rest-types == 1.10.*
     , safe >= 0.2 && < 0.4

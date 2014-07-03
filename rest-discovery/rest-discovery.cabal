@@ -1,0 +1,36 @@
+name:                rest-discovery
+version:             0.1.0.0
+description:         Generic Rest API discovery resource
+synopsis:            Generic Rest API discovery resource
+maintainer:          code@silk.co
+category:            Web
+build-type:          Simple
+cabal-version:       >= 1.8
+license:             BSD3
+license-file:        LICENSE
+
+extra-source-files:
+  CHANGELOG.md
+  LICENSE
+
+source-repository head
+  type:              git
+  location:          https://github.com/silkapp/rest.git
+
+library
+  ghc-options:       -Wall
+  hs-source-dirs:    src
+  exposed-modules:   Rest.Discovery.Api.ApiDescription
+                     Rest.Discovery.Type.ApiDescription
+  build-depends:
+      base == 4.*
+    , aeson == 0.7.*
+    , hxt == 9.3.*
+    , mtl >= 2.0 && < 2.3
+    , json-schema == 0.6.*
+    , regular == 0.3.*
+    , regular-xmlpickler == 0.2.*
+    , rest-gen
+    , rest-core
+    , rest-types
+    , text >= 0.10 && < 1.2
