@@ -47,6 +47,7 @@ library
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*
     , rest-core == 0.31.*
+    , rest-gen
     , rest-types == 1.10.*
     , safe >= 0.2 && < 0.4
     , transformers >= 0.2 && < 0.4

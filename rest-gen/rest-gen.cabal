@@ -39,7 +39,6 @@ library
     Rest.Gen.Ruby
     Rest.Gen.Types
     Paths_rest_gen
-    Rest.Gen.Base.ActionInfo
     Rest.Gen.Base.ActionInfo.Ident
     Rest.Gen.Base.JSON
     Rest.Gen.Base.JSON.Pretty
