@@ -21,8 +21,11 @@ mkJsApi ns priv ver r =
                 [ unModuleName ns ++ ".prototype.version" .=. string (show ver)
                 , mkJsCode (unModuleName ns) priv r
                 ]
-     return $ prelude ++ cod
+     return $ mkJsModule (prelude ++ cod)
   where attrs = [("apinamespace", unModuleName ns), ("dollar", "$")]
+
+mkJsModule :: String -> String
+mkJsModule content = "(function (window) {\n\n" ++ content ++ "\n\n})(this);"
 
 mkJsCode :: String -> Bool -> Router m s -> Code
 mkJsCode ns priv = mkJs ns . sortTree . (if priv then id else noPrivate) . apiSubtrees
@@ -33,13 +36,21 @@ mkJs ns = foldTreeChildren mkStack (\i ls -> mkStack $ mkRes ns i : ls)
 mkRes :: String -> ApiResource -> Code
 mkRes ns node = mkStack $
   [ if hasAccessor node
-      then resourceLoc ns node .=. ns ++ ".makeSilkConstructor()"
+      then resourceLoc ns node .=. mkAccessorConstructor ns node
       else resourceLoc ns node .=. jsObject []
   , resourceLoc ns node ++ ".apiObjectType" .=. string "resourceDir"
   , mkAccessFuncs ns node
   , mkPreFuncs ns node
   , mkPostFuncs ns node
   ]
+
+mkAccessorConstructor :: String -> ApiResource -> Code
+mkAccessorConstructor ns resource =
+  let constrName = jsDir (cleanName (resName resource))
+  in functionDecl constrName ["url"] $
+       jsIf (code $ "this instanceof " ++ constrName)
+            (proc (ns ++ ".setContext") (code "this, url"))
+         <-> jsElse (ret $ call (constrName ++ ".access") (code "url"))
 
 mkPreFuncs :: String -> ApiResource -> Code
 mkPreFuncs ns node =
@@ -83,7 +94,7 @@ mkFunction ns (ApiAction _ _ ai) =
               ++ maybe "" (\i -> "' + encodeURIComponent(" ++ i ++ ") + '/") mIdent
       mIdent   = (if isAccessor ai then const Nothing else id) $ fmap (jsId . cleanName . description) $ ident ai
   in function fParams $ ret $
-        proc (ns ++ "." ++ "ajaxCall")
+        call (ns ++ "." ++ "ajaxCall")
           [ string (method ai)
           , code $ (if (https ai) then "this.secureContextUrl" else "this.contextUrl") ++ " + '" ++ urlPart ++ "'"
           , code "params"
