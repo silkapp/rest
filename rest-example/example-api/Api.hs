@@ -2,10 +2,6 @@
 module Api where
 
 import Rest.Api
---import Rest.Api (Api, Router, Some1 (..), mkVersion, root, route, (-/))
---import Rest
---import qualified Rest.Resource as R
---import Control.Applicative
 
 import ApiTypes (BlogApi)
 import qualified Api.ApiDescription as ApiDescription
