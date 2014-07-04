@@ -21,6 +21,7 @@ import Rest.Api (Router)
 import Control.Applicative
 import Data.Function (on)
 import Data.List hiding (head, span)
+import Data.Maybe
 
 -- | Defines the /apis end-point.
 
@@ -29,6 +30,7 @@ resource router = mkResourceReader
   { R.name   = "apis" -- Name of the HTTP path segment.
   , R.schema = withListing () $ named [("name", singleBy T.pack)]
   , R.list   = const (list router) -- requested by GET /apis, gives a paginated listing of apis.
+  , R.get    = Just $ get router
   }
 
 apiDescriptionFromApiResource :: ApiResource -> ApiDescription
@@ -48,4 +50,19 @@ list router = mkListing xmlJsonO $ \r -> do
   let apiresource = apiSubtrees $ router
   let apilisting = [ apiDescriptionFromApiResource $ apiresource]
   return . take (count r) . drop (offset r) $ apilisting
+
+get :: (Applicative m, Monad m) => Router m m -> Handler (ReaderT T.Text m)
+get router = mkHandler xmlJsonO $ \_ -> do
+    name <- ask
+    let apiresource_tree = apiSubtrees $ router
+    let apiresource = findApiResource name apiresource_tree
+    return $ fmap apiDescriptionFromApiResource apiresource
+
+findApiResource :: T.Text -> ApiResource -> Maybe ApiResource
+findApiResource name tree =
+    if name == (T.pack . resName $ tree)
+    then Just tree
+    else if null (subResources tree)
+         then Nothing
+         else listToMaybe . catMaybes . map (findApiResource name) $ subResources tree
 
