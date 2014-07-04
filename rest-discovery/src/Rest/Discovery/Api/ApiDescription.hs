@@ -39,6 +39,12 @@ apiDescriptionFromApiResource =
                    <*> (linkText . resLink)
                    <*> ((map apiDescriptionFromApiResource) . subResources)
 
+shallowApiDescriptionFromApiResource :: ApiResource -> ApiDescription
+shallowApiDescriptionFromApiResource =
+    ApiDescription <$> ((T.pack . resName))
+                   <*> (linkText . resLink)
+                   <*> const []
+
 linkText :: Link -> T.Text
 linkText = T.concat . (map linkItem)
   where linkItem (LParam idf)   = T.pack ("/<" ++ idf ++ ">")
@@ -48,7 +54,7 @@ linkText = T.concat . (map linkItem)
 list :: (Applicative m, Monad m) => Router m m -> ListHandler m
 list router = mkListing xmlJsonO $ \r -> do
   let apiresource = apiSubtrees $ router
-  let apilisting = [ apiDescriptionFromApiResource $ apiresource]
+  let apilisting = map shallowApiDescriptionFromApiResource $ subResources apiresource
   return . take (count r) . drop (offset r) $ apilisting
 
 get :: (Applicative m, Monad m) => Router m m -> Handler (ReaderT T.Text m)
