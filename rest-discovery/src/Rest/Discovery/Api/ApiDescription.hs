@@ -30,7 +30,7 @@ resource router = mkResourceReader
   , R.schema = withListing () $ named [("name", singleBy T.pack)]
   , R.list   = const (list router) -- requested by GET /apis, gives a paginated listing of apis.
   , R.create = Nothing
-  , R.get = Just $ get router
+  , R.get    = Just $ get router
   }
 
 apiDescriptionFromApiResource :: ApiResource -> ApiDescription
@@ -40,7 +40,7 @@ apiDescriptionFromApiResource =
                    <*> ((map apiDescriptionFromApiResource) . subResources)
 
 linkText :: Link -> T.Text
-linkText = (T.intercalate ", ") . (map linkItem)
+linkText = T.concat . (map linkItem)
   where linkItem (LParam idf)   = T.pack ("/<" ++ idf ++ ">")
         linkItem (LAccess lnks) = T.concat $ map linkText $ reverse $ sortBy (compare `on` length) lnks
         linkItem x              = T.pack ("/" ++ itemString x)
