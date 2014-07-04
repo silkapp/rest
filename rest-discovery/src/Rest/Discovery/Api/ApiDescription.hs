@@ -29,8 +29,6 @@ resource router = mkResourceReader
   { R.name   = "apis" -- Name of the HTTP path segment.
   , R.schema = withListing () $ named [("name", singleBy T.pack)]
   , R.list   = const (list router) -- requested by GET /apis, gives a paginated listing of apis.
-  , R.create = Nothing
-  , R.get    = Just $ get router
   }
 
 apiDescriptionFromApiResource :: ApiResource -> ApiDescription
@@ -50,10 +48,4 @@ list router = mkListing xmlJsonO $ \r -> do
   let apiresource = apiSubtrees $ router
   let apilisting = [ apiDescriptionFromApiResource $ apiresource]
   return . take (count r) . drop (offset r) $ apilisting
-
-get :: (Applicative m, Monad m) => Router m m -> Handler (ReaderT T.Text m)
-get router = mkHandler xmlJsonO $ \_ -> do
-    name <- ask
-    -- TODO: traverse the apiTree and find the ApiResource
-    return $ ApiDescription name "" []
 
