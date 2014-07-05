@@ -13,6 +13,8 @@ script:
   - "cabal install rest-example/ -fwai --jobs=1"
   - "rest-example-gen --haskell --target rest-example/client"
   - "rest-example-gen --javascript --target rest-example/client.js"
+  - "rest-example-gen --ruby --target rest-example/client.rb"
+  - "ruby rest-example/client.rb"
   - "cabal install rest-example/client --jobs=1"
 notifications:
   email:
