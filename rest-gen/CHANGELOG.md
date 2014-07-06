@@ -6,6 +6,10 @@
   again.
 * Make test cases compile again.
 
+##### Revisions
+
+* Allow `Cabal == 1.16.*`
+
 ## 0.14
 
 * Abstracted generated code into rest-client, you should regenerate haskell clients
