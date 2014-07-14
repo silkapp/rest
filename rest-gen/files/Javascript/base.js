@@ -89,9 +89,9 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
   {
     var parsedResponse = parse(response);
     if (message.statusCode >= 200 && message.statusCode < 300)
-      onSuccess && onSuccess(message, parsedResponse);
+      onSuccess && onSuccess(parsedResponse, message);
     else if (onError)
-      onError(error, message, parsedResponse);
+      onError(error, parsedResponse, message);
   }
 
   function parse (response)
