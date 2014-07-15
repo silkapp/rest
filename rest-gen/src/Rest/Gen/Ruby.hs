@@ -3,7 +3,7 @@ module Rest.Gen.Ruby (mkRbApi) where
 
 import Data.Char
 import Data.List
-import Data.List.Utils (replace)
+import Data.List.Split (splitOn)
 import Data.Maybe
 
 import Code.Build
@@ -22,6 +22,9 @@ mkRbApi ns priv ver r =
      let prelude = replace "SilkApi" (unModuleName ns) rawPrelude
      let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
      return $ cod ++ "\n" ++ prelude
+
+replace :: String -> String -> String -> String
+replace from to = intercalate to . splitOn from
 
 mkRb :: String -> Version -> ApiResource -> Code
 mkRb ns ver node =
