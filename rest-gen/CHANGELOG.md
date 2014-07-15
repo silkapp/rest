@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.14.2
+
+* Generated JavaScript now also works as a Node module
+* JavaScript constructors are now named properly instead of "constrWrapper"
+* Now generates valid Ruby code again
+
 ### 0.14.1
 
 * Expose modules Rest.Gen.Base.ActionInfo and Rest.Gen.Base.ApiTree
