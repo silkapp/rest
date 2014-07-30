@@ -34,6 +34,7 @@ $apinamespace$.addObject = function (obj1, obj2)
 };
 
 $apinamespace$.defaultAjaxOptions = {};
+$apinamespace$.defaultHeaders = {};
 
 function jQueryRequest (method, url, params, success, error, contentType, dataType, data, callOpts)
 {
@@ -47,6 +48,7 @@ function jQueryRequest (method, url, params, success, error, contentType, dataTy
     , dataType: dataType
     , xhrFields: { withCredentials: true }
     , data: data || []
+    , headers: $apinamespace$.defaultHeaders
     };
 
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
@@ -70,6 +72,8 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
     headers.Accept = 'text/json';
   else if (dataType === 'xml')
     headers.Accept = 'text/xml';
+
+  $apinamespace$.addObject(headers, $apinamespace$.defaultHeaders);
 
   var callData =
     { url     : url
