@@ -54,7 +54,7 @@ function jQueryRequest (method, url, params, success, error, contentType, dataTy
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
 
-  return $dollar$.ajax(callData);
+  return Q($dollar$.ajax(callData));
 }
 
 function nodeRequest (method, url, params, onSuccess, onError, contentType, dataType, data, callOpts)
@@ -87,16 +87,34 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
 
-  return require("request")(callData, callback);
-
-  function callback (error, message, response)
+  return require("q").Promise(function (resolve, reject)
   {
-    var parsedResponse = parse(response);
-    if (message.statusCode >= 200 && message.statusCode < 300)
-      onSuccess && onSuccess(parsedResponse, message);
-    else if (onError)
-      onError(error, parsedResponse, message);
-  }
+    require("request")(callData, callback);
+
+    function callback (error, message, body)
+    {
+      if (message.statusCode >= 200 && message.statusCode < 300)
+      {
+        var parsedResponse = parse(body);
+        onSuccess && onSuccess(parsedResponse, message);
+        resolve(parsedResponse)
+      }
+      else
+      {
+        if (!error)
+        {
+          error = new Error("HTTP request error");
+          error.statusCode = message.statusCode;
+          error.responseBody = body;
+        }
+
+        if (onError)
+          onError(error);
+
+        reject(error);
+      }
+    }
+  });
 
   function parse (response)
   {
