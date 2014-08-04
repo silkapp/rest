@@ -85,18 +85,20 @@ deriving instance Show (Ident id)
 -- for generating documentation. The second field is a custom parser that can
 -- fail with a `DataError` or can produce a some value. When explicitly not
 -- interested in the headers we can use `NoHeader`.
---
--- Todo: allow multiple parsers for different headers instead of combining them
--- into one parser + use `Info` class to enfore some documention about the
--- parsed type.
 
 data Header h where
-  NoHeader ::                                                       Header ()
-  Header   :: [String] -> ([Maybe String] -> Either DataError h) -> Header h
+  NoHeader    ::                                                       Header ()
+  Header      :: [String] -> ([Maybe String] -> Either DataError h) -> Header h
+  TwoHeaders  :: Header h -> Header k                               -> Header (h,k)
 
 instance Show (Header h) where
   showsPrec _ NoHeader      = showString "NoHeader"
   showsPrec n (Header hs _) = showParen (n > 9) (showString "Header " . showsPrec 10 hs)
+  showsPrec n (TwoHeaders h k) = showParen (n > 9) ( showString "TwoHeaders "
+                                                  . showsPrec 10 h
+                                                  . showString " "
+                                                  . showsPrec 10 k
+                                                  )  
 
 -- | The explicit dictionary `Parameter` describes how to translate the request
 -- parameters to some Haskell value. The first field in the `Header`
@@ -104,10 +106,6 @@ instance Show (Header h) where
 -- validation and for generating documentation. The second field is a custom
 -- parser that can fail with a `DataError` or can produce a some value. When
 -- explicitly not interested in the parameters we can use `NoParam`.
---
--- Todo: allow multiple parsers for different parameters instead of combining
--- them into one parser + use `Info` class to enfore some documention about the
--- parsed type.
 
 data Param p where
   NoParam   ::                                                       Param ()

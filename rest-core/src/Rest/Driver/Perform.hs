@@ -190,6 +190,7 @@ parseContentType =
 headers :: Rest m => Header h -> ErrorT DataError m h
 headers NoHeader      = return ()
 headers (Header xs h) = mapM getHeader xs >>= either throwError return . h
+headers (TwoHeaders h1 h2) = (,) <$> headers h1 <*> headers h2
 
 parameters :: Rest m => Param p -> ErrorT DataError m p
 parameters NoParam      = return ()
