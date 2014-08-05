@@ -96,10 +96,11 @@ secureHandler h = h { secure = True }
 data Range = Range { offset :: Int, count :: Int }
 
 -- | Smart constructor for creating a list handler.
+-- Restricts the type of the 'Input' dictionary to 'None'
 
 mkListing
   :: Monad m
-  => Modifier () () () o e
+  => Modifier h p () o e
   -> (Range -> ErrorT (Reason e) m [o])
   -> ListHandler m
 mkListing d a = mkGenHandler (mkPar range . d) (a . param)
@@ -122,10 +123,11 @@ range = Param ["offset", "count"] $ \xs ->
                             }
 
 -- | Create a list handler that accepts ordering information.
+-- Restricts the type of the 'Input' dictionary to 'None'
 
 mkOrderedListing
   :: Monad m
-  => Modifier () () () o e
+  => Modifier h p () o e
   -> ((Range, Maybe String, Maybe String) -> ErrorT (Reason e) m [o])
   -> ListHandler m
 mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
