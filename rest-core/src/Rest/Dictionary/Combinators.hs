@@ -61,10 +61,15 @@ import qualified Data.Label.Total as L
 import Rest.Dictionary.Types
 import Rest.Info
 
--- | Add custom sub-dictionary for recognizing headers.
+-- | Set custom sub-dictionary for recognizing headers.
 
 mkHeader :: Header h -> Dict x p i o e -> Dict h p i o e
 mkHeader = L.set headers
+
+-- | Add custom sub-dictionary for recognizing headers.
+
+addHeader :: Header h -> Dict h' p i o e -> Dict (h, h') p i o e
+addHeader = L.modify headers . TwoHeaders
 
 -- | Set custom sub-dictionary for recognizing parameters.
 
