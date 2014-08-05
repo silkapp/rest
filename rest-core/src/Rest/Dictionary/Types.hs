@@ -92,13 +92,13 @@ data Header h where
   TwoHeaders  :: Header h -> Header k                               -> Header (h,k)
 
 instance Show (Header h) where
-  showsPrec _ NoHeader      = showString "NoHeader"
-  showsPrec n (Header hs _) = showParen (n > 9) (showString "Header " . showsPrec 10 hs)
+  showsPrec _ NoHeader         = showString "NoHeader"
+  showsPrec n (Header hs _)    = showParen (n > 9) ( showString "Header " . showsPrec 10 hs)
   showsPrec n (TwoHeaders h k) = showParen (n > 9) ( showString "TwoHeaders "
-                                                  . showsPrec 10 h
-                                                  . showString " "
-                                                  . showsPrec 10 k
-                                                  )  
+                                                   . showsPrec 10 h
+                                                   . showString " "
+                                                   . showsPrec 10 k
+                                                   )
 
 -- | The explicit dictionary `Parameter` describes how to translate the request
 -- parameters to some Haskell value. The first field in the `Header`
@@ -114,7 +114,7 @@ data Param p where
 
 instance Show (Param p) where
   showsPrec _ NoParam         = showString "NoParam"
-  showsPrec n (Param ns _)    = showParen (n > 9) (showString "Param " . showsPrec 10 ns)
+  showsPrec n (Param ns _)    = showParen (n > 9) ( showString "Param " . showsPrec 10 ns)
   showsPrec n (TwoParams p q) = showParen (n > 9) ( showString "TwoParams "
                                                   . showsPrec 10 p
                                                   . showString " "

@@ -69,7 +69,7 @@ mkHeader = L.set headers
 -- | Add custom sub-dictionary for recognizing headers.
 
 addHeader :: Header h -> Dict h' p i o e -> Dict (h, h') p i o e
-addHeader = L.modify headers . TwoHeaders 
+addHeader = L.modify headers . TwoHeaders
 
 -- | Set custom sub-dictionary for recognizing parameters.
 
