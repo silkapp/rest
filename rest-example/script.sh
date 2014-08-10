@@ -1,4 +1,19 @@
 #!/bin/bash
+echo "# Api discovery in XML:"
+echo ""
+curl -s 'http://localhost:3000/v1.0/apis' | xmllint --format -
+echo ""
+echo "-------------"
+echo "# Api discovery in JSON:"
+echo ""
+curl -s 'http://localhost:3000/v1.0/apis?type=json' | python -mjson.tool
+echo ""
+echo "-------------"
+echo "# Api subresource discovery in XML:"
+echo ""
+curl -s 'http://localhost:3000/v1.0/apis/name/post' | xmllint --format -
+echo ""
+echo "-------------"
 echo "# User list in XML:"
 echo ""
 curl -s 'http://localhost:3000/v1.0/user' | xmllint --format -

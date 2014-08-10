@@ -4,6 +4,7 @@ module Api where
 import Rest.Api
 
 import ApiTypes (BlogApi)
+import qualified Rest.Discovery.Api.ApiDescription as ApiDescription
 import qualified Api.Post as Post
 import qualified Api.User as User
 import qualified Api.Post.Comment as Post.Comment
@@ -17,6 +18,7 @@ blog :: Router BlogApi BlogApi
 blog =
   root -/ user
        -/ post --/ comment
+        -/ route (ApiDescription.resource blog)
   where
     user = route User.resource
     post = route Post.resource

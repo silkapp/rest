@@ -38,7 +38,6 @@ library
     Rest.Gen.JavaScript
     Rest.Gen.Ruby
     Rest.Gen.Types
-  other-modules:
     Paths_rest_gen
     Rest.Gen.Base.ActionInfo.Ident
     Rest.Gen.Base.JSON
