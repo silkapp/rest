@@ -39,6 +39,7 @@ module Rest.Dictionary.Combinators
   -- ** Header dictionaries
 
   , mkHeader
+  , addHeader
 
   -- ** Parameter dictionaries
 
