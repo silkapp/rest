@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.10.2
+
+* Add `Functor`, `Foldable` and `Traversable` instances for the types
+  in `Rest.Types.Error`.
+
 ### 1.10.1
 
 * Added `ShowUrl` instance for strict and lazy `Text`.

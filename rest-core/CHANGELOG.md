@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.32
+
+* Add `addHeader` dictionary combinator, to extend instead of replace
+  the header dictionaries. For this, a constructor `TwoHeaders` was
+  added to `Header`.
+* Relax the types of `mkListing` and `mkOrderedListing` to allow
+  parameters and headers.
+
 ### 0.31.1
 
 * Expose `Rest.Driver.Routing.splitUriString`.
