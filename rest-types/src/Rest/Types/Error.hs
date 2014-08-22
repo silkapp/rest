@@ -1,6 +1,9 @@
 {-# LANGUAGE
     DeriveDataTypeable
+  , DeriveFoldable
+  , DeriveFunctor
   , DeriveGeneric
+  , DeriveTraversable
   , EmptyDataDecls
   , GADTs
   , ScopedTypeVariables
@@ -21,7 +24,9 @@ module Rest.Types.Error
 
 import Control.Monad.Error
 import Data.Aeson hiding (Success)
+import Data.Foldable (Foldable)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
+import Data.Traversable (Traversable)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
@@ -41,7 +46,8 @@ data DataError
   | UnsupportedFormat String
   deriving (Eq, Generic, Show)
 
-data DomainReason a = DomainReason { responseCode :: Int, reason :: a } deriving (Eq, Generic)
+data DomainReason a = DomainReason { responseCode :: Int, reason :: a }
+  deriving (Eq, Generic, Functor, Foldable, Traversable)
 
 instance Show a => Show (DomainReason a) where
   showsPrec a (DomainReason _ e) = showParen (a >= 11) (showString "Domain " . showsPrec 11 e)
@@ -58,7 +64,8 @@ instance FromJSON a => FromJSON (DomainReason a) where
 instance JSONSchema a => JSONSchema (DomainReason a) where
   schema = schema . fmap reason
 
-data Status a b = Failure a | Success b deriving (Generic, Typeable)
+data Status a b = Failure a | Success b
+  deriving (Eq, Show, Generic, Typeable, Functor, Foldable, Traversable)
 
 $(deriveAll ''Status "PFStatus")
 type instance PF (Status a b) = PFStatus a b
@@ -103,7 +110,7 @@ data Reason a
 
   -- Custom domain reasons.
   | CustomReason (DomainReason a)
-  deriving (Eq, Generic, Show, Typeable)
+  deriving (Eq, Generic, Show, Typeable, Functor, Foldable, Traversable)
 
 instance Error DataError
 
