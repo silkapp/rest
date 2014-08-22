@@ -34,7 +34,6 @@ $apinamespace$.addObject = function (obj1, obj2)
 };
 
 $apinamespace$.defaultAjaxOptions = {};
-$apinamespace$.defaultHeaders = {};
 
 function jQueryRequest (method, url, params, success, error, contentType, dataType, data, callOpts)
 {
@@ -48,13 +47,12 @@ function jQueryRequest (method, url, params, success, error, contentType, dataTy
     , dataType: dataType
     , xhrFields: { withCredentials: true }
     , data: data || []
-    , headers: $apinamespace$.defaultHeaders
     };
 
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
 
-  return Q($dollar$.ajax(callData));
+  return $dollar$.ajax(callData);
 }
 
 function nodeRequest (method, url, params, onSuccess, onError, contentType, dataType, data, callOpts)
@@ -73,8 +71,6 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
   else if (dataType === 'xml')
     headers.Accept = 'text/xml';
 
-  $apinamespace$.addObject(headers, $apinamespace$.defaultHeaders);
-
   var callData =
     { url     : url
     , qs      : allParams
@@ -87,34 +83,16 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
 
-  return require("q").Promise(function (resolve, reject)
+  return require("request")(callData, callback);
+
+  function callback (error, message, response)
   {
-    require("request")(callData, callback);
-
-    function callback (error, message, body)
-    {
-      if (message.statusCode >= 200 && message.statusCode < 300)
-      {
-        var parsedResponse = parse(body);
-        onSuccess && onSuccess(parsedResponse, message);
-        resolve(parsedResponse)
-      }
-      else
-      {
-        if (!error)
-        {
-          error = new Error("HTTP request error");
-          error.statusCode = message.statusCode;
-          error.responseBody = body;
-        }
-
-        if (onError)
-          onError(error);
-
-        reject(error);
-      }
-    }
-  });
+    var parsedResponse = parse(response);
+    if (message.statusCode >= 200 && message.statusCode < 300)
+      onSuccess && onSuccess(parsedResponse, message);
+    else if (onError)
+      onError(error, parsedResponse, message);
+  }
 
   function parse (response)
   {
