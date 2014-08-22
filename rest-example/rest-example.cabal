@@ -58,22 +58,22 @@ library
 -- Executables linking against the rest-example library.
 
 flag happstack
-  description: Build the rest on happstack example.
+  description: Build the happstack executable.
   default:     False
   manual:      True
 
 flag wai
-  description: Build the rest on wai example.
+  description: Build the wai executable.
   default:     False
   manual:      True
 
 flag snap
-  description: Build the rest on snap example.
+  description: Build the snap executable.
   default:     False
   manual:      True
 
 flag gen
-  description: Build the rest on happstack example.
+  description: Build client generation executable.
   default:     True
   manual:      True
 
