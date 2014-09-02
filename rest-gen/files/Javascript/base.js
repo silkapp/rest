@@ -39,6 +39,8 @@ $apinamespace$.defaultHeaders = {};
 
 function jQueryRequest (method, url, params, success, error, contentType, dataType, data, callOpts)
 {
+  var q = window.Q || function (a) { return a };
+
   var callData =
     { type: method
     , url: url + (params ? '?' + $dollar$.param(params) : '')
@@ -55,7 +57,7 @@ function jQueryRequest (method, url, params, success, error, contentType, dataTy
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
 
-  return Q($dollar$.ajax(callData));
+  return q($dollar$.ajax(callData));
 }
 
 function nodeRequest (method, url, params, onSuccess, onError, contentType, dataType, data, callOpts)
