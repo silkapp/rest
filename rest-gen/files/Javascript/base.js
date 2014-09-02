@@ -1,10 +1,11 @@
 var $apinamespace$ =
   function (url, secureUrl)
   {
-    var postfix = '/v' + this.version + '/';
-    var sUrl = url + postfix;
-    $apinamespace$.setContext(this, sUrl);
-    this.secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
+    var postfix          = '/v' + this.version + '/';
+    var contextUrl       = url + postfix;
+    var secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
+
+    $apinamespace$.setContext(this, contextUrl, secureContextUrl);
   };
 
 if (typeof module === "object" && module && typeof module.exports === "object")
@@ -125,15 +126,16 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
 }
 
 $apinamespace$.setContext =
-  function (obj, url)
+  function (obj, url, secureUrl)
   {
     obj.contextUrl = url;
+    obj.secureContextUrl = secureUrl;
     for (var fld in obj)
     {
       if (obj[fld] != undefined && obj[fld].apiObjectType != undefined && obj[fld].apiObjectType == 'resourceDir')
       {
-        var newUrl = url + fld.replace(/([a-z0-9])([A-Z])/g, '$dollar$1-$dollar$2').toLowerCase() + '/'
-        $apinamespace$.setContext(obj[fld], newUrl);
+        var postfix = fld.replace(/([a-z0-9])([A-Z])/g, '$dollar$1-$dollar$2').toLowerCase() + '/';
+        $apinamespace$.setContext(obj[fld], url + postfix, secureUrl + postfix);
       }
     }
   };
