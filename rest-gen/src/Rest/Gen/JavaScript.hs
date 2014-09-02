@@ -47,10 +47,10 @@ mkRes ns node = mkStack $
 mkAccessorConstructor :: String -> ApiResource -> Code
 mkAccessorConstructor ns resource =
   let constrName = jsDir (cleanName (resName resource))
-  in functionDecl constrName ["url", "secureUrl"] $
+  in functionDecl constrName ["url"] $
        jsIf (code $ "this instanceof " ++ constrName)
-            (proc (ns ++ ".setContext") (code "this, url, secureUrl"))
-         <-> jsElse (ret $ call (constrName ++ ".access") (code "url, secureUrl"))
+            (proc (ns ++ ".setContext") (code "this, url"))
+         <-> jsElse (ret $ call (constrName ++ ".access") (code "url"))
 
 mkPreFuncs :: String -> ApiResource -> Code
 mkPreFuncs ns node =
@@ -77,9 +77,7 @@ mkAccessor ns node@(ApiAction _ _ ai) =
               ++ maybe "" (\i -> "' + encodeURIComponent(" ++ i ++ ") + '/") mIdent
       mIdent   = fmap (jsId . cleanName . description) $ ident ai
   in function fParams $
-      [ var "postfix" $ "'" ++ urlPart ++ "'"
-      , var "accessor" $ new "this" . code $  "this.contextUrl + postfix, "
-                                           ++ "this.secureContextUrl + postfix"
+      [ var "accessor" $ new "this" . code $ "this.contextUrl + '" ++ urlPart ++ "'"
       , "accessor.get" .=. mkFunction ns node
       , ret "accessor"
       ]
