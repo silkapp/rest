@@ -1,5 +1,5 @@
 name:                rest-gen
-version:             0.14.2.1
+version:             0.15
 description:         Documentation and client generation from rest definition.
 synopsis:            Documentation and client generation from rest definition.
 maintainer:          code@silk.co

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15
+
+* JavaScript/node.js: Clients now use and require Q promises
+* JavaScript/web: Will now use Q if available, and otherwise return the normal jQuery objects
+
+Bugfixes:
+* JavaScript: Fix propagation of URLs to secure end points
+
 ### 0.14.2
 
 * Generated JavaScript now also works as a Node module

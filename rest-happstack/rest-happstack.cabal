@@ -1,5 +1,5 @@
 name:                rest-happstack
-version:             0.2.10.1
+version:             0.2.10.2
 description:         Rest driver for Happstack.
 synopsis:            Rest driver for Happstack.
 maintainer:          code@silk.co
@@ -29,5 +29,5 @@ library
     , happstack-server >= 7.0.5 && < 7.4
     , mtl >= 2.0 && < 2.3
     , rest-core >= 0.31 && < 0.33
-    , rest-gen == 0.14.*
+    , rest-gen >= 0.14 && < 0.16
     , utf8-string == 0.3.*
