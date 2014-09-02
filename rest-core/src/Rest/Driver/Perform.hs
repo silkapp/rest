@@ -373,7 +373,8 @@ accept =
         [ ["image"]       , xs    ] -> xs >>= img
         _                           -> []
 
-    trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+    trim = f . f
+      where f = reverse . dropWhile isSpace
 
     txt "*"     = [XmlFormat, JsonFormat, StringFormat]
     txt "json"  = [JsonFormat]
