@@ -96,7 +96,7 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
 
     function callback (error, message, body)
     {
-      if (message.statusCode >= 200 && message.statusCode < 300)
+      if (message && message.statusCode >= 200 && message.statusCode < 300)
       {
         var parsedResponse = parse(body);
         onSuccess && onSuccess(parsedResponse, message);
