@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.15.0.1
+
+* JavaScript/node.js: Fixed error handling for `ECONNREFUSED` and other "top level" errors.
+
 ## 0.15
 
 * JavaScript/node.js: Clients now use and require Q promises
