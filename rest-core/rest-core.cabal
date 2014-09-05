@@ -47,7 +47,7 @@ library
     , fclabels == 2.0.*
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
-    , json-schema == 0.6.*
+    , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
     , multipart >= 0.1.1 && < 0.2
     , random == 1.0.*

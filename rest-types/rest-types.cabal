@@ -28,9 +28,9 @@ library
   build-depends:
       base == 4.*
     , aeson >= 0.7 && < 0.9
-    , generic-aeson == 0.1.*
+    , generic-aeson >= 0.1 && < 0.3
     , hxt >= 9.2 && < 9.4
-    , json-schema == 0.6.*
+    , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*

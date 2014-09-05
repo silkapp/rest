@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE
+    CPP
+  , OverloadedStrings
+  #-}
 module Rest.Gen.Base.JSON (showExample) where
 
 import Data.Aeson ((.=))
@@ -23,9 +26,11 @@ showExample = render . pp_value . showExample'
       Value _      -> A.String "value"
       Boolean      -> A.Bool True
       Number b     -> A.Number . boundExample $ b
-      Null         -> A.Null
       Any          -> A.String "<value>"
       Constant v   -> v
+#if !MIN_VERSION_json_schema(0,7,0)
+      Null         -> A.Null
+#endif
 
 boundExample :: Num a => Bound -> a
 boundExample b = fromIntegral $ fromMaybe 0 (maybe (lower b) Just (upper b))
