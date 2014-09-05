@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.15.0.2
+
+* Allow `json-schema 0.7.*`
+
 #### 0.15.0.1
 
 * JavaScript/node.js: Fixed error handling for `ECONNREFUSED` and other "top level" errors.
