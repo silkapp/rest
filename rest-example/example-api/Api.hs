@@ -7,6 +7,7 @@ import ApiTypes (BlogApi)
 import qualified Api.Post as Post
 import qualified Api.User as User
 import qualified Api.Post.Comment as Post.Comment
+import qualified Api.Test as Test
 
 -- | Defines a versioned api
 api :: Api BlogApi
@@ -17,7 +18,9 @@ blog :: Router BlogApi BlogApi
 blog =
   root -/ user
        -/ post --/ comment
+       -/ test
   where
-    user = route User.resource
-    post = route Post.resource
+    user    = route User.resource
+    post    = route Post.resource
     comment = route Post.Comment.resource
+    test    = route Test.resource

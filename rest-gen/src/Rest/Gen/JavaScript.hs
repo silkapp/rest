@@ -90,7 +90,7 @@ mkFunction ns (ApiAction _ _ ai) =
               ++ maybeToList (fmap fst3 mInp)
               ++ ["success", "error", "params", "callOpts"]
       mInp     = fmap mkType . chooseType $ inputs ai
-      mOut     = fmap mkType . chooseType $ outputs ai
+      mOut     = dataTypesToAcceptHeader JSON . responseAcceptType . chooseResponseType $ ai
       urlPart  = (if isAccessor ai then const "" else id) $
                  (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + encodeURIComponent(" ++ i ++ ") + '/") mIdent
@@ -103,7 +103,7 @@ mkFunction ns (ApiAction _ _ ai) =
           , code "success"
           , code "error"
           , string $ maybe "text/plain" snd3 mInp
-          , string $ maybe "text" fst3 mOut
+          , string $ mOut
           , maybe (code "undefined") (\(p, _, f) -> f (code p)) mInp
           , code "callOpts"
           ]

@@ -1,6 +1,7 @@
 {-# LANGUAGE
     CPP
   , GADTs
+  , LambdaCase
   , ScopedTypeVariables
   #-}
 module Rest.Gen.Base.ActionInfo
@@ -14,6 +15,12 @@ module Rest.Gen.Base.ActionInfo
   , accessLink
   , accessors
   , chooseType
+  , ResponseType (..)
+  , responseAcceptType
+  , dataTypesToAcceptHeader
+  , defaultErrorDataTypeDescription
+  , DataTypeDescription (..)
+  , chooseResponseType
   , isAccessor
   , listGetterActionInfo
   , mkActionDescription
@@ -32,26 +39,28 @@ import Control.Monad
 import Data.Foldable (foldMap)
 import Data.List
 import Data.Maybe
+import Data.Ord
 import Data.Proxy
 import Data.Typeable
+import Safe
 -- TODO Remove CPP
 #if __GLASGOW_HASKELL__ < 704
 import Data.List.Split
 #endif
-import qualified Data.JSON.Schema as J
-import qualified Data.Label.Total as L
+import qualified Data.JSON.Schema             as J
+import qualified Data.Label.Total             as L
 import qualified Language.Haskell.Exts.Parser as H
 import qualified Language.Haskell.Exts.Syntax as H
 
 import Rest.Dictionary (Error (..), Input (..), Output (..), Param (..))
 import Rest.Driver.Routing (mkListHandler, mkMultiHandler)
+import Rest.Gen.Types
 import Rest.Handler
 import Rest.Info
 import Rest.Resource hiding (description)
 import Rest.Schema
 import qualified Rest.Dictionary as Dict
 import qualified Rest.Resource   as Rest
-import Rest.Gen.Types
 
 import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident))
 import Rest.Gen.Base.Link
@@ -80,7 +89,7 @@ data ActionInfo = ActionInfo
   , actionTarget :: ActionTarget
   , resDir       :: String       -- Resource directory
   , method       :: RequestMethod
-  , inputs       :: [DataDescription]
+  , inputs       :: [DataDescription] -- TODO ? => ([DataDescription], [H.ModuleName])
   , outputs      :: [DataDescription]
   , errors       :: [DataDescription]
   , params       :: [String]
@@ -99,8 +108,8 @@ data DataDescription = DataDescription
   , dataTypeDesc   :: String
   , dataSchema     :: String
   , dataExample    :: String
-  , haskellType    :: Maybe H.Type
-  , haskellModules :: [H.ModuleName]
+  , haskellType    :: Maybe H.Type -- TODO Is this ever Nothing?
+  , haskellModules :: [H.ModuleName] -- TODO What does this actually contain?
   } deriving (Show, Eq)
 
 defaultDescription :: DataDescription
@@ -109,6 +118,96 @@ defaultDescription = DataDescription Other "" "" "" Nothing []
 chooseType :: [DataDescription] -> Maybe DataDescription
 chooseType []         = Nothing
 chooseType ls@(x : _) = Just $ fromMaybe x $ find ((JSON ==) . dataType) ls
+
+data ResponseType = ResponseType
+  { errorType  :: Maybe DataTypeDescription
+  , outputType :: Maybe DataTypeDescription
+  } deriving Show
+
+responseAcceptType :: ResponseType -> [DataType] -- TODO make non empty list Maybe (NonEmpty DataType)
+responseAcceptType (ResponseType e o) = typs
+  where
+    typs :: [DataType]
+    typs = nub $ f e ++ f o
+      where
+        f :: Maybe DataTypeDescription -> [DataType]
+        f = maybeToList . fmap dataTypeType
+
+-- | First argument is the default accept header to use if there is no
+-- output or errors, must be XML or JSON.
+dataTypesToAcceptHeader :: DataType -> [DataType] -> String
+dataTypesToAcceptHeader def = \case
+  [] -> dataTypeToAcceptHeader def
+  xs -> intercalate ";" . map dataTypeToAcceptHeader . (xs ++) $
+          if null (intersect xs [XML,JSON])
+            then [def]
+            else []
+
+dataTypeToAcceptHeader :: DataType -> String
+dataTypeToAcceptHeader = \case
+  String -> "text/plain"
+  XML    -> "text/xml"
+  JSON   -> "text/json"
+  File   -> "*"
+  Other  -> "text/plain"
+
+data DataTypeDescription = DataTypeDescription
+  { dataTypeType           :: DataType
+  , dataTypeHaskellType    :: H.Type
+  , dataTypeHaskellModules :: [H.ModuleName]
+  } deriving Show
+
+defaultErrorDataTypeDescription :: DataType -> DataTypeDescription
+defaultErrorDataTypeDescription dt =
+  DataTypeDescription
+    { dataTypeType           = dt
+    , dataTypeHaskellType    = haskellUnitType
+    , dataTypeHaskellModules = []
+    }
+
+chooseResponseType :: ActionInfo -> ResponseType
+chooseResponseType ai = case (outputs ai, errors ai) of
+  -- No outputs or errors defined
+  ([], []) -> ResponseType Nothing Nothing
+  -- Only an error type
+  ([], e ) -> ResponseType { errorType    = Just . choseType $ chooseTypeUnsafe e
+                           , outputType   = Nothing
+                           }
+  -- Only an output type
+  (o , []) -> ResponseType { errorType = Nothing
+                           , outputType = Just . choseType $ chooseTypeUnsafe o
+                           }
+  -- Output and error
+  (o , e ) -> intersection o e
+
+  where
+    chooseTypeUnsafe = fromJust . chooseType -- TODO unsafe
+
+    choseType :: DataDescription -> DataTypeDescription
+    choseType d = DataTypeDescription (dataType d) (fromJustNote "baa" $ haskellType d) (haskellModules d)
+
+    intersection :: [DataDescription] -> [DataDescription] -> ResponseType
+    intersection o e =
+      -- Try to find a response type that can be used for both output and error.
+      case intersect (map dataType o) (map dataType e) of
+        -- If the response types are disjoint we need to specify both.
+        [] -> ResponseType { errorType = Just . choseType $ chooseTypeUnsafe e
+                           , outputType = Just . choseType $ chooseTypeUnsafe o }
+        xs -> ResponseType { errorType = matching xs e, outputType = matching xs o }
+          where
+            matching :: [DataType] -> [DataDescription] -> Maybe DataTypeDescription
+            matching dts = fmap choseType . headMay
+                         -- Prioritize formats
+                         . sortBy (comparing cmp)
+                         -- Pick only the data types in the intersection of outputs and errors
+                         . filter ((`elem` dts) . dataType)
+            -- When we have an intersection with multiple possible
+            -- types, we prefer JSON over XML, and XML over the rest.
+            cmp :: DataDescription -> Int
+            cmp dt = case dataType dt of
+              JSON -> 0
+              XML  -> 1
+              _    -> 2
 
 --------------------
 -- * Traverse a resource's Schema and Handlers to create a [ActionInfo].
@@ -400,7 +499,7 @@ toHaskellType :: Typeable a => a -> H.Type
 toHaskellType ty =
   case H.parseType (typeString ty) of
     H.ParseOk parsedType -> parsedType
-    H.ParseFailed _loc msg -> error msg
+    H.ParseFailed _loc msg -> error msg -- TODO Error?
 #endif
 
 idIdent :: Id id -> Ident

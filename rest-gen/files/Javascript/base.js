@@ -37,9 +37,12 @@ $apinamespace$.addObject = function (obj1, obj2)
 $apinamespace$.defaultAjaxOptions = {};
 $apinamespace$.defaultHeaders = {};
 
-function jQueryRequest (method, url, params, success, error, contentType, dataType, data, callOpts)
+function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts)
 {
   var q = window.Q || function (a) { return a };
+
+  var headers = $dollar$.extend(true, {}, $apinamespace$.defaultHeaders);
+  $apinamespace$.addObject(headers, { Accept : acceptHeader });
 
   var callData =
     { type: method
@@ -48,10 +51,9 @@ function jQueryRequest (method, url, params, success, error, contentType, dataTy
     , success: success || function () {}
     , error: error || function () {}
     , contentType: contentType
-    , dataType: dataType
+    , headers: headers
     , xhrFields: { withCredentials: true }
     , data: data || []
-    , headers: $apinamespace$.defaultHeaders
     };
 
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);

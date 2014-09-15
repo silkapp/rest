@@ -1,5 +1,6 @@
 {-# LANGUAGE
     DoAndIfThenElse
+  , LambdaCase
   , PatternGuards
   , TemplateHaskell
   #-}
@@ -155,7 +156,7 @@ mkFunction :: Version -> String -> ApiAction -> ([H.Decl], [H.ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
   ([H.TypeSig noLoc [funName] fType,
     H.FunBind [H.Match noLoc funName fParams Nothing rhs noBinds]],
-   errorInfoModules errorI ++ infoModules output ++ maybe [] infoModules mInp)
+    responseInfoModules errorI ++ responseInfoModules output ++ maybe [] infoModules mInp)
      where
        funName = mkHsName ai
        fParams = map H.PVar $ lPars
@@ -163,6 +164,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                            ++ maybe [] (const [input]) mInp
                            ++ (if null (params ai) then [] else [pList])
        (lUrl, lPars) = linkToURL res lnk
+       mInp :: Maybe Info
        mInp    = fmap inputInfo . chooseType . inputs $ ai
        fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]] $ fTypify tyParts
          where cls = H.Ident "ApiStateC"
@@ -181,14 +183,14 @@ mkFunction ver res (ApiAction _ lnk ai) =
                          ++ [H.TyApp m (H.TyApp
                                          (H.TyApp
                                            (H.TyCon $ H.UnQual (H.Ident "ApiResponse"))
-                                           (maybe haskellUnitType id (errorInfoType errorI)))
-                                         (maybe haskellUnitType id (infoType output)))]
+                                           (responseInfoType errorI))
+                                         (responseInfoType output))]
                qualIdent (H.Ident s)
                  | s == res = H.TyCon $ H.UnQual tyIdent
                  | otherwise = H.TyCon $ H.Qual (H.ModuleName $ modName s) tyIdent
                qualIdent H.Symbol{} = error "Rest.Gen.Haskell.mkFunction.qualIdent - not expecting a Symbol"
-               inp | Just i <- mInp,
-                     Just i' <- infoType i = [i']
+               inp | Just i  <- mInp
+                   , i' <- infoType i = [i']
                    | otherwise = []
        input = H.Ident "input"
        pList = H.Ident "pList"
@@ -196,7 +198,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
          where binds = H.BDecls [rHeadersBind, requestBind]
                rHeadersBind =
                  H.PatBind noLoc (H.PVar rHeaders) Nothing
-                    (H.UnGuardedRhs $ H.List [H.Tuple H.Boxed [use hAccept, H.Lit $ H.String $ infoContentType output],
+                    (H.UnGuardedRhs $ H.List [H.Tuple H.Boxed [use hAccept     , H.Lit $ H.String $ dataTypesToAcceptHeader JSON $ responseAcceptType responseType],
                                               H.Tuple H.Boxed [use hContentType, H.Lit $ H.String $ maybe "text/plain" infoContentType mInp]])
                               noBinds
 
@@ -224,16 +226,15 @@ mkFunction ver res (ApiAction _ lnk ai) =
                request = H.Ident "request"
 
                expr = H.App (H.App (H.App (use doRequest)
-                                          (use $ H.Ident $ errorInfoFunc errorI))
-                                          (use $ H.Ident $ infoFunc output)) (use request)
+                                          (use $ H.Ident $ responseInfoFunc errorI))
+                                          (use $ H.Ident $ responseInfoFunc output)) (use request)
 
        (ve, url) = ("v" ++ show ver, lUrl)
-       errorI = headDef (ErrorInfo [] (Just haskellUnitType) defaultErrorConversion)
-                . map errorInfo
-                . mapMaybe (\v -> find ((v ==) . dataType) $ errors ai)
-                $ maybeToList (dataType <$> chooseType (outputs ai)) ++ [XML, JSON]
-       output = maybe (Info [] (Just haskellUnitType) "text/plain" "(const ())") outputInfo . chooseType . outputs $ ai
-       defaultErrorConversion = if fmap dataType (chooseType (outputs ai)) == Just JSON then "fromJSON" else "fromXML"
+       errorI :: ResponseInfo
+       errorI = errorInfo responseType
+       output :: ResponseInfo
+       output = outputInfo responseType
+       responseType = chooseResponseType ai
 
 linkToURL :: String -> Link -> (H.Exp, [H.Name])
 linkToURL res lnk = first H.List $ urlParts res lnk ([], [])
@@ -335,7 +336,7 @@ modName = concatMap upFirst . cleanName
 
 data Info = Info
   { infoModules     :: [H.ModuleName]
-  , infoType        :: Maybe H.Type
+  , infoType        :: H.Type
   , infoContentType :: String
   , infoFunc        :: String
   } deriving (Eq, Show)
@@ -343,32 +344,46 @@ data Info = Info
 inputInfo :: DataDescription -> Info
 inputInfo ds =
   case dataType ds of
-    String -> Info []                  (Just haskellStringType)     "text/plain"               "fromString"
-    XML    -> Info (haskellModules ds) (haskellType ds)             "text/xml"                 "toXML"
-    JSON   -> Info (haskellModules ds) (haskellType ds)             "text/json"                "toJSON"
-    File   -> Info []                  (Just haskellByteStringType) "application/octet-stream" "id"
-    Other  -> Info []                  (Just haskellByteStringType) "text/plain"               "id"
+    String -> Info []                  (haskellStringType        ) "text/plain"               "fromString"
+    XML    -> Info (haskellModules ds) (fromJust $ haskellType ds) "text/xml"                 "toXML"
+    JSON   -> Info (haskellModules ds) (fromJust $ haskellType ds) "text/json"                "toJSON"
+    File   -> Info []                  haskellByteStringType       "application/octet-stream" "id"
+    Other  -> Info []                  haskellByteStringType       "text/plain"               "id"
 
-outputInfo :: DataDescription -> Info
-outputInfo ds =
-  case dataType ds of
-    String -> Info []                  (Just haskellStringType)     "text/plain" "toString"
-    XML    -> Info (haskellModules ds) (haskellType ds)             "text/xml"   "fromXML"
-    JSON   -> Info (haskellModules ds) (haskellType ds)             "text/json"  "fromJSON"
-    File   -> Info []                  (Just haskellByteStringType) "*"          "id"
-    Other  -> Info []                  (Just haskellByteStringType)"text/plain" "id"
-
-data ErrorInfo = ErrorInfo
-  { errorInfoModules :: [H.ModuleName]
-  , errorInfoType    :: (Maybe H.Type)
-  , errorInfoFunc    :: String
+data ResponseInfo = ResponseInfo
+  { responseInfoModules :: [H.ModuleName]
+  , responseInfoType    :: H.Type
+  , responseInfoFunc    :: String
   } deriving (Eq, Show)
 
-errorInfo :: DataDescription -> ErrorInfo
-errorInfo ds =
-  case dataType ds of
-    String -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
-    XML    -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
-    JSON   -> ErrorInfo (haskellModules ds) (haskellType ds) "fromJSON"
-    File   -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
-    Other  -> ErrorInfo (haskellModules ds) (haskellType ds) "fromXML"
+outputInfo :: ResponseType -> ResponseInfo
+outputInfo r =
+  case outputType r of
+    Nothing -> ResponseInfo [] haskellUnitType "(const ())"
+    Just t -> case dataTypeType t of
+      String -> ResponseInfo []                         haskellStringType       "toString"
+      XML    -> ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromXML"
+      JSON   -> ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromJSON"
+      File   -> ResponseInfo []                         haskellByteStringType   "id"
+      Other  -> ResponseInfo []                         haskellByteStringType   "id"
+
+errorInfo :: ResponseType -> ResponseInfo
+errorInfo r =
+  case errorType r of
+    -- Rest only has XML and JSON instances for errors, so we need to
+    -- include at least one of these in the accept header. If there is
+    -- no accept type the Driver assumes XML for errors, so we specify
+    -- JSON here and also send text/json as the accept header.
+    Nothing -> fromJustNote "booooo" . toResponseInfo' . defaultErrorDataTypeDescription . maybe XML (\x -> case x of { XML -> XML; _ -> JSON }) . fmap dataTypeType . outputType $ r
+    Just t -> toResponseInfo [t]
+  where
+    toResponseInfo :: [DataTypeDescription] -> ResponseInfo
+    toResponseInfo xs = fromMaybe (error $ "Unsupported error formats: " ++ show xs ++ ", this is a bug in rest-gen.")
+         . headMay
+         . mapMaybe toResponseInfo'
+         $ xs
+    toResponseInfo' :: DataTypeDescription -> Maybe ResponseInfo
+    toResponseInfo' t = case dataTypeType t of
+      XML  -> Just $ ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromXML"
+      JSON -> Just $ ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromJSON"
+      _    -> Nothing

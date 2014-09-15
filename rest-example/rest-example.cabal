@@ -23,6 +23,7 @@ library
     Api
     Api.Post
     Api.Post.Comment
+    Api.Test
     Api.User
     ApiTypes
     Example
@@ -40,6 +41,7 @@ library
     , aeson >= 0.7 && < 0.9
     , containers >= 0.3 && < 0.6
     , filepath >= 1.1 && < 1.4
+    , generic-aeson == 0.2.*
     , hxt == 9.3.*
     , json-schema >= 0.6 && < 0.8
     , monad-control == 0.3.*
