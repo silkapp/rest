@@ -1,8 +1,9 @@
-{-# LANGUAGE RankNTypes
-           , GADTs
-           , ScopedTypeVariables
-           , OverloadedStrings
-           #-}
+{-# LANGUAGE
+    GADTs
+  , OverloadedStrings
+  , RankNTypes
+  , ScopedTypeVariables
+  #-}
 module Rest.Driver.Perform where
 
 import Control.Applicative
@@ -22,7 +23,7 @@ import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.UUID (UUID)
-import Network.Multipart (showMultipartBody, MultiPart(..), BodyPart (..))
+import Network.Multipart (BodyPart (..), MultiPart (..), showMultipartBody)
 import Safe
 import System.IO.Unsafe
 import System.Random (randomIO)
@@ -33,10 +34,7 @@ import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
-import Rest.Dictionary ( Dict, Format (..)
-                       , Param (..), Header (..), Input (..), Output (..), Error (..)
-                       , Dicts (..), Inputs, Outputs, Errors
-                       )
+import Rest.Dictionary (Dict, Dicts (..), Error (..), Errors, Format (..), Header (..), Input (..), Inputs, Output (..), Outputs, Param (..))
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
@@ -229,14 +227,14 @@ failureWriter es err =
             )
   where
     tryPrint :: forall m e. Rest m => Reason e -> Errors e -> Format -> MaybeT m UTF8.ByteString
-    tryPrint e None JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-    tryPrint e None XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
+    tryPrint e None JsonFormat = printError JsonFormat (toResponseCode e) (encode e)
+    tryPrint e None XmlFormat  = printError XmlFormat  (toResponseCode e) (UTF8.fromString (toXML e))
     tryPrint _ None _          = mzero
     tryPrint e (Dicts ds) f = tryPrintD ds f
       where
         tryPrintD :: Rest m => [D.Error e] -> Format -> MaybeT m UTF8.ByteString
-        tryPrintD (JsonE   : _ ) JsonFormat = printError JsonFormat (toRespCode e) (encode e)
-        tryPrintD (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toRespCode e) (UTF8.fromString (toXML e))
+        tryPrintD (JsonE   : _ ) JsonFormat = printError JsonFormat (toResponseCode e) (encode e)
+        tryPrintD (XmlE    : _ ) XmlFormat  = printError XmlFormat  (toResponseCode e) (UTF8.fromString (toXML e))
         tryPrintD (_       : xs) t          = tryPrintD xs t
         tryPrintD []             _          = mzero
 
@@ -245,7 +243,7 @@ failureWriter es err =
          setResponseCode cd
          return x
 
-    printFallback fs = printError XmlFormat (toRespCode (fallbackError fs)) (UTF8.fromString (toXML $ fallbackError fs))
+    printFallback fs = printError XmlFormat (toResponseCode (fallbackError fs)) (UTF8.fromString (toXML $ fallbackError fs))
 
     fallbackError :: [Format] -> Reason_
     fallbackError fs = OutputError (UnsupportedFormat $ intercalate "," $ map formatCT fs)
@@ -260,24 +258,6 @@ failureWriter es err =
         NoFormat        -> "any"
 
     fromMaybeT def = runMaybeT >=> maybe def return
-
-    toRespCode e =
-      case e of
-        NotFound                          -> 404
-        UnsupportedRoute                  -> 404
-        UnsupportedMethod                 -> 404
-        UnsupportedVersion                -> 404
-        NotAllowed                        -> 403
-        AuthenticationFailed              -> 401
-        Busy                              -> 503
-        Gone                              -> 410
-        OutputError (UnsupportedFormat _) -> 406
-        InputError  _                     -> 400
-        OutputError _                     -> 500
-        IdentError  _                     -> 400
-        HeaderError _                     -> 400
-        ParamError  _                     -> 400
-        CustomReason (DomainReason r _)   -> r
 
 -------------------------------------------------------------------------------
 -- Printing the output resource.

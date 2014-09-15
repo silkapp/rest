@@ -12,6 +12,7 @@ import Data.Typeable
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
+import Rest.Types.Error
 import Text.XML.HXT.Arrow.Pickle
 
 data PostError = InvalidTitle | InvalidContent
@@ -24,3 +25,6 @@ instance XmlPickler PostError where xpickle = gxpickle
 instance JSONSchema PostError where schema = gSchema
 instance FromJSON   PostError
 instance ToJSON     PostError
+
+instance ToResponseCode PostError where
+  toResponseCode _ = 400

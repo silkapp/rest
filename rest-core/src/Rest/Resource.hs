@@ -98,3 +98,4 @@ mkResourceReaderWith f = mkResource (\a -> flip runReaderT a . f)
 -- can't be routed to. It contains no values apart from bottom.
 
 newtype Void = Void { magic :: forall a. a }
+

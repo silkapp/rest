@@ -49,9 +49,9 @@ create = mkInputHandler (xmlJsonE . xmlJsonO . xmlJsonI) $ \usr -> do
   merr <- liftIO . atomically $ do
     vu <- validUserName usr <$> readTVar usrs
     if not (validPassword usr)
-      then return . Just $ domainReason (const 400) InvalidPassword
+      then return . Just $ domainReason InvalidPassword
       else if not vu
-        then return . Just $ domainReason (const 400) InvalidUserName
+        then return . Just $ domainReason InvalidUserName
         else modifyTVar usrs (Set.insert usr) >> return Nothing
   maybe (return $ toUserInfo usr) throwError merr
 

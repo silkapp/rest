@@ -1,11 +1,11 @@
 {-# LANGUAGE
-    TemplateHaskell
+    DeriveDataTypeable
   , EmptyDataDecls
-  , TypeFamilies
   , GADTs
   , ScopedTypeVariables
   , StandaloneDeriving
-  , DeriveDataTypeable
+  , TemplateHaskell
+  , TypeFamilies
   #-}
 -- | Error types that can be returned by handlers, as well as some
 -- utilities for manipulating these errors.
@@ -40,8 +40,8 @@ eitherToStatus :: Either a b -> Status a b
 eitherToStatus (Left  e) = Failure e
 eitherToStatus (Right e) = Success e
 
--- | Wrap your custom error type in a 'Reason'. The first argument is
--- a function for converting your error to an HTTP status code.
-
-domainReason :: (a -> Int) -> a -> Reason a
-domainReason f x = CustomReason (DomainReason (f x) x)
+-- | Wrap your custom error type in a 'Reason'.
+-- This requires the ToResponseCode dictionary to pick a response code when
+-- the error is served.
+domainReason :: ToResponseCode a => a -> Reason a
+domainReason = CustomReason . DomainReason

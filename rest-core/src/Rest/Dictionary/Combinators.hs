@@ -61,6 +61,7 @@ import qualified Data.Label.Total as L
 
 import Rest.Dictionary.Types
 import Rest.Info
+import Rest.Types.Error
 
 -- | Set custom sub-dictionary for recognizing headers.
 
@@ -166,12 +167,12 @@ someE = L.set errors (Dicts [])
 
 -- | Allow error output as JSON using the `Json` type class.
 
-jsonE :: (Typeable e, ToJSON e, JSONSchema e) => Dict h p i o e -> Dict h p i o e
+jsonE :: (ToResponseCode e, Typeable e, ToJSON e, JSONSchema e) => Dict h p i o e -> Dict h p i o e
 jsonE = L.modify (dicts . errors) (JsonE:)
 
 -- | Allow error output as XML using the `XmlPickler` type class.
 
-xmlE :: (Typeable e, XmlPickler e) => Dict h p i o e -> Dict h p i o e
+xmlE :: (ToResponseCode e, Typeable e, XmlPickler e) => Dict h p i o e -> Dict h p i o e
 xmlE = L.modify (dicts . errors) (XmlE:)
 
 -- | The input can be read into some instance of both `Json` and `XmlPickler`.
@@ -188,7 +189,7 @@ xmlJsonO = xmlO . jsonO . someO
 -- | Allow error output as JSON using the `Json` type class and allow output as
 -- XML using the `XmlPickler` type class.
 
-xmlJsonE :: (Typeable e, ToJSON e, JSONSchema e, XmlPickler e) => Dict h p i o () -> Dict h p i o e
+xmlJsonE :: (ToResponseCode e, Typeable e, ToJSON e, JSONSchema e, XmlPickler e) => Dict h p i o () -> Dict h p i o e
 xmlJsonE = xmlE . jsonE . someE
 
 -- | The input can be read into some instance of both `Json` and `XmlPickler`

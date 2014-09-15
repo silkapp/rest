@@ -95,9 +95,9 @@ create = mkInputHandler (xmlJsonE . xmlJson) $ \(UserPost usr pst) -> do
   merr <- liftIO . atomically $ do
     let vt = validTitle pst psts
     if not vt
-      then return . Just $ domainReason (const 400) InvalidTitle
+      then return . Just $ domainReason InvalidTitle
       else if not (validContent pst)
-        then return . Just $ domainReason (const 400) InvalidContent
+        then return . Just $ domainReason InvalidContent
         else modifyTVar pstsVar (Set.insert post) >> return Nothing
   maybe (return post) throwError merr
 

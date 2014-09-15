@@ -1,9 +1,9 @@
 {-# LANGUAGE
-    GADTs
+    FlexibleContexts
+  , GADTs
   , StandaloneDeriving
   , TemplateHaskell
   , TypeOperators
-  , FlexibleContexts
   #-}
 module Rest.Dictionary.Types
   (
@@ -160,8 +160,8 @@ deriving instance Ord  (Output o)
 -- error value to a response body.
 
 data Error e where
-  JsonE   :: (Typeable e, ToJSON e, JSONSchema e) => Error e
-  XmlE    :: (Typeable e, XmlPickler e)           => Error e
+  JsonE   :: (ToResponseCode e, Typeable e, ToJSON e, JSONSchema e) => Error e
+  XmlE    :: (ToResponseCode e, Typeable e, XmlPickler e)           => Error e
 
 deriving instance Show (Error e)
 deriving instance Eq   (Error e)

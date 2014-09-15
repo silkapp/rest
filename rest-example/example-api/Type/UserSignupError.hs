@@ -12,6 +12,7 @@ import Data.Typeable
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
+import Rest.Types.Error
 import Text.XML.HXT.Arrow.Pickle
 
 data UserSignupError = InvalidPassword | InvalidUserName
@@ -24,3 +25,6 @@ instance XmlPickler UserSignupError where xpickle = gxpickle
 instance JSONSchema UserSignupError where schema = gSchema
 instance FromJSON   UserSignupError
 instance ToJSON     UserSignupError
+
+instance ToResponseCode UserSignupError where
+  toResponseCode _ = 400

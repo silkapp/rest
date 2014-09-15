@@ -20,6 +20,7 @@ module Rest.Types.Error
   , Reason_
   , Reason(..)
   , SomeReason(..)
+  , ToResponseCode(..)
   ) where
 
 import Control.Monad.Error
@@ -46,20 +47,16 @@ data DataError
   | UnsupportedFormat String
   deriving (Eq, Generic, Show)
 
-data DomainReason a = DomainReason { responseCode :: Int, reason :: a }
-  deriving (Eq, Generic, Functor, Foldable, Traversable)
-
-instance Show a => Show (DomainReason a) where
-  showsPrec a (DomainReason _ e) = showParen (a >= 11) (showString "Domain " . showsPrec 11 e)
+newtype DomainReason a = DomainReason { reason :: a }
+  deriving (Eq, Generic, Functor, Foldable, Show, Traversable)
 
 instance XmlPickler a => XmlPickler (DomainReason a) where
-  xpickle = xpWrap (DomainReason (error "No error function defined for DomainReason parsed from JSON"), reason) xpickle
+  xpickle = xpWrap (DomainReason, reason) xpickle
 
 instance ToJSON a => ToJSON (DomainReason a) where
-  toJSON (DomainReason _ e) = toJSON e
+  toJSON (DomainReason e) = toJSON e
 instance FromJSON a => FromJSON (DomainReason a) where
-  parseJSON = fmap (DomainReason (error "No error function defined for DomainReason parsed from JSON")) . parseJSON
-
+  parseJSON = fmap DomainReason . parseJSON
 
 instance JSONSchema a => JSONSchema (DomainReason a) where
   schema = schema . fmap reason
@@ -150,3 +147,32 @@ instance ToJSON SomeReason where toJSON (SomeReason r) = toJSON r
 
 instance JSONSchema SomeReason where
   schema _ = JSONSchema.Any
+
+-- | The response code that should be given for a type.
+-- This is currently only used for errors.
+class ToResponseCode a where
+  toResponseCode :: a -> Int
+
+-- This instance shouldn't be here, and instead the None dictionary in
+-- Rest.Dictionary.Types should have type Dicts f Void.
+instance ToResponseCode () where
+  toResponseCode () = 500
+
+instance ToResponseCode a => ToResponseCode (Reason a) where
+  toResponseCode e =
+    case e of
+      NotFound                          -> 404
+      UnsupportedRoute                  -> 404
+      UnsupportedMethod                 -> 404
+      UnsupportedVersion                -> 404
+      NotAllowed                        -> 403
+      AuthenticationFailed              -> 401
+      Busy                              -> 503
+      Gone                              -> 410
+      OutputError (UnsupportedFormat _) -> 406
+      InputError  _                     -> 400
+      OutputError _                     -> 500
+      IdentError  _                     -> 400
+      HeaderError _                     -> 400
+      ParamError  _                     -> 400
+      CustomReason (DomainReason a)     -> toResponseCode a
