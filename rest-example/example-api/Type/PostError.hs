@@ -12,7 +12,7 @@ import Data.Typeable
 import GHC.Generics
 import Generics.Regular
 import Generics.Regular.XmlPickler
-import Rest.Types.Error
+import Rest.Error
 import Text.XML.HXT.Arrow.Pickle
 
 data PostError = InvalidTitle | InvalidContent

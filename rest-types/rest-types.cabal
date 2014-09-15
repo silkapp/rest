@@ -23,6 +23,7 @@ library
   exposed-modules:
     Rest.Types.Container
     Rest.Types.Container.Resource
+    Rest.Types.Info
     Rest.Types.Error
     Rest.Types.ShowUrl
   build-depends:

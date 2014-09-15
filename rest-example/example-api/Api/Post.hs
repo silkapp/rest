@@ -24,7 +24,7 @@ import qualified Data.Text     as T
 
 import Rest
 import Rest.Info
-import Rest.Types.ShowUrl
+import Rest.ShowUrl
 import qualified Rest.Resource as R
 
 import ApiTypes
