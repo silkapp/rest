@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33
+
+* Added a `Rest.Types.Error.ToResponseCode` constraint to `jsonE`, `xmlE`, and `xmlJsonE`.
+* Changed `domainReason` to have a `ToResponseCode` constraint instead of an explicit argument.
+* Added `Rest.ShowUrl` re-exporting `ShowUrl` from `rest-types`.
+
 #### 0.32.0.1
 * Fix bug in Chrome when serving files with commas in name.
 

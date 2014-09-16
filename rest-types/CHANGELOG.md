@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.11
+
+* Added `Rest.Types.Error.ToResponseCode` for getting the response codes of errors.
+* Removed `responseCode` from `Rest.Types.Error.DomainReason`, use `toResponseCode` instead.
+* Added `Rest.Types.Info`, moved from `rest-core`.
+
 ### 1.10.2
 
 * Add `Functor`, `Foldable` and `Traversable` instances for the types
@@ -11,15 +17,15 @@
 
 #### 1.10.0.3
 
-* Use `JSONSchema` `Any` type instead of `Choice []`
+* Use `JSONSchema` `Any` type instead of `Choice []`.
 
 #### 1.10.0.2
 
-* Use `rest-stringmap == 0.2.*`
+* Use `rest-stringmap == 0.2.*`.
 
 #### 1.10.0.1
 
-* Allow `mtl == 2.2.*`
+* Allow `mtl == 2.2.*`.
 
 ## 1.10
 

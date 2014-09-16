@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.10.3
+
+* Bump `rest-types` and `rest-core`
+
 #### 0.2.10.2
 
 * Allow `rest-gen == 0.15.*`
