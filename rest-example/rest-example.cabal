@@ -24,6 +24,7 @@ library
     Api.Post
     Api.Post.Comment
     Api.Test
+    Api.Test.Err2
     Api.User
     ApiTypes
     Example

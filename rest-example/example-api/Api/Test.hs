@@ -2,6 +2,8 @@
     DeriveDataTypeable
   , DeriveGeneric
   , LambdaCase
+  , OverloadedStrings
+  , ScopedTypeVariables
   , TemplateHaskell
   , TypeFamilies
   #-}
@@ -23,6 +25,7 @@ import Rest
 import qualified Rest.Resource as R
 
 import ApiTypes
+import qualified Api.Test.Err2 as E2
 
 -- | User extends the root of the API with a reader containing the ways to identify a user in our URLs.
 -- Currently only by the user name.
@@ -55,6 +58,10 @@ resource = mkResourceReader
                 , ("differentFormats"   , differentFormats   )
                 , ("intersectedFormats" , intersectedFormats )
                 , ("intersectedFormats2", intersectedFormats2)
+                , ("errorImport"        , errorImport        )
+                , ("noError"            , noError            )
+                , ("justStringO"        , justStringO        )
+                , ("preferJson"         , preferJson         )
                 ]
   }
 
@@ -79,6 +86,24 @@ intersectedFormats = mkInputHandler (jsonE . someE . xmlO . jsonO . someO . stri
 
 intersectedFormats2 :: Handler WithText
 intersectedFormats2 = mkInputHandler (xmlE . someE . xmlO . jsonO . someO . stringI . someI) $
+  \case
+    "error" -> throwError $ domainReason Err
+    _       -> return Ok
+
+errorImport :: Handler WithText
+errorImport = mkIdHandler (stringI . rawXmlO . xmlE . someE) $ \s (_::Text) ->
+  case s of
+    "error" -> throwError $ domainReason E2.Err
+    _       -> return "<ok/>"
+
+noError :: Handler WithText
+noError = mkConstHandler (jsonO . someO) $ return Ok
+
+justStringO :: Handler WithText
+justStringO = mkConstHandler (stringO . someO) $ return "Ok"
+
+preferJson :: Handler WithText
+preferJson = mkInputHandler (xmlJsonO . xmlJsonE . stringI . someI) $
   \case
     "error" -> throwError $ domainReason Err
     _       -> return Ok
