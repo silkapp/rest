@@ -336,11 +336,13 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
              mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower ext)
              setHeader "Content-Type" mime
              setHeader "Cache-Control" "max-age=604800"
-             setHeader "Content-Disposition" ("filename=" ++ snd v)
+             setHeader "Content-Disposition" ("filename=\"" ++ escapeQuotes (snd v) ++ "\"")
              ok (fst v)
         tryD []                t            = throwError (UnsupportedFormat (show t))
         tryD (_          : xs) t            = tryD xs t
     ok r = setResponseCode 200 >> return r
+    escapeQuotes :: String -> String
+    escapeQuotes = intercalate "\\\"" . splitOn "\""
 
 outputMultipart :: Rest m => [BodyPart] -> m UTF8.ByteString
 outputMultipart vs =
