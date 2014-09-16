@@ -1,5 +1,8 @@
 # Changelog
 
+#### 0.32.0.1
+* Fix bug in Chrome when serving files with commas in name.
+
 ## 0.32
 
 * Add `addHeader` dictionary combinator, to extend instead of replace
