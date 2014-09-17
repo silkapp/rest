@@ -1,10 +1,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Rest.Gen.Ruby (mkRbApi) where
 
+import Prelude hiding ((.))
+
+import Control.Category ((.))
 import Data.Char
 import Data.List
 import Data.List.Split (splitOn)
 import Data.Maybe
+import qualified Data.Label.Total             as L
 import qualified Data.List.NonEmpty           as NList
 import qualified Language.Haskell.Exts.Syntax as H
 
@@ -141,7 +145,7 @@ accessorName = concatMap upFirst . ("Access":) . concatMap cleanName
 
 mkType :: DataDescription -> (String, String, Code -> Code)
 mkType ds =
-  case dataType ds of
+  case L.get (dataType . desc) ds of
     String -> ("data", "text/plain", id)
     XML    -> ("xml" , "text/xml", (<+> ".to_s"))
     JSON   -> ("json", "text/json", call "mkJson")

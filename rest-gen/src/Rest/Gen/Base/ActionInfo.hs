@@ -1,14 +1,15 @@
 {-# LANGUAGE
     GADTs
   , LambdaCase
+  , NoMonomorphismRestriction
   , ScopedTypeVariables
+  , TemplateHaskell
   #-}
 module Rest.Gen.Base.ActionInfo
   ( Accessor
   , ActionInfo (..)
   , ActionType (..)
   , ActionTarget (..)
-  , DataDescription (..)
   , DataType (..)
   , ResourceId
   , accessLink
@@ -17,7 +18,21 @@ module Rest.Gen.Base.ActionInfo
   , ResponseType (..)
   , responseAcceptType
   , dataTypesToAcceptHeader
-  , DataTypeDescription (..)
+
+  , DataDesc (..)
+  , dataType
+  , haskellType
+  , haskellModules
+
+  , DataMeta (..)
+  , dataTypeDesc
+  , dataSchema
+  , dataExample
+
+  , DataDescription (..)
+  , desc
+  , meta
+
   , chooseResponseType
   , isAccessor
   , listGetterActionInfo
@@ -35,6 +50,7 @@ import Control.Applicative
 import Control.Category
 import Control.Monad
 import Data.Foldable (foldMap)
+import Data.Label.Derive
 import Data.List
 import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
@@ -79,14 +95,39 @@ data ActionType = Retrieve | Create | Delete | DeleteMany | List | Update | Upda
 
 data ActionTarget = Self | Any deriving (Show, Eq)
 
+data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
+
+data DataDesc = DataDesc
+  { _dataType       :: DataType
+  , _haskellType    :: H.Type
+  , _haskellModules :: [H.ModuleName]
+  } deriving (Show, Eq)
+
+mkLabel ''DataDesc
+
+data DataMeta = DataMeta
+  { _dataTypeDesc :: String       -- ^ The name of the DataType, or a custom value if dataType is Other
+  , _dataSchema   :: Maybe String -- ^ Just if dataType is XML
+  , _dataExample  :: Maybe String -- ^ Just if dataType is XML or JSON
+  } deriving (Show, Eq)
+
+mkLabel ''DataMeta
+
+data DataDescription = DataDescription
+  { _desc :: DataDesc
+  , _meta :: DataMeta
+  } deriving (Show, Eq)
+
+mkLabel ''DataDescription
+
 data ActionInfo = ActionInfo
-  { ident        :: Maybe Ident  -- Requires extra identifier in url? e.g. page/<identifier>
-  , postAction   :: Bool         -- Works on identified resources? e.g. uri/<uri>/action
+  { ident        :: Maybe Ident -- Requires extra identifier in url? e.g. page/<identifier>
+  , postAction   :: Bool        -- Works on identified resources? e.g. uri/<uri>/action
   , actionType   :: ActionType
   , actionTarget :: ActionTarget
-  , resDir       :: String       -- Resource directory
+  , resDir       :: String      -- Resource directory
   , method       :: RequestMethod
-  , inputs       :: [DataDescription] -- TODO ? => ([DataDescription], [H.ModuleName])
+  , inputs       :: [DataDescription]
   , outputs      :: [DataDescription]
   , errors       :: [DataDescription]
   , params       :: [String]
@@ -97,35 +138,27 @@ data ActionInfo = ActionInfo
 isAccessor :: ActionInfo -> Bool
 isAccessor ai = actionType ai == Retrieve && actionTarget ai == Self
 
-data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
-
--- | Description of input/output data
-data DataDescription = DataDescription
-  { dataType       :: DataType
-  , dataTypeDesc   :: String -- ^ The name of the DataType, or a custom value if dataType is Other
-  , dataSchema     :: Maybe String -- ^ Just if dataType is XML
-  , dataExample    :: Maybe String -- ^ Just if dataType is XML or JSON
-  , haskellType    :: H.Type
-  , haskellModules :: [H.ModuleName] -- ^ The module dependencies of the haskell type
-  } deriving (Show, Eq)
-
 defaultDescription :: DataType -> String -> H.Type -> DataDescription
-defaultDescription typ desc htype =
+defaultDescription typ typeDesc htype =
   DataDescription
-    { dataType       = typ
-    , dataTypeDesc   = desc
-    , dataSchema     = Nothing
-    , dataExample    = Nothing
-    , haskellType    = htype
-    , haskellModules = []
+    { _desc = DataDesc
+        { _dataType       = typ
+        , _haskellType    = htype
+        , _haskellModules = []
+        }
+    , _meta = DataMeta
+        { _dataTypeDesc = typeDesc
+        , _dataSchema   = Nothing
+        , _dataExample  = Nothing
+        }
     }
 
 chooseType :: NonEmpty DataDescription -> DataDescription
-chooseType ls = fromMaybe (NList.head ls) $ F.find ((JSON ==) . dataType) ls
+chooseType ls = fromMaybe (NList.head ls) $ F.find ((JSON ==) . L.get (dataType . desc)) ls
 
 data ResponseType = ResponseType
-  { errorType  :: Maybe DataTypeDescription
-  , outputType :: Maybe DataTypeDescription
+  { errorType  :: Maybe DataDesc
+  , outputType :: Maybe DataDesc
   } deriving Show
 
 responseAcceptType :: ResponseType -> [DataType] -- TODO make non empty list Maybe (NonEmpty DataType)
@@ -134,8 +167,8 @@ responseAcceptType (ResponseType e o) = typs
     typs :: [DataType]
     typs = nub $ f e ++ f o
       where
-        f :: Maybe DataTypeDescription -> [DataType]
-        f = maybeToList . fmap dataTypeType
+        f :: Maybe DataDesc -> [DataType]
+        f = maybeToList . fmap (L.get dataType)
 
 -- | First argument is the default accept header to use if there is no
 -- output or errors, must be XML or JSON.
@@ -155,12 +188,6 @@ dataTypeToAcceptHeader = \case
   File   -> "*"
   Other  -> "text/plain"
 
-data DataTypeDescription = DataTypeDescription
-  { dataTypeType           :: DataType
-  , dataTypeHaskellType    :: H.Type
-  , dataTypeHaskellModules :: [H.ModuleName]
-  } deriving Show
-
 chooseResponseType :: ActionInfo -> ResponseType
 chooseResponseType ai = case (NList.nonEmpty $ outputs ai, NList.nonEmpty $ errors ai) of
   -- No outputs or errors defined
@@ -172,52 +199,51 @@ chooseResponseType ai = case (NList.nonEmpty $ outputs ai, NList.nonEmpty $ erro
   -- Only an error type
   (Nothing, Just e ) ->
     ResponseType
-      { errorType  = Just . toDataTypeDescription $ chooseType e
+      { errorType  = Just . L.get desc $ chooseType e
       , outputType = Nothing
       }
   -- Only an output type
   (Just o , Nothing) ->
     ResponseType
       { errorType  = Nothing
-      , outputType = Just . toDataTypeDescription $ chooseType o
+      , outputType = Just . L.get desc $ chooseType o
       }
   -- Output and error
   (Just o , Just e ) -> intersection o e
 
   where
-    toDataTypeDescription :: DataDescription -> DataTypeDescription
-    toDataTypeDescription d = DataTypeDescription (dataType d) (haskellType d) (haskellModules d)
 
     intersection :: NonEmpty DataDescription -> NonEmpty DataDescription -> ResponseType
     intersection o e =
       -- Try to find a response type that can be used for both output and error.
-      case intersect (map dataType . NList.toList $ o) (map dataType . NList.toList $ e) of
+      case intersect (f o) (f e) of
         -- If the response types are disjoint we need to specify both.
         [] ->
           ResponseType
-            { errorType  = Just . toDataTypeDescription $ chooseType e
-            , outputType = Just . toDataTypeDescription $ chooseType o
+            { errorType  = Just . L.get desc $ chooseType e
+            , outputType = Just . L.get desc $ chooseType o
             }
         xs ->
           ResponseType
             { errorType  = matching xs e
             , outputType = matching xs o
             }
-          where
-            matching :: [DataType] -> NonEmpty DataDescription -> Maybe DataTypeDescription
-            matching dts = fmap toDataTypeDescription . headMay
-                         -- Prioritize formats
-                         . sortBy (comparing cmp)
-                         -- Pick only the data types in the intersection of outputs and errors
-                         . filter ((`elem` dts) . dataType)
-                         . NList.toList
-            -- When we have an intersection with multiple possible
-            -- types, we prefer JSON over XML, and XML over the rest.
-            cmp :: DataDescription -> Int
-            cmp dt = case dataType dt of
-              JSON -> 0
-              XML  -> 1
-              _    -> 2
+        where
+          f = map (L.get (dataType . desc)) . NList.toList
+          matching :: [DataType] -> NonEmpty DataDescription -> Maybe DataDesc
+          matching dts = fmap (L.get desc) . headMay
+                       -- Prioritize formats
+                       . sortBy (comparing cmp)
+                       -- Pick only the data types in the intersection of outputs and errors
+                       . filter ((`elem` dts) . (L.get (dataType . desc)))
+                       . NList.toList
+          -- When we have an intersection with multiple possible
+          -- types, we prefer JSON over XML, and XML over the rest.
+          cmp :: DataDescription -> Int
+          cmp dt = case L.get (dataType . desc) dt of
+            JSON -> 0
+            XML  -> 1
+            _    -> 2
 
 --------------------
 -- * Traverse a resource's Schema and Handlers to create a [ActionInfo].
@@ -395,52 +421,53 @@ paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 -- | Extract input description from handlers
 handlerInputs :: Handler m -> [DataDescription]
 handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dicts . Dict.inputs) dict)
-  where handlerInput :: Proxy a -> Input a -> DataDescription
-        handlerInput d ReadI    = (defaultDescription Other (describe d) (toHaskellType d)) { haskellModules = modString d }
-        handlerInput _ StringI  = defaultDescription String "String" haskellStringType
-        handlerInput d XmlI     = (defaultDescription XML "XML" (toHaskellType d))
-                                                     { dataSchema   = Just . X.showSchema  . X.getXmlSchema $ d
-                                                     , dataExample  = Just . X.showExample . X.getXmlSchema $ d
-                                                     , haskellModules = modString d
-                                                     }
-        handlerInput _ XmlTextI = defaultDescription XML "XML" haskellStringType
-        handlerInput _ RawXmlI  = defaultDescription XML "XML" haskellStringType
-        handlerInput d JsonI    = (defaultDescription JSON "JSON" (toHaskellType d))
-                                                     { dataExample  = Just . J.showExample . J.schema $ d
-                                                     , haskellModules = modString d
-                                                     }
-        handlerInput _ FileI    = defaultDescription File "File" haskellByteStringType
+  where
+    handlerInput :: Proxy a -> Input a -> DataDescription
+    handlerInput d c = case c of
+      ReadI    -> L.set (haskellModules . desc) (modString d)
+                $ defaultDescription Other (describe d) (toHaskellType d)
+      StringI  -> defaultDescription String "String" haskellStringType
+      XmlI     -> L.set (haskellModules . desc) (modString d)
+                . L.set (dataSchema     . meta) (Just . X.showSchema  . X.getXmlSchema $ d)
+                . L.set (dataExample    . meta) (Just . X.showExample . X.getXmlSchema $ d)
+                $ defaultDescription XML "XML" (toHaskellType d)
+      XmlTextI -> defaultDescription XML "XML" haskellStringType
+      RawXmlI  -> defaultDescription XML "XML" haskellStringType
+      JsonI    -> L.set (haskellModules . desc) (modString d)
+                . L.set (dataExample    . meta) (Just . J.showExample . J.schema $ d)
+                $ defaultDescription JSON "JSON" (toHaskellType d)
+      FileI    -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract output description from handlers
 handlerOutputs :: Handler m -> [DataDescription]
 handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.dicts . Dict.outputs) dict)
-  where handlerOutput :: Proxy a -> Output a -> DataDescription
-        handlerOutput _ StringO  = defaultDescription String "String" haskellStringType
-        handlerOutput d XmlO     = (defaultDescription XML "XML" (toHaskellType d))
-                                                      { dataSchema    = Just . X.showSchema  . X.getXmlSchema $ d
-                                                      , dataExample   = Just . X.showExample . X.getXmlSchema $ d
-                                                      , haskellModules = modString d
-                                                      }
-        handlerOutput _ RawXmlO  = defaultDescription XML "XML" haskellStringType
-        handlerOutput d JsonO    = (defaultDescription JSON "JSON" (toHaskellType d))
-                                                      { dataExample   = Just . J.showExample . J.schema $ d
-                                                      , haskellModules = modString d
-                                                      }
-        handlerOutput _ FileO    = defaultDescription File "File" haskellByteStringType
+  where
+    handlerOutput :: Proxy a -> Output a -> DataDescription
+    handlerOutput d c = case c of
+      StringO -> defaultDescription String "String" haskellStringType
+      XmlO    -> L.set (haskellModules . desc) (modString d)
+               . L.set (dataSchema     . meta) (Just . X.showSchema  . X.getXmlSchema $ d)
+               . L.set (dataExample    . meta) (Just . X.showExample . X.getXmlSchema $ d)
+               $ defaultDescription XML "XML" (toHaskellType d)
+      RawXmlO -> defaultDescription XML "XML" haskellStringType
+      JsonO   -> L.set (haskellModules . desc) (modString d)
+               . L.set (dataExample    . meta) (Just . J.showExample . J.schema $ d)
+               $ defaultDescription JSON "JSON" (toHaskellType d)
+      FileO   -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]
 handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (L.get (Dict.dicts . Dict.errors) dict)
-  where handleError :: Proxy a -> Error a -> DataDescription
-        handleError d XmlE     = (defaultDescription XML "XML" (toHaskellType d))
-                                                    { dataSchema    = Just . X.showSchema  . X.getXmlSchema $ d
-                                                    , dataExample   = Just . X.showExample . X.getXmlSchema $ d
-                                                    , haskellModules = modString d
-                                                    }
-        handleError d JsonE    = (defaultDescription JSON "JSON" (toHaskellType d))
-                                                    { dataExample   = Just . J.showExample . J.schema $ d
-                                                    , haskellModules = modString d
-                                                    }
+  where
+    handleError :: Proxy a -> Error a -> DataDescription
+    handleError d c = case c of
+      XmlE  -> L.set (dataSchema     . meta) (Just . X.showSchema  . X.getXmlSchema $ d)
+             . L.set (dataExample    . meta) (Just . X.showExample . X.getXmlSchema $ d)
+             . L.set (haskellModules . desc) (modString d)
+             $ defaultDescription XML "XML" (toHaskellType d)
+      JsonE -> L.set (dataExample    . meta) (Just . J.showExample . J.schema $ d)
+             . L.set (haskellModules . desc) (modString d)
+             $ defaultDescription JSON "JSON" (toHaskellType d)
 
 typeString :: forall a. Typeable a => Proxy a -> String
 typeString _ = typeString' . typeOf $ (undefined :: a)

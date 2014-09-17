@@ -22,6 +22,7 @@ import Safe
 import System.Directory
 import System.FilePath
 import qualified Data.Generics.Uniplate.Data                 as U
+import qualified Data.Label.Total                            as L
 import qualified Data.List.NonEmpty                          as NList
 import qualified Distribution.ModuleName                     as Cabal
 import qualified Distribution.Package                        as Cabal
@@ -344,13 +345,14 @@ data Info = Info
 
 inputInfo :: DataDescription -> Info
 inputInfo ds =
-  case dataType ds of
-    String -> Info []                  (haskellStringType)   "text/plain"               "fromString"
+  let dsc = L.get desc ds in
+  case L.get dataType dsc of
+    String -> Info [] (haskellStringType) "text/plain" "fromString"
     -- TODO fromJusts
-    XML    -> Info (haskellModules ds) (haskellType ds)      "text/xml"                 "toXML"
-    JSON   -> Info (haskellModules ds) (haskellType ds)      "text/json"                "toJSON"
-    File   -> Info []                  haskellByteStringType "application/octet-stream" "id"
-    Other  -> Info []                  haskellByteStringType "text/plain"               "id"
+    XML    -> Info (L.get haskellModules dsc) (L.get haskellType dsc) "text/xml" "toXML"
+    JSON   -> Info (L.get haskellModules dsc) (L.get haskellType dsc) "text/json" "toJSON"
+    File   -> Info [] haskellByteStringType "application/octet-stream" "id"
+    Other  -> Info [] haskellByteStringType "text/plain" "id"
 
 data ResponseInfo = ResponseInfo
   { responseInfoModules :: [H.ModuleName]
@@ -362,12 +364,12 @@ outputInfo :: ResponseType -> ResponseInfo
 outputInfo r =
   case outputType r of
     Nothing -> ResponseInfo [] haskellUnitType "(const ())"
-    Just t -> case dataTypeType t of
-      String -> ResponseInfo []                         haskellStringType       "toString"
-      XML    -> ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromXML"
-      JSON   -> ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromJSON"
-      File   -> ResponseInfo []                         haskellByteStringType   "id"
-      Other  -> ResponseInfo []                         haskellByteStringType   "id"
+    Just t -> case L.get dataType t of
+      String -> ResponseInfo [] haskellStringType "toString"
+      XML    -> ResponseInfo (L.get haskellModules t) (L.get haskellType t) "fromXML"
+      JSON   -> ResponseInfo (L.get haskellModules t) (L.get haskellType t) "fromJSON"
+      File   -> ResponseInfo [] haskellByteStringType "id"
+      Other  -> ResponseInfo [] haskellByteStringType "id"
 
 errorInfo :: ResponseType -> ResponseInfo
 errorInfo r =
@@ -376,24 +378,24 @@ errorInfo r =
     -- include at least one of these in the accept header. If there is
     -- no accept type the Driver assumes XML for errors, so we specify
     -- JSON here and also send text/json as the accept header.
-    Nothing -> fromJustNote "booooo" . toResponseInfo' . defaultErrorDataTypeDescription . maybe XML (\x -> case x of { XML -> XML; _ -> JSON }) . fmap dataTypeType . outputType $ r
+    Nothing -> fromJustNote "booooo" . toResponseInfo' . defaultErrorDataDesc . maybe XML (\x -> case x of { XML -> XML; _ -> JSON }) . fmap (L.get dataType) . outputType $ r
     Just t -> toResponseInfo [t]
   where
-    toResponseInfo :: [DataTypeDescription] -> ResponseInfo
+    toResponseInfo :: [DataDesc] -> ResponseInfo
     toResponseInfo xs = fromMaybe (error $ "Unsupported error formats: " ++ show xs ++ ", this is a bug in rest-gen.")
          . headMay
          . mapMaybe toResponseInfo'
          $ xs
-    toResponseInfo' :: DataTypeDescription -> Maybe ResponseInfo
-    toResponseInfo' t = case dataTypeType t of
-      XML  -> Just $ ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromXML"
-      JSON -> Just $ ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromJSON"
+    toResponseInfo' :: DataDesc -> Maybe ResponseInfo
+    toResponseInfo' t = case L.get dataType t of
+      XML  -> Just $ ResponseInfo (L.get haskellModules t) (L.get haskellType t) "fromXML"
+      JSON -> Just $ ResponseInfo (L.get haskellModules t) (L.get haskellType t) "fromJSON"
       _    -> Nothing
 
-defaultErrorDataTypeDescription :: DataType -> DataTypeDescription
-defaultErrorDataTypeDescription dt =
-  DataTypeDescription
-    { dataTypeType           = dt
-    , dataTypeHaskellType    = haskellUnitType
-    , dataTypeHaskellModules = []
+defaultErrorDataDesc :: DataType -> DataDesc
+defaultErrorDataDesc dt =
+  DataDesc
+    { _dataType       = dt
+    , _haskellType    = haskellUnitType
+    , _haskellModules = []
     }

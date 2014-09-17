@@ -20,9 +20,10 @@ module Rest.Gen.Docs
   , writeDocs
   ) where
 
-import Prelude hiding (div, head, id, span)
+import Prelude hiding (div, head, id, id, span, (.))
 import qualified Prelude as P
 
+import Control.Category ((.))
 import Data.Foldable (forM_)
 import Data.Function (on)
 import Data.Hashable (hash)
@@ -32,10 +33,11 @@ import System.Directory
 import System.FilePath
 import System.Log.Logger
 import Text.Blaze.Html
-import Text.Blaze.Html5 hiding (map)
+import Text.Blaze.Html5 hiding (map, meta)
 import Text.Blaze.Html5.Attributes hiding (method, span, title)
 import Text.Blaze.Html.Renderer.String
 import Text.StringTemplate
+import qualified Data.Label.Total as L
 
 import Rest.Api (Router, Version)
 import Rest.Gen.Base
@@ -164,10 +166,10 @@ dataDescriptions :: String -> [DataDescription] -> Html
 dataDescriptions s []    = toHtml s
 dataDescriptions _ descs =
   table ! cls "data-description" $
-    do tr $ flip mapM_ descs $ \desc -> td $ toHtml $ dataTypeDesc desc
-       tr $ flip mapM_ descs $ \desc -> td $
-        do forM_ (dataSchema  desc) $ mkCode (typeLang (dataType desc)) "Schema"
-           forM_ (dataExample desc) $ mkCode (typeLang (dataType desc)) "Example"
+    do tr $ forM_ descs $ \dsc -> td $ toHtml . L.get (dataTypeDesc . meta) $ dsc
+       tr $ forM_ descs $ \dsc -> td $
+        do forM_ (L.get (dataSchema  . meta) dsc) $ mkCode (typeLang (L.get (dataType . desc) dsc)) "Schema"
+           forM_ (L.get (dataExample . meta) dsc) $ mkCode (typeLang (L.get (dataType . desc) dsc)) "Example"
   where typeLang XML  = "xml"
         typeLang JSON = "js"
         typeLang _    = ""

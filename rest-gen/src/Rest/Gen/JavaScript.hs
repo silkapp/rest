@@ -1,9 +1,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Rest.Gen.JavaScript (mkJsApi) where
 
+import Prelude hiding ((.))
+
+import Control.Category ((.))
 import Control.Monad
 import Data.Maybe
 import Text.StringTemplate
+import qualified Data.Label.Total             as L
 import qualified Data.List.NonEmpty           as NList
 import qualified Language.Haskell.Exts.Syntax as H
 
@@ -132,7 +136,7 @@ jsId (x : xs) = x ++ concatMap upFirst xs
 
 mkType :: DataDescription -> (String, String, Code -> Code)
 mkType ds =
-  case dataType ds of
+  case L.get (dataType . desc) ds of
     String -> ("text", "text/plain", id)
     XML    -> ("xml" , "text/xml", id)
     JSON   -> ("json", "text/json", call "JSON.stringify")
