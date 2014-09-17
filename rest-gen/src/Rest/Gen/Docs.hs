@@ -27,7 +27,6 @@ import Data.Foldable (forM_)
 import Data.Function (on)
 import Data.Hashable (hash)
 import Data.List hiding (head, span)
-import Data.Maybe
 import Data.String
 import System.Directory
 import System.FilePath
@@ -165,7 +164,7 @@ dataDescriptions :: String -> [DataDescription] -> Html
 dataDescriptions s []    = toHtml s
 dataDescriptions _ descs =
   table ! cls "data-description" $
-    do tr $ flip mapM_ descs $ \desc -> td $ toHtml $ fromMaybe "" $ dataTypeDesc desc
+    do tr $ flip mapM_ descs $ \desc -> td $ toHtml $ dataTypeDesc desc
        tr $ flip mapM_ descs $ \desc -> td $
         do forM_ (dataSchema  desc) $ mkCode (typeLang (dataType desc)) "Schema"
            forM_ (dataExample desc) $ mkCode (typeLang (dataType desc)) "Example"
