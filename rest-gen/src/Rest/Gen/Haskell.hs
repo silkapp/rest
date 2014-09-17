@@ -167,7 +167,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                            ++ (if null (params ai) then [] else [pList])
        (lUrl, lPars) = linkToURL res lnk
        mInp :: Maybe Info
-       mInp    = fmap (inputInfo . chooseType) . NList.nonEmpty . inputs $ ai
+       mInp    = fmap (inputInfo . L.get desc . chooseType) . NList.nonEmpty . inputs $ ai
        fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]] $ fTypify tyParts
          where cls = H.Ident "ApiStateC"
                m = H.TyVar $ H.Ident "m"
@@ -343,9 +343,8 @@ data Info = Info
   , infoFunc        :: String
   } deriving (Eq, Show)
 
-inputInfo :: DataDescription -> Info
-inputInfo ds =
-  let dsc = L.get desc ds in
+inputInfo :: DataDesc -> Info
+inputInfo dsc =
   case L.get dataType dsc of
     String -> Info [] (haskellStringType) "text/plain" "fromString"
     -- TODO fromJusts
@@ -378,14 +377,18 @@ errorInfo r =
     -- include at least one of these in the accept header. If there is
     -- no accept type the Driver assumes XML for errors, so we specify
     -- JSON here and also send text/json as the accept header.
-    Nothing -> fromJustNote "booooo" . toResponseInfo' . defaultErrorDataDesc . maybe XML (\x -> case x of { XML -> XML; _ -> JSON }) . fmap (L.get dataType) . outputType $ r
+    Nothing -> fromJustNote ("rest-gen bug: toResponseInfo' was called with a data type other than XML or JSON, responseType: " ++ show r)
+             . toResponseInfo' . defaultErrorDataDesc . maybe XML (\x -> case x of { XML -> XML; _ -> JSON })
+             . fmap (L.get dataType) . outputType
+             $ r
     Just t -> toResponseInfo [t]
   where
     toResponseInfo :: [DataDesc] -> ResponseInfo
-    toResponseInfo xs = fromMaybe (error $ "Unsupported error formats: " ++ show xs ++ ", this is a bug in rest-gen.")
-         . headMay
-         . mapMaybe toResponseInfo'
-         $ xs
+    toResponseInfo xs
+      = fromMaybe (error $ "Unsupported error formats: " ++ show xs ++ ", this is a bug in rest-gen.")
+      . headMay
+      . mapMaybe toResponseInfo'
+      $ xs
     toResponseInfo' :: DataDesc -> Maybe ResponseInfo
     toResponseInfo' t = case L.get dataType t of
       XML  -> Just $ ResponseInfo (L.get haskellModules t) (L.get haskellType t) "fromXML"

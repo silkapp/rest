@@ -93,7 +93,7 @@ mkFunction ns (ApiAction _ _ ai) =
   let fParams  = maybeToList mIdent
               ++ maybeToList (fmap fst3 mInp)
               ++ ["success", "error", "params", "callOpts"]
-      mInp     = fmap (mkType . chooseType) . NList.nonEmpty . inputs $ ai
+      mInp     = fmap (mkType . L.get (dataType . desc) . chooseType) . NList.nonEmpty . inputs $ ai
       mOut     = dataTypesToAcceptHeader JSON . responseAcceptType . chooseResponseType $ ai
       urlPart  = (if isAccessor ai then const "" else id) $
                  (if resDir ai == "" then "" else resDir ai ++ "/")
@@ -134,9 +134,9 @@ jsId :: [String] -> String
 jsId []       = ""
 jsId (x : xs) = x ++ concatMap upFirst xs
 
-mkType :: DataDescription -> (String, String, Code -> Code)
-mkType ds =
-  case L.get (dataType . desc) ds of
+mkType :: DataType -> (String, String, Code -> Code)
+mkType dt =
+  case dt of
     String -> ("text", "text/plain", id)
     XML    -> ("xml" , "text/xml", id)
     JSON   -> ("json", "text/json", call "JSON.stringify")

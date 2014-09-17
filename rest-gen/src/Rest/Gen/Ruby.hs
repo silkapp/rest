@@ -80,7 +80,8 @@ mkAccessor node@(ApiAction rid _ ai) =
   let fParams  = maybeToList mIdent
       urlPart  = (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + " ++ i ++ " + '/") mIdent
-      datType  = maybe ":data" ((':':) . fst3 . mkType . chooseType) . NList.nonEmpty . outputs $ ai
+      datType  = maybe ":data" ((':':) . fst3 . mkType . L.get (dataType . desc) . chooseType)
+               . NList.nonEmpty . outputs $ ai
       mIdent   = fmap (rbName . cleanName . description) $ ident ai
   in function (rbName $ mkFuncParts node) fParams $ ret $
         new (className rid) ["@url + '" ++ urlPart ++ "'", "@api", datType]
@@ -90,9 +91,9 @@ mkFunction node@(ApiAction _ _ ai) =
   let fParams   = maybeToList mIdent
               ++ maybeToList (fmap fst3 mInp)
               ++ ["params = {}", "headers = {}"]
-      mInp     = fmap (mkType . chooseType) . NList.nonEmpty . inputs $ ai
+      mInp     = fmap (mkType . L.get (dataType . desc) . chooseType) . NList.nonEmpty . inputs $ ai
       -- TODO Other clients call responseAcceptType here
-      mOut     = fmap (mkType . chooseType) . NList.nonEmpty . outputs $ ai
+      mOut     = fmap (mkType . L.get (dataType . desc) . chooseType) . NList.nonEmpty . outputs $ ai
       urlPart  = (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + " ++ i ++ " + '/") mIdent
       mIdent   = fmap (rbName . cleanName . description) $ ident ai
@@ -143,9 +144,9 @@ className = concatMap upFirst . concatMap cleanName
 accessorName :: ResourceId -> String
 accessorName = concatMap upFirst . ("Access":) . concatMap cleanName
 
-mkType :: DataDescription -> (String, String, Code -> Code)
-mkType ds =
-  case L.get (dataType . desc) ds of
+mkType :: DataType -> (String, String, Code -> Code)
+mkType dt =
+  case dt of
     String -> ("data", "text/plain", id)
     XML    -> ("xml" , "text/xml", (<+> ".to_s"))
     JSON   -> ("json", "text/json", call "mkJson")
