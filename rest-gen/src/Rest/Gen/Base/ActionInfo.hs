@@ -1,6 +1,5 @@
 {-# LANGUAGE
-    CPP
-  , GADTs
+    GADTs
   , LambdaCase
   , ScopedTypeVariables
   #-}
@@ -43,10 +42,6 @@ import Data.Ord
 import Data.Proxy
 import Data.Typeable
 import Safe
--- TODO Remove CPP
-#if __GLASGOW_HASKELL__ < 704
-import Data.List.Split
-#endif
 import qualified Data.JSON.Schema             as J
 import qualified Data.Label.Total             as L
 import qualified Language.Haskell.Exts.Parser as H
@@ -461,7 +456,6 @@ handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (L.get (Dict.dicts
                                                     , haskellModules = modString d
                                                     }
 
-#if __GLASGOW_HASKELL__ >= 704
 typeString :: forall a. Typeable a => Proxy a -> String
 typeString _ = typeString' . typeOf $ (undefined :: a)
   where typeString' tr =
@@ -485,22 +479,6 @@ toHaskellType ty =
   case H.parseType (typeString ty) of
     H.ParseOk parsedType -> parsedType
     H.ParseFailed _loc msg -> error msg
-#else
-typeString :: Typeable a => a -> String
-typeString = show . typeOf
-
-modString :: Typeable a => a -> [ModuleName]
-modString = map ModuleName . filter (/= "") . modString' . typeOf
-  where modString' tr =
-          let (tyCon, subs) = splitTyConApp tr
-          in (intercalate "." . init . splitOn "." . tyConString $ tyCon) : concatMap modString' subs
-
-toHaskellType :: Typeable a => a -> H.Type
-toHaskellType ty =
-  case H.parseType (typeString ty) of
-    H.ParseOk parsedType -> parsedType
-    H.ParseFailed _loc msg -> error msg -- TODO Error?
-#endif
 
 idIdent :: Id id -> Ident
 idIdent (Id idnt _) = actionIdent idnt
