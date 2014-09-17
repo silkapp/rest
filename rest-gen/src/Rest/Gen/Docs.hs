@@ -23,10 +23,11 @@ module Rest.Gen.Docs
 import Prelude hiding (div, head, id, span)
 import qualified Prelude as P
 
-import Control.Monad hiding (forM_)
+import Data.Foldable (forM_)
 import Data.Function (on)
 import Data.Hashable (hash)
 import Data.List hiding (head, span)
+import Data.Maybe
 import Data.String
 import System.Directory
 import System.FilePath
@@ -164,10 +165,10 @@ dataDescriptions :: String -> [DataDescription] -> Html
 dataDescriptions s []    = toHtml s
 dataDescriptions _ descs =
   table ! cls "data-description" $
-    do tr $ flip mapM_ descs $ \desc -> td $ toHtml $ dataTypeDesc desc
+    do tr $ flip mapM_ descs $ \desc -> td $ toHtml $ fromMaybe "" $ dataTypeDesc desc
        tr $ flip mapM_ descs $ \desc -> td $
-        do when (dataSchema desc /= "") $ mkCode (typeLang (dataType desc)) "Schema" $ dataSchema desc
-           when (dataExample desc /= "") $ mkCode (typeLang (dataType desc)) "Example" $ dataExample desc
+        do forM_ (dataSchema  desc) $ mkCode (typeLang (dataType desc)) "Schema"
+           forM_ (dataExample desc) $ mkCode (typeLang (dataType desc)) "Example"
   where typeLang XML  = "xml"
         typeLang JSON = "js"
         typeLang _    = ""

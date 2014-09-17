@@ -102,15 +102,23 @@ data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
 -- | Description of input/output data
 data DataDescription = DataDescription
   { dataType       :: DataType
-  , dataTypeDesc   :: String
-  , dataSchema     :: String
-  , dataExample    :: String
-  , haskellType    :: Maybe H.Type -- TODO Is this ever Nothing?
+  , dataTypeDesc   :: Maybe String
+  , dataSchema     :: Maybe String
+  , dataExample    :: Maybe String
+  , haskellType    :: Maybe H.Type -- ^ Nothing when you use RawXML, String, or Read
   , haskellModules :: [H.ModuleName] -- TODO What does this actually contain?
   } deriving (Show, Eq)
 
 defaultDescription :: DataDescription
-defaultDescription = DataDescription Other "" "" "" Nothing []
+defaultDescription =
+  DataDescription
+    { dataType       = Other
+    , dataTypeDesc   = Nothing
+    , dataSchema     = Nothing
+    , dataExample    = Nothing
+    , haskellType    = Nothing
+    , haskellModules = []
+    }
 
 chooseType :: NonEmpty DataDescription -> DataDescription
 chooseType ls = fromMaybe (NList.head ls) $ F.find ((JSON ==) . dataType) ls
@@ -388,61 +396,61 @@ paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 handlerInputs :: Handler m -> [DataDescription]
 handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dicts . Dict.inputs) dict)
   where handlerInput :: Proxy a -> Input a -> DataDescription
-        handlerInput d ReadI    = defaultDescription { dataTypeDesc = describe d }
+        handlerInput d ReadI    = defaultDescription { dataTypeDesc = Just . describe $ d }
         handlerInput _ StringI  = defaultDescription { dataType     = String
-                                                     , dataTypeDesc = "String"
+                                                     , dataTypeDesc = Just "String"
                                                      }
         handlerInput d XmlI     = defaultDescription { dataType     = XML
-                                                     , dataTypeDesc = "XML"
-                                                     , dataSchema   = X.showSchema  . X.getXmlSchema $ d
-                                                     , dataExample  = X.showExample . X.getXmlSchema $ d
-                                                     , haskellType  = Just $ toHaskellType d
+                                                     , dataTypeDesc = Just "XML"
+                                                     , dataSchema   = Just . X.showSchema  . X.getXmlSchema $ d
+                                                     , dataExample  = Just . X.showExample . X.getXmlSchema $ d
+                                                     , haskellType  = Just . toHaskellType $ d
                                                      , haskellModules = modString d
                                                      }
         handlerInput _ XmlTextI = defaultDescription { dataType     = XML
-                                                     , dataTypeDesc = "XML"
+                                                     , dataTypeDesc = Just "XML"
                                                      , haskellType  = Just haskellStringType
                                                      }
         handlerInput _ RawXmlI  = defaultDescription { dataType     = XML
-                                                     , dataTypeDesc = "XML"
+                                                     , dataTypeDesc = Just "XML"
                                                      , haskellType  = Just haskellStringType
                                                      }
         handlerInput d JsonI    = defaultDescription { dataType     = JSON
-                                                     , dataTypeDesc = "JSON"
-                                                     , dataExample  = J.showExample . J.schema $ d
-                                                     , haskellType  = Just $ toHaskellType d
+                                                     , dataTypeDesc = Just "JSON"
+                                                     , dataExample  = Just . J.showExample . J.schema $ d
+                                                     , haskellType  = Just . toHaskellType $ d
                                                      , haskellModules = modString d
                                                      }
         handlerInput _ FileI    = defaultDescription { dataType     = File
-                                                     , dataTypeDesc = "File"
+                                                     , dataTypeDesc = Just "File"
                                                      }
 
 -- | Extract output description from handlers
 handlerOutputs :: Handler m -> [DataDescription]
 handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.dicts . Dict.outputs) dict)
   where handlerOutput :: Proxy a -> Output a -> DataDescription
-        handlerOutput _ StringO  = defaultDescription { dataType      = String
-                                                      , dataTypeDesc = "String"
+        handlerOutput _ StringO  = defaultDescription { dataType     = String
+                                                      , dataTypeDesc = Just "String"
                                                       }
         handlerOutput d XmlO     = defaultDescription { dataType      = XML
-                                                      , dataTypeDesc  = "XML"
-                                                      , dataSchema    = X.showSchema  . X.getXmlSchema $ d
-                                                      , dataExample   = X.showExample . X.getXmlSchema $ d
-                                                      , haskellType   = Just $ toHaskellType d
+                                                      , dataTypeDesc  = Just "XML"
+                                                      , dataSchema    = Just . X.showSchema  . X.getXmlSchema $ d
+                                                      , dataExample   = Just . X.showExample . X.getXmlSchema $ d
+                                                      , haskellType   = Just . toHaskellType $ d
                                                       , haskellModules = modString d
                                                       }
         handlerOutput _ RawXmlO  = defaultDescription { dataType     = XML
-                                                      , dataTypeDesc = "XML"
+                                                      , dataTypeDesc = Just "XML"
                                                       , haskellType  = Just haskellStringType
                                                       }
         handlerOutput d JsonO    = defaultDescription { dataType      = JSON
-                                                      , dataTypeDesc  = "JSON"
-                                                      , dataExample   = J.showExample . J.schema $ d
+                                                      , dataTypeDesc  = Just "JSON"
+                                                      , dataExample   = Just . J.showExample . J.schema $ d
                                                       , haskellType   = Just $ toHaskellType d
                                                       , haskellModules = modString d
                                                       }
         handlerOutput _ FileO    = defaultDescription { dataType      = File
-                                                      , dataTypeDesc  = "File"
+                                                      , dataTypeDesc  = Just "File"
                                                       }
 
 -- | Extract input description from handlers
@@ -450,15 +458,15 @@ handlerErrors :: Handler m -> [DataDescription]
 handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (L.get (Dict.dicts . Dict.errors) dict)
   where handleError :: Proxy a -> Error a -> DataDescription
         handleError d XmlE     = defaultDescription { dataType      = XML
-                                                    , dataTypeDesc  = "XML"
-                                                    , dataSchema    = X.showSchema  . X.getXmlSchema $ d
-                                                    , dataExample   = X.showExample . X.getXmlSchema $ d
+                                                    , dataTypeDesc  = Just "XML"
+                                                    , dataSchema    = Just . X.showSchema  . X.getXmlSchema $ d
+                                                    , dataExample   = Just . X.showExample . X.getXmlSchema $ d
                                                     , haskellType   = Just $ toHaskellType d
                                                     , haskellModules = modString d
                                                     }
         handleError d JsonE    = defaultDescription { dataType      = JSON
-                                                    , dataTypeDesc  = "JSON"
-                                                    , dataExample   = J.showExample . J.schema $ d
+                                                    , dataTypeDesc  = Just "JSON"
+                                                    , dataExample   = Just . J.showExample . J.schema $ d
                                                     , haskellType   = Just $ toHaskellType d
                                                     , haskellModules = modString d
                                                     }
