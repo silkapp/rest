@@ -17,7 +17,6 @@ module Rest.Gen.Base.ActionInfo
   , ResponseType (..)
   , responseAcceptType
   , dataTypesToAcceptHeader
-  , defaultErrorDataTypeDescription
   , DataTypeDescription (..)
   , chooseResponseType
   , isAccessor
@@ -37,13 +36,16 @@ import Control.Category
 import Control.Monad
 import Data.Foldable (foldMap)
 import Data.List
+import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
 import Data.Ord
 import Data.Proxy
 import Data.Typeable
 import Safe
+import qualified Data.Foldable                as F
 import qualified Data.JSON.Schema             as J
 import qualified Data.Label.Total             as L
+import qualified Data.List.NonEmpty           as NList
 import qualified Language.Haskell.Exts.Parser as H
 import qualified Language.Haskell.Exts.Syntax as H
 
@@ -110,9 +112,8 @@ data DataDescription = DataDescription
 defaultDescription :: DataDescription
 defaultDescription = DataDescription Other "" "" "" Nothing []
 
-chooseType :: [DataDescription] -> Maybe DataDescription
-chooseType []         = Nothing
-chooseType ls@(x : _) = Just $ fromMaybe x $ find ((JSON ==) . dataType) ls
+chooseType :: NonEmpty DataDescription -> DataDescription
+chooseType ls = fromMaybe (NList.head ls) $ F.find ((JSON ==) . dataType) ls
 
 data ResponseType = ResponseType
   { errorType  :: Maybe DataTypeDescription
@@ -152,50 +153,56 @@ data DataTypeDescription = DataTypeDescription
   , dataTypeHaskellModules :: [H.ModuleName]
   } deriving Show
 
-defaultErrorDataTypeDescription :: DataType -> DataTypeDescription
-defaultErrorDataTypeDescription dt =
-  DataTypeDescription
-    { dataTypeType           = dt
-    , dataTypeHaskellType    = haskellUnitType
-    , dataTypeHaskellModules = []
-    }
-
 chooseResponseType :: ActionInfo -> ResponseType
-chooseResponseType ai = case (outputs ai, errors ai) of
+chooseResponseType ai = case (NList.nonEmpty $ outputs ai, NList.nonEmpty $ errors ai) of
   -- No outputs or errors defined
-  ([], []) -> ResponseType Nothing Nothing
+  (Nothing, Nothing) ->
+    ResponseType
+      { errorType  = Nothing
+      , outputType = Nothing
+      }
   -- Only an error type
-  ([], e ) -> ResponseType { errorType    = Just . choseType $ chooseTypeUnsafe e
-                           , outputType   = Nothing
-                           }
+  (Nothing, Just e ) ->
+    ResponseType
+      { errorType  = Just . toDataTypeDescription $ chooseType e
+      , outputType = Nothing
+      }
   -- Only an output type
-  (o , []) -> ResponseType { errorType = Nothing
-                           , outputType = Just . choseType $ chooseTypeUnsafe o
-                           }
+  (Just o , Nothing) ->
+    ResponseType
+      { errorType  = Nothing
+      , outputType = Just . toDataTypeDescription $ chooseType o
+      }
   -- Output and error
-  (o , e ) -> intersection o e
+  (Just o , Just e ) -> intersection o e
 
   where
-    chooseTypeUnsafe = fromJust . chooseType -- TODO unsafe
+    toDataTypeDescription :: DataDescription -> DataTypeDescription
+    toDataTypeDescription d = DataTypeDescription (dataType d) (fromJustNote "baa" $ haskellType d) (haskellModules d)
 
-    choseType :: DataDescription -> DataTypeDescription
-    choseType d = DataTypeDescription (dataType d) (fromJustNote "baa" $ haskellType d) (haskellModules d)
-
-    intersection :: [DataDescription] -> [DataDescription] -> ResponseType
+    intersection :: NonEmpty DataDescription -> NonEmpty DataDescription -> ResponseType
     intersection o e =
       -- Try to find a response type that can be used for both output and error.
-      case intersect (map dataType o) (map dataType e) of
+      case intersect (map dataType . NList.toList $ o) (map dataType . NList.toList $ e) of
         -- If the response types are disjoint we need to specify both.
-        [] -> ResponseType { errorType = Just . choseType $ chooseTypeUnsafe e
-                           , outputType = Just . choseType $ chooseTypeUnsafe o }
-        xs -> ResponseType { errorType = matching xs e, outputType = matching xs o }
+        [] ->
+          ResponseType
+            { errorType  = Just . toDataTypeDescription $ chooseType e
+            , outputType = Just . toDataTypeDescription $ chooseType o
+            }
+        xs ->
+          ResponseType
+            { errorType  = matching xs e
+            , outputType = matching xs o
+            }
           where
-            matching :: [DataType] -> [DataDescription] -> Maybe DataTypeDescription
-            matching dts = fmap choseType . headMay
+            matching :: [DataType] -> NonEmpty DataDescription -> Maybe DataTypeDescription
+            matching dts = fmap toDataTypeDescription . headMay
                          -- Prioritize formats
                          . sortBy (comparing cmp)
                          -- Pick only the data types in the intersection of outputs and errors
                          . filter ((`elem` dts) . dataType)
+                         . NList.toList
             -- When we have an intersection with multiple possible
             -- types, we prefer JSON over XML, and XML over the rest.
             cmp :: DataDescription -> Int

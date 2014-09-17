@@ -22,6 +22,7 @@ import Safe
 import System.Directory
 import System.FilePath
 import qualified Data.Generics.Uniplate.Data                 as U
+import qualified Data.List.NonEmpty                          as NList
 import qualified Distribution.ModuleName                     as Cabal
 import qualified Distribution.Package                        as Cabal
 import qualified Distribution.PackageDescription             as Cabal
@@ -165,7 +166,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                            ++ (if null (params ai) then [] else [pList])
        (lUrl, lPars) = linkToURL res lnk
        mInp :: Maybe Info
-       mInp    = fmap inputInfo . chooseType . inputs $ ai
+       mInp    = fmap (inputInfo . chooseType) . NList.nonEmpty . inputs $ ai
        fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]] $ fTypify tyParts
          where cls = H.Ident "ApiStateC"
                m = H.TyVar $ H.Ident "m"
@@ -387,3 +388,11 @@ errorInfo r =
       XML  -> Just $ ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromXML"
       JSON -> Just $ ResponseInfo (dataTypeHaskellModules t) (dataTypeHaskellType t) "fromJSON"
       _    -> Nothing
+
+defaultErrorDataTypeDescription :: DataType -> DataTypeDescription
+defaultErrorDataTypeDescription dt =
+  DataTypeDescription
+    { dataTypeType           = dt
+    , dataTypeHaskellType    = haskellUnitType
+    , dataTypeHaskellModules = []
+    }

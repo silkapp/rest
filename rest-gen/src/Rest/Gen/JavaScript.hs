@@ -1,14 +1,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Rest.Gen.JavaScript (mkJsApi) where
 
-import Code.Build
-import Code.Build.JavaScript
-
 import Control.Monad
 import Data.Maybe
 import Text.StringTemplate
+import qualified Data.List.NonEmpty           as NList
 import qualified Language.Haskell.Exts.Syntax as H
 
+import Code.Build
+import Code.Build.JavaScript
 import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
@@ -89,7 +89,7 @@ mkFunction ns (ApiAction _ _ ai) =
   let fParams  = maybeToList mIdent
               ++ maybeToList (fmap fst3 mInp)
               ++ ["success", "error", "params", "callOpts"]
-      mInp     = fmap mkType . chooseType $ inputs ai
+      mInp     = fmap (mkType . chooseType) . NList.nonEmpty . inputs $ ai
       mOut     = dataTypesToAcceptHeader JSON . responseAcceptType . chooseResponseType $ ai
       urlPart  = (if isAccessor ai then const "" else id) $
                  (if resDir ai == "" then "" else resDir ai ++ "/")

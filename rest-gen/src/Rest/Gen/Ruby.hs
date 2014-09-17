@@ -5,12 +5,11 @@ import Data.Char
 import Data.List
 import Data.List.Split (splitOn)
 import Data.Maybe
+import qualified Data.List.NonEmpty           as NList
+import qualified Language.Haskell.Exts.Syntax as H
 
 import Code.Build
 import Code.Build.Ruby
-
-import qualified Language.Haskell.Exts.Syntax as H
-
 import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
@@ -77,7 +76,7 @@ mkAccessor node@(ApiAction rid _ ai) =
   let fParams  = maybeToList mIdent
       urlPart  = (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + " ++ i ++ " + '/") mIdent
-      datType  = maybe ":data" ((':':) . fst3 . mkType) $ chooseType $ outputs ai
+      datType  = maybe ":data" ((':':) . fst3 . mkType . chooseType) . NList.nonEmpty . outputs $ ai
       mIdent   = fmap (rbName . cleanName . description) $ ident ai
   in function (rbName $ mkFuncParts node) fParams $ ret $
         new (className rid) ["@url + '" ++ urlPart ++ "'", "@api", datType]
@@ -87,8 +86,9 @@ mkFunction node@(ApiAction _ _ ai) =
   let fParams   = maybeToList mIdent
               ++ maybeToList (fmap fst3 mInp)
               ++ ["params = {}", "headers = {}"]
-      mInp     = fmap mkType . chooseType $ inputs ai
-      mOut     = fmap mkType . chooseType $ outputs ai
+      mInp     = fmap (mkType . chooseType) . NList.nonEmpty . inputs $ ai
+      -- TODO Other clients call responseAcceptType here
+      mOut     = fmap (mkType . chooseType) . NList.nonEmpty . outputs $ ai
       urlPart  = (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + " ++ i ++ " + '/") mIdent
       mIdent   = fmap (rbName . cleanName . description) $ ident ai
