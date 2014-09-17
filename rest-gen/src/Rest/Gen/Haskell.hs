@@ -374,9 +374,9 @@ errorInfo :: ResponseType -> ResponseInfo
 errorInfo r =
   case errorType r of
     -- Rest only has XML and JSON instances for errors, so we need to
-    -- include at least one of these in the accept header. If there is
-    -- no accept type the Driver assumes XML for errors, so we specify
-    -- JSON here and also send text/json as the accept header.
+    -- include at least one of these in the accept header. We don't
+    -- want to make assumptions about the response type if there is no
+    -- accept header so in that case we force it to be JSON.
     Nothing -> fromJustNote ("rest-gen bug: toResponseInfo' was called with a data type other than XML or JSON, responseType: " ++ show r)
              . toResponseInfo' . defaultErrorDataDesc . maybe XML (\x -> case x of { XML -> XML; _ -> JSON })
              . fmap (L.get dataType) . outputType

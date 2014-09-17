@@ -15,9 +15,6 @@ module Rest.Gen.Base.ActionInfo
   , accessLink
   , accessors
   , chooseType
-  , ResponseType (..)
-  , responseAcceptType
-  , dataTypesToAcceptHeader
 
   , DataDesc (..)
   , dataType
@@ -33,7 +30,11 @@ module Rest.Gen.Base.ActionInfo
   , desc
   , meta
 
+  , ResponseType (..)
+  , responseAcceptType
+  , dataTypesToAcceptHeader
   , chooseResponseType
+
   , isAccessor
   , listGetterActionInfo
   , mkActionDescription
