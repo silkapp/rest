@@ -45,15 +45,15 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
   $apinamespace$.addObject(headers, { Accept : acceptHeader });
 
   var callData =
-    { type: method
-    , url: url + (params ? '?' + $dollar$.param(params) : '')
-    , cache: false
-    , success: success || function () {}
-    , error: error || function () {}
-    , contentType: contentType
-    , headers: headers
-    , xhrFields: { withCredentials: true }
-    , data: data || []
+    { type        : method
+    , url         : url + (params ? '?' + $dollar$.param(params) : '')
+    , cache       : false
+    , success     : success || function () {}
+    , error       : error || function () {}
+    , contentType : contentType
+    , headers     : headers
+    , xhrFields   : { withCredentials: true }
+    , data        : data || []
     };
 
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
@@ -62,7 +62,7 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
   return q($dollar$.ajax(callData));
 }
 
-function nodeRequest (method, url, params, onSuccess, onError, contentType, dataType, data, callOpts)
+function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts)
 {
   var allParams = {};
   $apinamespace$.addObject(allParams, params);
@@ -71,12 +71,9 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
     // Avoid cached API responses.
     allParams._ = Date.now();
 
-  var headers = { "Content-type": contentType };
-
-  if (dataType === 'json')
-    headers.Accept = 'text/json';
-  else if (dataType === 'xml')
-    headers.Accept = 'text/xml';
+  var headers = { "Content-type" : contentType
+                , "Accept"       : acceptHeader
+                };
 
   $apinamespace$.addObject(headers, $apinamespace$.defaultHeaders);
 
@@ -113,6 +110,8 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
           error.responseBody = body;
         }
 
+        error.response = parse(body);
+
         if (onError)
           onError(error);
 
@@ -123,8 +122,18 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, data
 
   function parse (response)
   {
-    if (dataType === 'json')
-      return JSON.parse(response);
+    if (acceptHeader === 'text/json')
+    {
+      var r = response;
+      try
+      {
+        JSON.parse(response);
+      }
+      catch (e)
+      {
+        return r;
+      }
+    }
     else return response;
   }
 }
