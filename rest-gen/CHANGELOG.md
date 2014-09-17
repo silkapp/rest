@@ -1,5 +1,13 @@
 # Changelog
 
+#### 0.16
+
+You don't have to regenerate clients after this release, but it is strongly recommended!
+
+* Accept headers are now sent based on both the output and errors of an endpoint, previously none of the clients would handle an end point with different inputs and outputs properly.
+
+* JavaScript/node.js: Error objects now contain a JSON `response` property if the error response is valid JSON.
+
 #### 0.15.0.3
 
 * Bump `rest-types` and `rest-core`
