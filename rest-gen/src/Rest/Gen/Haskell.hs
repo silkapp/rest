@@ -345,11 +345,12 @@ data Info = Info
 inputInfo :: DataDescription -> Info
 inputInfo ds =
   case dataType ds of
-    String -> Info []                  (haskellStringType        ) "text/plain"               "fromString"
-    XML    -> Info (haskellModules ds) (fromJust $ haskellType ds) "text/xml"                 "toXML"
-    JSON   -> Info (haskellModules ds) (fromJust $ haskellType ds) "text/json"                "toJSON"
-    File   -> Info []                  haskellByteStringType       "application/octet-stream" "id"
-    Other  -> Info []                  haskellByteStringType       "text/plain"               "id"
+    String -> Info []                  (haskellStringType)   "text/plain"               "fromString"
+    -- TODO fromJusts
+    XML    -> Info (haskellModules ds) (haskellType ds)      "text/xml"                 "toXML"
+    JSON   -> Info (haskellModules ds) (haskellType ds)      "text/json"                "toJSON"
+    File   -> Info []                  haskellByteStringType "application/octet-stream" "id"
+    Other  -> Info []                  haskellByteStringType "text/plain"               "id"
 
 data ResponseInfo = ResponseInfo
   { responseInfoModules :: [H.ModuleName]
