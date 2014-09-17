@@ -158,7 +158,7 @@ mkFunction :: Version -> String -> ApiAction -> ([H.Decl], [H.ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
   ([H.TypeSig noLoc [funName] fType,
     H.FunBind [H.Match noLoc funName fParams Nothing rhs noBinds]],
-    responseInfoModules errorI ++ responseInfoModules output ++ maybe [] infoModules mInp)
+    responseModules errorI ++ responseModules output ++ maybe [] inputModules mInp)
      where
        funName = mkHsName ai
        fParams = map H.PVar $ lPars
@@ -166,7 +166,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                            ++ maybe [] (const [input]) mInp
                            ++ (if null (params ai) then [] else [pList])
        (lUrl, lPars) = linkToURL res lnk
-       mInp :: Maybe Info
+       mInp :: Maybe InputInfo
        mInp    = fmap (inputInfo . L.get desc . chooseType) . NList.nonEmpty . inputs $ ai
        fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]] $ fTypify tyParts
          where cls = H.Ident "ApiStateC"
@@ -185,14 +185,14 @@ mkFunction ver res (ApiAction _ lnk ai) =
                          ++ [H.TyApp m (H.TyApp
                                          (H.TyApp
                                            (H.TyCon $ H.UnQual (H.Ident "ApiResponse"))
-                                           (responseInfoType errorI))
-                                         (responseInfoType output))]
+                                           (responseHaskellType errorI))
+                                         (responseHaskellType output))]
                qualIdent (H.Ident s)
                  | s == res = H.TyCon $ H.UnQual tyIdent
                  | otherwise = H.TyCon $ H.Qual (H.ModuleName $ modName s) tyIdent
                qualIdent H.Symbol{} = error "Rest.Gen.Haskell.mkFunction.qualIdent - not expecting a Symbol"
                inp | Just i  <- mInp
-                   , i' <- infoType i = [i']
+                   , i' <- inputHaskellType i = [i']
                    | otherwise = []
        input = H.Ident "input"
        pList = H.Ident "pList"
@@ -201,7 +201,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                rHeadersBind =
                  H.PatBind noLoc (H.PVar rHeaders) Nothing
                     (H.UnGuardedRhs $ H.List [H.Tuple H.Boxed [use hAccept     , H.Lit $ H.String $ dataTypesToAcceptHeader JSON $ responseAcceptType responseType],
-                                              H.Tuple H.Boxed [use hContentType, H.Lit $ H.String $ maybe "text/plain" infoContentType mInp]])
+                                              H.Tuple H.Boxed [use hContentType, H.Lit $ H.String $ maybe "text/plain" inputContentType mInp]])
                               noBinds
 
                rHeaders     = H.Ident "rHeaders"
@@ -222,14 +222,14 @@ mkFunction ver res (ApiAction _ lnk ai) =
                             (if null (params ai) then (H.List []) else (use pList)))
                           (use rHeaders))) noBinds
                appLast e
-                 | Just i <- mInp = H.App e (H.App (use $ H.Ident $ infoFunc i) (use input))
+                 | Just i <- mInp = H.App e (H.App (use $ H.Ident $ inputFunc i) (use input))
                  | otherwise = H.App e (H.Lit $ H.String "")
                makeReq = H.Ident "makeReq"
                request = H.Ident "request"
 
                expr = H.App (H.App (H.App (use doRequest)
-                                          (use $ H.Ident $ responseInfoFunc errorI))
-                                          (use $ H.Ident $ responseInfoFunc output)) (use request)
+                                          (use $ H.Ident $ responseFunc errorI))
+                                          (use $ H.Ident $ responseFunc output)) (use request)
 
        (ve, url) = ("v" ++ show ver, lUrl)
        errorI :: ResponseInfo
@@ -336,27 +336,27 @@ dataName = modName
 modName :: String -> String
 modName = concatMap upFirst . cleanName
 
-data Info = Info
-  { infoModules     :: [H.ModuleName]
-  , infoType        :: H.Type
-  , infoContentType :: String
-  , infoFunc        :: String
+data InputInfo = InputInfo
+  { inputModules     :: [H.ModuleName]
+  , inputHaskellType :: H.Type
+  , inputContentType :: String
+  , inputFunc        :: String
   } deriving (Eq, Show)
 
-inputInfo :: DataDesc -> Info
+inputInfo :: DataDesc -> InputInfo
 inputInfo dsc =
   case L.get dataType dsc of
-    String -> Info [] (haskellStringType) "text/plain" "fromString"
+    String -> InputInfo [] (haskellStringType) "text/plain" "fromString"
     -- TODO fromJusts
-    XML    -> Info (L.get haskellModules dsc) (L.get haskellType dsc) "text/xml" "toXML"
-    JSON   -> Info (L.get haskellModules dsc) (L.get haskellType dsc) "text/json" "toJSON"
-    File   -> Info [] haskellByteStringType "application/octet-stream" "id"
-    Other  -> Info [] haskellByteStringType "text/plain" "id"
+    XML    -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/xml" "toXML"
+    JSON   -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/json" "toJSON"
+    File   -> InputInfo [] haskellByteStringType "application/octet-stream" "id"
+    Other  -> InputInfo [] haskellByteStringType "text/plain" "id"
 
 data ResponseInfo = ResponseInfo
-  { responseInfoModules :: [H.ModuleName]
-  , responseInfoType    :: H.Type
-  , responseInfoFunc    :: String
+  { responseModules     :: [H.ModuleName]
+  , responseHaskellType :: H.Type
+  , responseFunc        :: String
   } deriving (Eq, Show)
 
 outputInfo :: ResponseType -> ResponseInfo

@@ -97,6 +97,7 @@ data ActionTarget = Self | Any deriving (Show, Eq)
 
 data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
 
+-- | Core information about the type of the input/output
 data DataDesc = DataDesc
   { _dataType       :: DataType
   , _haskellType    :: H.Type
@@ -105,6 +106,7 @@ data DataDesc = DataDesc
 
 mkLabel ''DataDesc
 
+-- | Documentation information about the input/output
 data DataMeta = DataMeta
   { _dataTypeDesc :: String       -- ^ The name of the DataType, or a custom value if dataType is Other
   , _dataSchema   :: Maybe String -- ^ Just if dataType is XML
@@ -113,6 +115,7 @@ data DataMeta = DataMeta
 
 mkLabel ''DataMeta
 
+-- | Combines the core and documentation information for input/output
 data DataDescription = DataDescription
   { _desc :: DataDesc
   , _meta :: DataMeta
