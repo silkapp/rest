@@ -1,18 +1,24 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
+{-# LANGUAGE
+    OverloadedStrings
+  , ScopedTypeVariables
+  #-}
 
+import Prelude hiding ((.))
+
+import Control.Category ((.))
 import Data.String
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertEqual)
-
+import qualified Data.Label.Total             as L
 import qualified Language.Haskell.Exts.Parser as H
 import qualified Language.Haskell.Exts.Syntax as H
 
 import Rest.Api
+import Rest.Dictionary (xmlJsonO)
 import Rest.Gen.Base.ActionInfo
 import Rest.Gen.Base.ApiTree
-import Rest.Dictionary (xmlJsonO)
 import Rest.Handler
 import Rest.Resource
 import Rest.Schema
@@ -73,8 +79,9 @@ data ServerId = ById String | ByIp String
 testListingType :: Assertion
 testListingType =
   assertEqual "Listing should have List type"
-    (Just "Rest.Types.Container.List (())")
-    (haskellType . head . outputs . itemInfo . head . resItems $ api)
+    "Rest.Types.Container.List (())"
+    -- (L.get haskellType . outputs . itemInfo . head . resItems $ api)
+    (L.get (haskellType . desc) . head . outputs . itemInfo . head . resItems $ api)
   where
     api = apiTree (route resource)
     resource :: Resource IO IO Void () Void
