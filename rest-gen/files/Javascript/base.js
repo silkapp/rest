@@ -122,17 +122,18 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
 
   function parse (response)
   {
-    if (acceptHeader === 'text/json')
+    if (acceptHeader.split(";").indexOf('text/json') >= 0)
     {
       var r = response;
       try
       {
-        JSON.parse(response);
+        r = JSON.parse(response);
       }
       catch (e)
       {
         return r;
       }
+      return r;
     }
     else return response;
   }
