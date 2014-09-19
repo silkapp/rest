@@ -2,7 +2,7 @@
 
 #### 0.16
 
-You don't have to regenerate clients after this release, but it is strongly recommended!
+You don't have to regenerate clients for this release, but it is strongly recommended!
 
 * Accept headers are now sent based on both the output and errors of an endpoint, previously none of the clients would handle an end point with different inputs and outputs properly.
 
