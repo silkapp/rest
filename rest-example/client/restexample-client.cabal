@@ -1,5 +1,5 @@
 name: restexample-client
-version: 0.1
+version: 0.1.1
 cabal-version: >=1.8
 build-type: Simple
 license: AllRightsReserved
@@ -7,7 +7,7 @@ license: AllRightsReserved
 library
     build-depends:
         base ==4.*,
-        rest-types ==1.10.*,
+        rest-types ==1.11.*,
         rest-client ==0.4.*,
         text >=0.10 && <1.3,
         rest-example -any,
