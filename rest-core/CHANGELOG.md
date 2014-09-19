@@ -1,5 +1,8 @@
 # Changelog
 
+#### 0.32.0.2
+* Allow random 1.1.*
+
 #### 0.32.0.1
 * Fix bug in Chrome when serving files with commas in name.
 
