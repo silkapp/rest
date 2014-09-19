@@ -62,6 +62,7 @@ resource = mkResourceReader
                 , ("noError"            , noError            )
                 , ("justStringO"        , justStringO        )
                 , ("preferJson"         , preferJson         )
+                , ("octetStreamOut"     , octetStreamOut     )
                 ]
   }
 
@@ -107,3 +108,9 @@ preferJson = mkInputHandler (xmlJsonO . xmlJsonE . stringI . someI) $
   \case
     "error" -> throwError $ domainReason Err
     _       -> return Ok
+
+octetStreamOut :: Handler WithText
+octetStreamOut = mkInputHandler (fileI . fileO . xmlJsonE) $
+  \case
+    "error" -> throwError $ domainReason Err
+    _       -> return ("ok", "ok")
