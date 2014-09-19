@@ -179,7 +179,7 @@ responseAcceptType (ResponseType e o) = typs
 dataTypesToAcceptHeader :: DataType -> [DataType] -> String
 dataTypesToAcceptHeader def = \case
   [] -> dataTypeToAcceptHeader def
-  xs -> intercalate ";" . map dataTypeToAcceptHeader . (xs ++) $
+  xs -> intercalate "," . map dataTypeToAcceptHeader . (xs ++) $
           if null (intersect xs [XML,JSON])
             then [def]
             else []
@@ -189,7 +189,7 @@ dataTypeToAcceptHeader = \case
   String -> "text/plain"
   XML    -> "text/xml"
   JSON   -> "text/json"
-  File   -> "*"
+  File   -> "application/octet-stream"
   Other  -> "text/plain"
 
 chooseResponseType :: ActionInfo -> ResponseType
