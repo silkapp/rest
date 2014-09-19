@@ -5,6 +5,7 @@
 * Added a `Rest.Types.Error.ToResponseCode` constraint to `jsonE`, `xmlE`, and `xmlJsonE`.
 * Changed `domainReason` to have a `ToResponseCode` constraint instead of an explicit argument.
 * Added `Rest.ShowUrl` re-exporting `ShowUrl` from `rest-types`.
+* `application/*` and `application/octet-stream` accept headers now match file outputs.
 
 #### 0.32.0.2
 * Allow random 1.1.*
