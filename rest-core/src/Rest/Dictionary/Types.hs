@@ -77,9 +77,9 @@ data Format
   | JsonFormat
   | StringFormat
   | FileFormat
-  | MultipartFormat
+  | MultipartFormat String
   | NoFormat
-  deriving (Eq, Ord, Enum, Bounded, Show)
+  deriving (Eq, Ord, Show)
 
 -- | The explicit dictionary `Ident` describes how to translate a resource
 -- identifier (originating from a request URI) to a Haskell value. We allow
@@ -140,13 +140,14 @@ instance Show (Param p) where
 -- needs of the backend resource.
 
 data Input i where
-  JsonI    :: (Typeable i, FromJSON i, JSONSchema i) => Input i
-  ReadI    :: (Info i, Read i, Show i)               => Input i
-  StringI  ::                                           Input String
-  FileI    ::                                           Input ByteString
-  XmlI     :: (Typeable i, XmlPickler i)             => Input i
-  XmlTextI ::                                           Input Text
-  RawXmlI  ::                                           Input ByteString
+  JsonI      :: (Typeable i, FromJSON i, JSONSchema i) => Input i
+  ReadI      :: (Info i, Read i, Show i)               => Input i
+  StringI    ::                                           Input String
+  FileI      ::                                           Input ByteString
+  MultipartI ::                                           Input [BodyPart]
+  XmlI       :: (Typeable i, XmlPickler i)             => Input i
+  XmlTextI   ::                                           Input Text
+  RawXmlI    ::                                           Input ByteString
 
 deriving instance Show (Input i)
 deriving instance Eq   (Input i)

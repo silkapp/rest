@@ -17,6 +17,7 @@ module Rest.Dictionary.Combinators
   , xmlI
   , rawXmlI
   , jsonI
+  , multipartI
 
   -- ** Output dictionaries
 
@@ -112,6 +113,11 @@ xmlTextI = L.set inputs (Dicts [XmlTextI])
 
 fileI :: Dict h p Nothing o e -> Dict h p (Just ByteString) o e
 fileI = L.set inputs (Dicts [FileI])
+
+-- | Allow generic mixed input, represented as [BodyPart].
+
+multipartI :: Dict h p i o e -> Dict h p [BodyPart] o e
+multipartI = L.set inputs (Dicts [MultipartI]) 
 
 -- | The input can be read into some instance of `Read`. For inspection reasons
 -- the type must also be an instance of both `Info` and `Show`.

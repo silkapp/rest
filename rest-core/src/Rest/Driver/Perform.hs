@@ -23,7 +23,7 @@ import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.UUID (UUID)
-import Network.Multipart (BodyPart (..), MultiPart (..), showMultipartBody)
+import Network.Multipart (BodyPart (..), MultiPart (..), showMultipartBody, parseMultipartBody)
 import Safe
 import System.IO.Unsafe
 import System.Random (randomIO)
@@ -160,30 +160,33 @@ fetchInputs dict =
               None -> return ()
               _    ->
                 case ct of
-                  Just XmlFormat      -> parser XmlFormat     inputs bs
-                  Just JsonFormat     -> parser JsonFormat    inputs bs
-                  Just StringFormat   -> parser StringFormat  inputs bs
-                  Just FileFormat     -> parser FileFormat    inputs bs
-                  Just x              -> throwError (UnsupportedFormat (show x))
-                  Nothing | B.null bs -> parser NoFormat inputs bs
-                  Nothing             -> throwError (UnsupportedFormat "unknown")
+                  Just XmlFormat           -> parser XmlFormat           inputs bs
+                  Just JsonFormat          -> parser JsonFormat          inputs bs
+                  Just StringFormat        -> parser StringFormat        inputs bs
+                  Just FileFormat          -> parser FileFormat          inputs bs
+                  Just (MultipartFormat k) -> parser (MultipartFormat k) inputs bs
+                  Just x                   -> throwError (UnsupportedFormat (show x))
+                  Nothing | B.null bs      -> parser NoFormat            inputs bs
+                  Nothing                  -> throwError (UnsupportedFormat "unknown")
      return (Env h p j)
 
 parseContentType :: Rest m => m (Maybe Format)
 parseContentType =
   do ct <- fromMaybe "" <$> getHeader "Content-Type"
-     let segs  = concat (take 1 . splitOn ";" <$> splitOn "," ct)
-         types = flip concatMap segs $ \ty ->
-                   case splitOn "/" ty of
-                     ["application", "xml"]          -> [XmlFormat]
-                     ["application", "json"]         -> [JsonFormat]
-                     ["text",        "xml"]          -> [XmlFormat]
-                     ["text",        "json"]         -> [JsonFormat]
-                     ["text",        "plain"]        -> [StringFormat]
-                     ["application", "octet-stream"] -> [FileFormat]
-                     ["application", _             ] -> [FileFormat]
-                     ["image",       _             ] -> [FileFormat]
-                     _                               -> []
+     let hdrGrp :: [[String]]
+         hdrGrp  = filter (not . null) . splitOneOf ";= " <$> splitOn "," ct
+         types = flip concatMap hdrGrp $ \ty ->
+                   case (ty :: [String]) of
+                     "application/xml":_                -> [XmlFormat]
+                     "application/json":_               -> [JsonFormat]
+                     "text/xml":_                       -> [XmlFormat]
+                     "text/json":_                      -> [JsonFormat]
+                     "text/plain":_                     -> [StringFormat]
+                     "application/octet-stream":_       -> [FileFormat]
+                     "application": _                   -> [FileFormat]
+                     "image":_                          -> [FileFormat]
+                     "multipart/mixed":"boundary":bnd:_ -> [MultipartFormat bnd]
+                     _                                  -> []
      return (headMay types)
 
 headers :: Rest m => Header h -> ErrorT DataError m h
@@ -201,6 +204,7 @@ parser NoFormat None       _ = return ()
 parser f        None       _ = throwError (UnsupportedFormat (show f))
 parser f        (Dicts ds) v = parserD f ds
   where
+    unMultipart (Multipart bps) = bps
     parserD :: Monad m => Format -> [D.Input j] -> ErrorT DataError m j
     parserD XmlFormat     (XmlI     : _ ) = case eitherFromXML (UTF8.toString v) of
                                               Left err -> throwError (ParseError err)
@@ -212,6 +216,7 @@ parser f        (Dicts ds) v = parserD f ds
                                               Left  e -> throwError (ParseError e)
     parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
     parserD FileFormat    (FileI    : _ ) = return v
+    parserD (MultipartFormat bnd)  (MultipartI:_) = return (unMultipart $ parseMultipartBody bnd v)
     parserD XmlFormat     (RawXmlI  : _ ) = return v
     parserD t             []              = throwError (UnsupportedFormat (show t))
     parserD t             (_        : xs) = parserD t xs
@@ -252,12 +257,12 @@ failureWriter es err =
 
     formatCT v =
       case v of
-        XmlFormat       -> "xml"
-        JsonFormat      -> "json"
-        StringFormat    -> "text/plain"
-        FileFormat      -> "application/octet-stream"
-        MultipartFormat -> "multipart/mixed"
-        NoFormat        -> "any"
+        XmlFormat           -> "xml"
+        JsonFormat          -> "json"
+        StringFormat        -> "text/plain"
+        FileFormat          -> "application/octet-stream"
+        (MultipartFormat _) -> "multipart/mixed"
+        NoFormat            -> "any"
 
     fromMaybeT def = runMaybeT >=> maybe def return
 
@@ -277,11 +282,11 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
 
   where
     try :: Outputs v -> Format -> ErrorT DataError m ()
-    try None NoFormat        = return ()
-    try None XmlFormat       = return ()
-    try None JsonFormat      = return ()
-    try None StringFormat    = return ()
-    try None MultipartFormat = return ()
+    try None NoFormat             = return ()
+    try None XmlFormat            = return ()
+    try None JsonFormat           = return ()
+    try None StringFormat         = return ()
+    try None (MultipartFormat _ ) = return ()
     try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
     try (Dicts ds) f = tryD ds f
       where
@@ -301,20 +306,20 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
 
   where
     try :: Outputs v -> Format -> ErrorT DataError m UTF8.ByteString
-    try None NoFormat        = contentType NoFormat >> ok ""
-    try None XmlFormat       = contentType NoFormat >> ok "<done/>"
-    try None JsonFormat      = contentType NoFormat >> ok "{}"
-    try None StringFormat    = contentType NoFormat >> ok "done"
-    try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
-    try None MultipartFormat = contentType NoFormat >> ok ""
+    try None NoFormat            = contentType NoFormat >> ok ""
+    try None XmlFormat           = contentType NoFormat >> ok "<done/>"
+    try None JsonFormat          = contentType NoFormat >> ok "{}"
+    try None StringFormat        = contentType NoFormat >> ok "done"
+    try None FileFormat          = throwError (UnsupportedFormat (show FileFormat))
+    try None (MultipartFormat _) = contentType NoFormat >> ok ""
     try (Dicts ds) f = tryD ds f
       where
         tryD :: forall v'. FromMaybe () v ~ v' => [Output v'] -> Format -> ErrorT DataError m UTF8.ByteString
-        tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
-        tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
-        tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
-        tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
-        tryD (MultipartO : _ ) _            = outputMultipart v
+        tryD (XmlO       : _ ) XmlFormat             = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
+        tryD (RawXmlO    : _ ) XmlFormat             = contentType XmlFormat    >> ok v
+        tryD (JsonO      : _ ) JsonFormat            = contentType JsonFormat   >> ok (encode v)
+        tryD (StringO    : _ ) StringFormat          = contentType StringFormat >> ok (UTF8.fromString v)
+        tryD (MultipartO : _ ) (MultipartFormat bnd) = outputMultipart bnd v
         tryD (FileO      : _ ) FileFormat   =
           do let ext = (reverse . takeWhile (/='.') . reverse) $ snd v
              mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower ext)
@@ -328,11 +333,10 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
     escapeQuotes :: String -> String
     escapeQuotes = intercalate "\\\"" . splitOn "\""
 
-outputMultipart :: Rest m => [BodyPart] -> m UTF8.ByteString
-outputMultipart vs =
-  do let boundary = show $ unsafePerformIO (randomIO :: IO UUID)
-     setHeader "Content-Type" ("multipart/mixed; boundary=" ++ boundary)
-     return $ showMultipartBody boundary (MultiPart vs)
+outputMultipart :: Rest m => String -> [BodyPart] -> m UTF8.ByteString
+outputMultipart bnd vs =
+  do setHeader "Content-Type" ("multipart/mixed; boundary=" ++ bnd)
+     return $ showMultipartBody bnd (MultiPart vs)
 
 accept :: Rest m => m [Format]
 accept =
@@ -348,7 +352,9 @@ accept =
      return (fromQuery ++ fromAccept)
 
   where
-    allFormats ct = (maybe id (:) ct) [minBound .. maxBound]
+    bnd = show $ unsafePerformIO (randomIO :: IO UUID)
+    formatList = [XmlFormat, JsonFormat, StringFormat, MultipartFormat bnd, NoFormat]
+    allFormats ct = (maybe id (:) ct) formatList
     splitter ct hdr = nub (match ct =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
 
     match ct ty =
