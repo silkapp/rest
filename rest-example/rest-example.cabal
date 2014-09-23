@@ -1,5 +1,5 @@
 name:                rest-example
-version:             0.1.1
+version:             0.1.2
 synopsis:            Example project for rest
 homepage:            http://www.github.com/silkapp/rest
 license:             BSD3
@@ -25,6 +25,7 @@ library
     Api.Post.Comment
     Api.Test
     Api.Test.Err2
+    Api.Test.ReservedName
     Api.User
     ApiTypes
     Example
