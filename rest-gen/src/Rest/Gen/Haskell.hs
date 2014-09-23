@@ -188,7 +188,7 @@ mkFunction ver res (ApiAction _ lnk ai) =
                                            (responseHaskellType errorI))
                                          (responseHaskellType output))]
                qualIdent (H.Ident s)
-                 | s == res = H.TyCon $ H.UnQual tyIdent
+                 | s == cleanHsName res = H.TyCon $ H.UnQual tyIdent
                  | otherwise = H.TyCon $ H.Qual (H.ModuleName $ modName s) tyIdent
                qualIdent H.Symbol{} = error "Rest.Gen.Haskell.mkFunction.qualIdent - not expecting a Symbol"
                inp | Just i  <- mInp
@@ -247,7 +247,7 @@ urlParts res lnk ac@(rlnk, pars) =
     [] -> ac
     (LResource r : a@(LAccess _) : xs)
       | not (hasParam a) -> urlParts res xs (rlnk ++ [H.List [H.Lit $ H.String r]], pars)
-      | otherwise -> urlParts res xs (rlnk', pars ++ [H.Ident r])
+      | otherwise -> urlParts res xs (rlnk', pars ++ [H.Ident . cleanHsName $ r])
            where rlnk' = rlnk ++ (H.List [H.Lit $ H.String $ r] : tailed)
                  tailed = [H.App (useMQual qual $ H.Ident "readId")
                                  (use $ hsName (cleanName r))]
@@ -316,9 +316,11 @@ mkHsName ai = hsName $ concatMap cleanName parts
 
 hsName :: [String] -> H.Name
 hsName []       = H.Ident ""
-hsName (x : xs) = H.Ident $ clean $ downFirst x ++ concatMap upFirst xs
+hsName (x : xs) = H.Ident $ cleanHsName $ downFirst x ++ concatMap upFirst xs
+
+cleanHsName :: String -> String
+cleanHsName s = if s `elem` reservedNames then s ++ "_" else s
   where
-    clean s = if s `elem` reservedNames then s ++ "_" else s
     reservedNames =
       ["as","case","class","data","instance","default","deriving","do"
       ,"foreign","if","then","else","import","infix","infixl","infixr","let"

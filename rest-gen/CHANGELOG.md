@@ -2,6 +2,8 @@
 
 #### 0.16.0.1
 
+* Fix a bug where the generated Haskell client for a resource with a
+  name that was a Haskell keyword would contain invalid code.
 * Relax bounds on semigroups.
 
 ## 0.16
