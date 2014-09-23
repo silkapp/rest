@@ -1,6 +1,10 @@
 # Changelog
 
-#### 0.16
+#### 0.16.0.1
+
+* Relax bounds on semigroups.
+
+## 0.16
 
 You don't have to regenerate clients for this release, but it is strongly recommended!
 
