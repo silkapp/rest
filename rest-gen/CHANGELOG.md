@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.16.0.2
+
+* Allow haskell-src-exts 1.16.*
+
 #### 0.16.0.1
 
 * Fix a bug where the generated Haskell client for a resource with a
