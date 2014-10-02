@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Rest.Gen.Types
   ( unModuleName
   , overModuleName
@@ -29,6 +30,9 @@ namedImport name = ImportDecl
   , importQualified = False
   , importModule    = ModuleName name
   , importSrc       = False
+#if MIN_VERSION_haskell_src_exts(1,16,0)
+  , importSafe      = False
+#endif
   , importPkg       = Nothing
   , importAs        = Nothing
   , importSpecs     = Nothing
