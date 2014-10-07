@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Architect Theme by Jason Long
+title: Rest - building REST APIs using Haskell
 
 ---
 
