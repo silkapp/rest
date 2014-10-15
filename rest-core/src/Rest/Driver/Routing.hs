@@ -293,9 +293,9 @@ guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)
 
 mkListHandler :: Monad m => ListHandler m -> Maybe (Handler m)
-mkListHandler (GenHandler dict act sec) =
+mkListHandler (GenHandler dict act sec resH) =
   do newDict <- L.traverse outputs listO . addPar range $ dict
-     return $ GenHandler newDict (mkListAction act) sec
+     return $ GenHandler newDict (mkListAction act) sec resH
 
 mkListAction :: Monad m
             => (Env h p i -> ErrorT (Reason e) m [a])
@@ -306,7 +306,7 @@ mkListAction act (Env h (Range f c, p) i) = do
   return (List f (min c (length xs)) (take c xs))
 
 mkMultiHandler :: Monad m => Rest.Id id -> (id -> Run s m) -> Handler s -> Maybe (Handler m)
-mkMultiHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> pure newAct <*> pure sec
+mkMultiHandler sBy run (GenHandler dict act sec resH) = GenHandler <$> mNewDict <*> pure newAct <*> pure sec <*> pure resH
   where
     newErrDict = L.modify errors reasonE dict
     mNewDict =  L.traverse inputs mappingI

@@ -132,9 +132,10 @@ instance Rest m => Rest (MaybeT m) where
   setResponseCode = lift . setResponseCode
 
 writeResponse :: Rest m => RunnableHandler m -> m UTF8.ByteString
-writeResponse (RunnableHandler run (GenHandler dict act _)) = do
+writeResponse (RunnableHandler run (GenHandler dict act _ rh)) = do
   res <- runErrorT $ do
     let os = L.get D.outputs dict
+    mapM_ (uncurry setHeader) rh
     validator os
     inp <- fetchInputs dict
     output <- mapErrorT run (act inp)
