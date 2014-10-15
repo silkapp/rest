@@ -1,14 +1,17 @@
+var isNodeJs = typeof module === "object" && module && typeof module.exports === "object";
+
 var $apinamespace$ =
   function (url, secureUrl)
   {
     var postfix          = '/v' + this.version + '/';
     var contextUrl       = url + postfix;
     var secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
+    var cookieJar = isNodeJs ? require('request').jar() : undefined;
 
-    $apinamespace$.setContext(this, contextUrl, secureContextUrl);
+    $apinamespace$.setContext(this, contextUrl, secureContextUrl, cookieJar);
   };
 
-if (typeof module === "object" && module && typeof module.exports === "object")
+if (isNodeJs)
 {
   // Export as Node module.
   module.exports = $apinamespace$;
@@ -62,7 +65,7 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
   return q($dollar$.ajax(callData));
 }
 
-function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts)
+function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, cookieJar)
 {
   var allParams = {};
   $apinamespace$.addObject(allParams, params);
@@ -82,6 +85,7 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
     , qs      : allParams
     , method  : method
     , headers : headers
+    , jar     : cookieJar ? cookieJar : undefined
     };
 
   if (data) callData.body = data;
@@ -140,16 +144,17 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
 }
 
 $apinamespace$.setContext =
-  function (obj, url, secureUrl)
+  function (obj, url, secureUrl, cookieJar)
   {
     obj.contextUrl = url;
     obj.secureContextUrl = secureUrl;
+    obj.cookieJar = cookieJar;
     for (var fld in obj)
     {
       if (obj[fld] != undefined && obj[fld].apiObjectType != undefined && obj[fld].apiObjectType == 'resourceDir')
       {
         var postfix = fld.replace(/([a-z0-9])([A-Z])/g, '$dollar$1-$dollar$2').toLowerCase() + '/';
-        $apinamespace$.setContext(obj[fld], url + postfix, secureUrl + postfix);
+        $apinamespace$.setContext(obj[fld], url + postfix, secureUrl + postfix, cookieJar);
       }
     }
   };
