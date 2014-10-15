@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.16.0.3
+
+* JavaScript/node.js: Each instance of a client now uses its own cookie jar automatically. You no longer need to depend on the `request` library to use generated clients. If you want access to the cookie jar use `api.cookieJar`.
+
 #### 0.16.0.2
 
 * Allow haskell-src-exts 1.16.*
