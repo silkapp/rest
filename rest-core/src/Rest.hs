@@ -18,7 +18,7 @@ module Rest
 
 import Rest.Dictionary.Combinators
 import Rest.Error
-import Rest.Handler ( Env (..), Handler, ListHandler, secureHandler
+import Rest.Handler ( Env (..), Handler, ListHandler, secureHandler, setResponseHeaders, addResponseHeaders
                     , Range (..), range, mkListing, mkOrderedListing, mkHandler
                     , mkInputHandler, mkConstHandler, mkIdHandler
                     )

@@ -25,6 +25,8 @@ module Rest.Handler
 
     -- * Convenience functions.
   , secureHandler
+  , setResponseHeaders
+  , addResponseHeaders
   ) where
 
 import Control.Arrow
@@ -65,13 +67,14 @@ data GenHandler m f where
     { dictionary :: Dict h p i o e
     , handler    :: Env h p i -> ErrorT (Reason e) m (Apply f o)
     , secure     :: Bool
+    , resHeaders :: [(String, String)]
     } -> GenHandler m f
 
 -- | Construct a 'GenHandler' using a 'Modifier' instead of a 'Dict'.
 -- The 'secure' flag will be 'False'.
 
 mkGenHandler :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m (Apply f o)) -> GenHandler m f
-mkGenHandler d a = GenHandler (d empty) a False
+mkGenHandler d a = GenHandler (d empty) a False []
 
 -- | Apply a Functor @f@ to a type @a@. In general will result in @f
 -- a@, except if @f@ is 'Identity', in which case it will result in
@@ -90,6 +93,16 @@ type ListHandler m = GenHandler m []
 
 secureHandler :: Handler m -> Handler m
 secureHandler h = h { secure = True }
+
+-- | Set default response headers for handler.
+
+setResponseHeaders :: [(String, String)] -> Handler m -> Handler m
+setResponseHeaders rh h = h { resHeaders = rh }
+
+-- | Add default response headers for handler.
+
+addResponseHeaders :: [(String, String)] -> Handler m -> Handler m
+addResponseHeaders rh h = h { resHeaders = rh ++ resHeaders h }
 
 -- | Data type for representing the requested range in list handlers.
 
