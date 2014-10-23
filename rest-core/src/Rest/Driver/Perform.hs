@@ -3,11 +3,11 @@
   , OverloadedStrings
   , RankNTypes
   , ScopedTypeVariables
+  , TupleSections
   #-}
 module Rest.Driver.Perform where
 
 import Control.Applicative
-import Control.Monad
 import Control.Monad.Cont
 import Control.Monad.Error
 import Control.Monad.RWS
@@ -16,26 +16,21 @@ import Control.Monad.State
 import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Writer
-import Data.Aeson.Utils
-import Data.Char (isSpace, toLower)
 import Data.List
-import Data.List.Split
-import Data.Maybe
-import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.UUID (UUID)
 import Network.Multipart (BodyPart (..), MultiPart (..), showMultipartBody)
+import Network.Multipart.Header (parseContentType, showContentType)
 import Safe
 import System.IO.Unsafe
 import System.Random (randomIO)
-import Text.Xml.Pickle
 
 import qualified Control.Monad.Error       as E
 import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
-import Rest.Dictionary ( Dict, Dicts (..), Error (..), Errors, Format (..), Header (..)
-                       , Input (..), Inputs, Output (..), Outputs, Param (..), FromMaybe
+import Rest.Dictionary ( Dict, Dicts (..), Errors, Format (..), Header (..)
+                       , Output (..), Outputs, Param (..), FromMaybe
                        )
 import Rest.Driver.Types
 import Rest.Error
@@ -140,8 +135,8 @@ writeResponse (RunnableHandler run (GenHandler dict act _)) = do
     let os = L.get D.outputs dict
     validator os
     inp <- fetchInputs dict
-    output <- mapErrorT run (act inp)
-    outputWriter os output
+    outp <- mapErrorT run (act inp)
+    outputWriter os outp
   case res of
     Left  er -> failureWriter (L.get D.errors dict) er
     Right r  -> return r
@@ -152,41 +147,28 @@ writeResponse (RunnableHandler run (GenHandler dict act _)) = do
 fetchInputs :: Rest m => Dict h p j o e -> ErrorT (Reason (FromMaybe Void e)) m (Env h p (FromMaybe () j))
 fetchInputs dict =
   do bs <- getBody
-     ct <- parseContentType
+     mCtHdr <- getHeader "Content-Type"
+     mCt <- case mCtHdr of -- TODO: mapM?
+       Nothing -> return Nothing
+       Just ctHdr -> either (throwError . HeaderError . ParseError)
+                            (return . Just)
+                            (parseContentType ctHdr)
 
      h <- HeaderError `mapE` headers    (L.get D.headers dict)
      p <- ParamError  `mapE` parameters (L.get D.params dict)
      let inputs = L.get D.inputs dict
      j <- InputError  `mapE`
             case inputs of
-              None -> return ()
-              _    ->
-                case ct of
-                  Just XmlFormat      -> parser XmlFormat     inputs bs
-                  Just JsonFormat     -> parser JsonFormat    inputs bs
-                  Just StringFormat   -> parser StringFormat  inputs bs
-                  Just FileFormat     -> parser FileFormat    inputs bs
-                  Just x              -> throwError (UnsupportedFormat (show x))
-                  Nothing | B.null bs -> parser NoFormat inputs bs
+              None     -> return ()
+              Dicts is ->
+                case mCt of
+                  Just ct             ->
+                    case find (($ ct) . D.accepts) is of
+                      Nothing -> throwError (UnsupportedFormat (showContentType ct))
+                      Just i  -> either (throwError . ParseError) return (D.parser i bs)
+                  Nothing | B.null bs -> throwError (MissingField "input required")
                   Nothing             -> throwError (UnsupportedFormat "unknown")
      return (Env h p j)
-
-parseContentType :: Rest m => m (Maybe Format)
-parseContentType =
-  do ct <- fromMaybe "" <$> getHeader "Content-Type"
-     let segs  = concat (take 1 . splitOn ";" <$> splitOn "," ct)
-         types = flip concatMap segs $ \ty ->
-                   case splitOn "/" ty of
-                     ["application", "xml"]          -> [XmlFormat]
-                     ["application", "json"]         -> [JsonFormat]
-                     ["text",        "xml"]          -> [XmlFormat]
-                     ["text",        "json"]         -> [JsonFormat]
-                     ["text",        "plain"]        -> [StringFormat]
-                     ["application", "octet-stream"] -> [FileFormat]
-                     ["application", _             ] -> [FileFormat]
-                     ["image",       _             ] -> [FileFormat]
-                     _                               -> []
-     return (headMay types)
 
 headers :: Rest m => Header h -> ErrorT DataError m h
 headers NoHeader      = return ()
@@ -198,7 +180,8 @@ parameters NoParam      = return ()
 parameters (Param xs p) = mapM (lift . getParameter) xs >>= either throwError return . p
 parameters (TwoParams p1 p2) = (,) <$> parameters p1 <*> parameters p2
 
-parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m (FromMaybe () j)
+{-
+parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m j
 parser NoFormat None       _ = return ()
 parser f        None       _ = throwError (UnsupportedFormat (show f))
 parser f        (Dicts ds) v = parserD f ds
@@ -217,12 +200,21 @@ parser f        (Dicts ds) v = parserD f ds
     parserD XmlFormat     (RawXmlI  : _ ) = return v
     parserD t             []              = throwError (UnsupportedFormat (show t))
     parserD t             (_        : xs) = parserD t xs
+    -}
 
 -------------------------------------------------------------------------------
 -- Failure responses.
 
 failureWriter :: Rest m => Errors e -> Reason (FromMaybe Void e) -> m UTF8.ByteString
-failureWriter es err =
+failureWriter errors err = do
+  fmts <- accept
+  case errors of
+    None     -> undefined
+    Dicts ds -> do
+      let (fmt, e) = headDef (error "TODO: some default formatter?") . concatMap (\f -> map (f,) . filter ((`returns` f) . D.output) $ ds) $ fmts
+      setHeader "Content-Type" (showContentType $ D.acceptToContentType fmt)
+      return (D.printer (D.output e) (undefined err)) -- TODO: how to get dicts for 'Reason'?
+{-
   do formats <- accept
      fromMaybeT (printFallback formats) $
        msum (  (tryPrint err                     es   <$> (formats ++ [XmlFormat]))
@@ -262,6 +254,7 @@ failureWriter es err =
         NoFormat        -> "any"
 
     fromMaybeT def = runMaybeT >=> maybe def return
+    -}
 
 -------------------------------------------------------------------------------
 -- Printing the output resource.
@@ -274,7 +267,8 @@ contentType c = setHeader "Content-Type" $
     _          -> "text/plain; charset=UTF-8"
 
 validator :: forall v m e. Rest m => Outputs v -> ErrorT (Reason e) m ()
-validator outputs = lift accept >>= \formats -> OutputError `mapE`
+validator _outputs = undefined -- TODO: is this still needed?
+{- lift accept >>= \formats -> OutputError `mapE`
    (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
 
   where
@@ -295,9 +289,21 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
         tryD (MultipartO : _ ) _            = return () -- Multipart is always ok, subparts can fail.
         tryD []                t            = throwError (UnsupportedFormat (show t))
         tryD (_          : xs) t            = tryD xs t
+        -}
 
 outputWriter :: forall v m e. Rest m => Outputs v -> FromMaybe () v -> ErrorT (Reason e) m UTF8.ByteString
-outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
+outputWriter outputs v = do
+  fmts <- accept
+  case outputs of
+    None     -> setResponseCode 204 >> return ""
+    Dicts ds -> do
+      let (fmt, o) = headDef (error "TODO: some default formatter?") . concatMap (\f -> map (f,) . filter (`returns` f) $ ds) $ fmts
+      setHeader "Content-Type" (showContentType $ D.acceptToContentType fmt)
+      ok (D.printer o v)
+  where
+    ok r = setResponseCode 200 >> return r
+
+{- lift accept >>= \formats -> OutputError `mapE`
   (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
 
   where
@@ -324,9 +330,9 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
              ok (fst v)
         tryD []                t            = throwError (UnsupportedFormat (show t))
         tryD (_          : xs) t            = tryD xs t
-    ok r = setResponseCode 200 >> return r
     escapeQuotes :: String -> String
     escapeQuotes = intercalate "\\\"" . splitOn "\""
+-}
 
 outputMultipart :: Rest m => [BodyPart] -> m UTF8.ByteString
 outputMultipart vs =
@@ -334,8 +340,9 @@ outputMultipart vs =
      setHeader "Content-Type" ("multipart/mixed; boundary=" ++ boundary)
      return $ showMultipartBody boundary (MultiPart vs)
 
-accept :: Rest m => m [Format]
-accept =
+accept :: Rest m => m [D.Accept]
+accept = undefined
+{-
   do acceptHeader <- getHeader "Accept"
      ct <- parseContentType
      ty <- fromMaybe "" <$> getParameter "type"
@@ -374,3 +381,4 @@ accept =
     app "octet-stream" = [FileFormat]
     app _              = []
     img _              = [FileFormat]
+    -}

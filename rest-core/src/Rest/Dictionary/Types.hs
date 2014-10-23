@@ -1,6 +1,7 @@
 {-# LANGUAGE
     CPP
   , DataKinds
+  , DeriveFunctor
   , FlexibleContexts
   , GADTs
   , KindSignatures
@@ -36,6 +37,7 @@ module Rest.Dictionary.Types
   , Param (..)
   , Input (..)
   , Output (..)
+  -- , contramap
   , Error (..)
 
   -- * Plural dictionaries.
@@ -49,6 +51,8 @@ module Rest.Dictionary.Types
   , Outputs
   , Errors
   , SomeError (..)
+  , Accept
+  , acceptToContentType
 
   , FromMaybe
 
@@ -56,15 +60,11 @@ module Rest.Dictionary.Types
 
 where
 
-import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
-import Data.JSON.Schema
 import Data.Label ((:->), lens)
 import Data.Label.Derive
-import Data.Text.Lazy (Text)
 import Data.Typeable
-import Network.Multipart (BodyPart)
-import Text.XML.HXT.Arrow.Pickle
+import Network.Multipart (ContentType)
 
 import Rest.Error
 import Rest.Info
@@ -134,50 +134,43 @@ instance Show (Param p) where
                                                   )
 
 -- | The explicitly dictionary `Input` describes how to translate the request
--- body into some Haskell value. We currently use a constructor for every
--- combination of input type to output type. For example, we can use XML input
--- in multiple ways, parsed, as plain/text or as raw bytes, depending on the
--- needs of the backend resource.
+-- body into some Haskell value.
 
-data Input i where
-  JsonI    :: (Typeable i, FromJSON i, JSONSchema i) => Input i
-  ReadI    :: (Info i, Read i, Show i)               => Input i
-  StringI  ::                                           Input String
-  FileI    ::                                           Input ByteString
-  XmlI     :: (Typeable i, XmlPickler i)             => Input i
-  XmlTextI ::                                           Input Text
-  RawXmlI  ::                                           Input ByteString
+type ParseError = String
 
-deriving instance Show (Input i)
-deriving instance Eq   (Input i)
-deriving instance Ord  (Input i)
+data Input i = Input
+  { parser  :: ByteString -> Either ParseError i
+  -- TODO: re-export ContentType for easily defining formatters?
+  , accepts :: ContentType -> Bool
+  } deriving (Functor)
+
+type Accept = (ContentType, Double)
+
+acceptToContentType :: Accept -> ContentType
+acceptToContentType = fst
 
 -- | The explicitly dictionary `Output` describes how to translate some Haskell
--- value to a response body. We currently use a constructor for every
--- combination of input type to output type.
+-- value to a response body.
 
-data Output o where
-  FileO      ::                                         Output (ByteString, String)
-  RawXmlO    ::                                         Output ByteString
-  JsonO      :: (Typeable o, ToJSON o, JSONSchema o) => Output o
-  XmlO       :: (Typeable o, XmlPickler o)           => Output o
-  StringO    ::                                         Output String
-  MultipartO ::                                         Output [BodyPart]
+data Output o = forall custom. (Typeable custom, Typeable o) => Output
+  { printer :: o      -> ByteString
+  -- TODO: should this just take a content-type instead? no sense in
+  -- giving a single q value.
+  , returns :: Accept -> Bool
+  , custom :: custom o
+  }
 
-deriving instance Show (Output o)
-deriving instance Eq   (Output o)
-deriving instance Ord  (Output o)
+-- TODO: Contravariant instance
+-- contramap :: (p -> o) -> Output o -> Output p
+-- contramap f o = o { printer = printer o . f }
 
 -- | The explicitly dictionary `Error` describes how to translate some Haskell
 -- error value to a response body.
 
-data Error e where
-  JsonE   :: (ToResponseCode e, Typeable e, ToJSON e, JSONSchema e) => Error e
-  XmlE    :: (ToResponseCode e, Typeable e, XmlPickler e)           => Error e
-
-deriving instance Show (Error e)
-deriving instance Eq   (Error e)
-deriving instance Ord  (Error e)
+data Error e = Error
+  { output       :: Output e
+  , responseCode :: e -> Int
+  }
 
 type Inputs  i = Dicts Input  i
 type Outputs o = Dicts Output o
@@ -242,7 +235,7 @@ fclabels [d|
     , inputs  :: Inputs  i
     , outputs :: Outputs o
     , errors  :: Errors  e
-    } deriving Show
+    }
   |]
 
 -- | The empty dictionary, recognizing no types.

@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     DeriveDataTypeable
+  , DeriveFunctor
   , DeriveGeneric
   , EmptyDataDecls
   , FlexibleContexts
@@ -38,7 +39,7 @@ data List a = List
   { offset :: Int
   , count  :: Int
   , items  :: [a]
-  } deriving (Generic, Show, Typeable)
+  } deriving (Eq, Show, Read, Functor, Typeable, Generic)
 
 deriveAll ''List "PFList"
 type instance PF (List a) = PFList a
