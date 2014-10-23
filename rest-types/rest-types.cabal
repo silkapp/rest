@@ -25,6 +25,7 @@ library
     Rest.Types.Container.Resource
     Rest.Types.Info
     Rest.Types.Error
+    Rest.Types.Range
     Rest.Types.ShowUrl
   build-depends:
       base == 4.*

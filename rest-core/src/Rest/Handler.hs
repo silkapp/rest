@@ -1,4 +1,10 @@
-{-# LANGUAGE GADTs, KindSignatures, TupleSections, DeriveDataTypeable, TypeFamilies #-}
+{-# LANGUAGE
+    DeriveDataTypeable
+  , GADTs
+  , KindSignatures
+  , TupleSections
+  , TypeFamilies
+  #-}
 -- | Handlers for endpoints in a 'Resource'.
 module Rest.Handler
   ( -- * Single handlers.
@@ -27,11 +33,12 @@ module Rest.Handler
   , secureHandler
   ) where
 
-import Control.Arrow
 import Control.Applicative hiding (empty)
+import Control.Arrow
 import Control.Monad.Error
 import Control.Monad.Identity
 import Control.Monad.Reader
+import Rest.Types.Range
 import Safe
 
 import Rest.Dictionary
@@ -90,10 +97,6 @@ type ListHandler m = GenHandler m []
 
 secureHandler :: Handler m -> Handler m
 secureHandler h = h { secure = True }
-
--- | Data type for representing the requested range in list handlers.
-
-data Range = Range { offset :: Int, count :: Int }
 
 -- | Smart constructor for creating a list handler.
 -- Restricts the type of the 'Input' dictionary to 'None'
