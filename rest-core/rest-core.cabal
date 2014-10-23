@@ -1,5 +1,5 @@
 name:                rest-core
-version:             0.33
+version:             0.33.1
 description:         Rest API library.
 synopsis:            Rest API library.
 maintainer:          code@silk.co
@@ -53,7 +53,7 @@ library
     , multipart >= 0.1.1 && < 0.2
     , random >= 1.0 && < 1.2
     , rest-stringmap == 0.2.*
-    , rest-types == 1.11.*
+    , rest-types >= 1.11.1 && < 1.12
     , safe >= 0.2 && < 0.4
     , split >= 0.1 && < 0.3
     , text >= 0.11 && < 1.3

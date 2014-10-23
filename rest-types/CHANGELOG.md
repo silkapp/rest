@@ -1,6 +1,10 @@
 # Changelog
 
-### 1.11
+### 1.11.1
+
+* Moved `Range` from `rest-core` to `Rest.Types.Range`.
+
+## 1.11
 
 * Added `Rest.Types.Error.ToResponseCode` for getting the response codes of errors.
 * Removed `responseCode` from `Rest.Types.Error.DomainReason`, use `toResponseCode` instead.

@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.33.1
+
+* Move `Range` from `Rest.Handler` into `rest-types`. Still re-exported.
+
 ## 0.33
 
 * Added a `Rest.Types.Error.ToResponseCode` constraint to `jsonE`, `xmlE`, and `xmlJsonE`.
