@@ -1,14 +1,14 @@
 var isNodeJs = typeof module === "object" && module && typeof module.exports === "object";
 
 var $apinamespace$ =
-  function (url, secureUrl)
+  function (url, secureUrl, modifyRequest)
   {
     var postfix          = '/v' + this.version + '/';
     var contextUrl       = url + postfix;
     var secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
     var cookieJar = isNodeJs ? require('request').jar() : undefined;
 
-    $apinamespace$.setContext(this, contextUrl, secureContextUrl, cookieJar);
+    $apinamespace$.setContext(this, contextUrl, secureContextUrl, cookieJar, modifyRequest);
   };
 
 if (isNodeJs)
@@ -65,7 +65,7 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
   return q($dollar$.ajax(callData));
 }
 
-function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, cookieJar)
+function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, cookieJar, modifyRequest)
 {
   var allParams = {};
   $apinamespace$.addObject(allParams, params);
@@ -89,6 +89,9 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
     };
 
   if (data) callData.body = data;
+
+  if (modifyRequest)
+    callData = modifyRequest(callData);
 
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
@@ -144,17 +147,18 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
 }
 
 $apinamespace$.setContext =
-  function (obj, url, secureUrl, cookieJar)
+  function (obj, url, secureUrl, cookieJar, modifyRequest)
   {
     obj.contextUrl = url;
     obj.secureContextUrl = secureUrl;
     obj.cookieJar = cookieJar;
+    obj.modifyRequest = modifyRequest;
     for (var fld in obj)
     {
       if (obj[fld] != undefined && obj[fld].apiObjectType != undefined && obj[fld].apiObjectType == 'resourceDir')
       {
         var postfix = fld.replace(/([a-z0-9])([A-Z])/g, '$dollar$1-$dollar$2').toLowerCase() + '/';
-        $apinamespace$.setContext(obj[fld], url + postfix, secureUrl + postfix, cookieJar);
+        $apinamespace$.setContext(obj[fld], url + postfix, secureUrl + postfix, cookieJar, modifyRequest);
       }
     }
   };
