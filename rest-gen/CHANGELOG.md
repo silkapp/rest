@@ -1,5 +1,13 @@
 # Changelog
 
+#### 0.16.1
+
+##### JavaScript
+
+* When instantiating API object you can now optionally pass a `modifyRequest` argument of type `RequestObject -> RequestObject` which is called before every request.
+
+* NodeJS: The `cookieJar` instance member is no longer available on sub resources, it can now only be accessed from the top-level api object. This is a breaking change for generated clients. It was a bad idea to use this to begin with since the cookie jar is shared across the entire api object.
+
 #### 0.16.0.4
 
 * JavaScript: Minor simplification in the template.
