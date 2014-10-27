@@ -1,14 +1,24 @@
 var isNodeJs = typeof module === "object" && module && typeof module.exports === "object";
 
 var $apinamespace$ =
-  function (url, secureUrl)
+  function (url, secureUrl, modifyRequest)
   {
+    var self = this;
     var postfix          = '/v' + this.version + '/';
     var contextUrl       = url + postfix;
     var secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
-    var cookieJar = isNodeJs ? require('request').jar() : undefined;
 
-    $apinamespace$.setContext(this, contextUrl, secureContextUrl, cookieJar);
+    this.cookieJar = isNodeJs ? require('request').jar() : undefined;
+
+    if(!modifyRequest) modifyRequest = function(req) { return req; };
+
+    var finalModifyRequest = function(req)
+    {
+      if (isNodeJs) req.jar = self.cookieJar;
+      return modifyRequest(req);
+    }
+
+    $apinamespace$.setContext(this, contextUrl, secureContextUrl, finalModifyRequest);
   };
 
 if (isNodeJs)
@@ -40,7 +50,7 @@ $apinamespace$.addObject = function (obj1, obj2)
 $apinamespace$.defaultAjaxOptions = {};
 $apinamespace$.defaultHeaders = {};
 
-function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts)
+function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts, modifyRequest)
 {
   var q = window.Q || function (a) { return a };
 
@@ -59,13 +69,15 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
     , data        : data || []
     };
 
+  callData = modifyRequest(callData);
+
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
 
   return q($dollar$.ajax(callData));
 }
 
-function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, cookieJar)
+function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, modifyRequest)
 {
   var allParams = {};
   $apinamespace$.addObject(allParams, params);
@@ -85,10 +97,11 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
     , qs      : allParams
     , method  : method
     , headers : headers
-    , jar     : cookieJar
     };
 
   if (data) callData.body = data;
+
+  callData = modifyRequest(callData);
 
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
@@ -144,17 +157,17 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
 }
 
 $apinamespace$.setContext =
-  function (obj, url, secureUrl, cookieJar)
+  function (obj, url, secureUrl, modifyRequest)
   {
     obj.contextUrl = url;
     obj.secureContextUrl = secureUrl;
-    obj.cookieJar = cookieJar;
+    obj.modifyRequest = modifyRequest;
     for (var fld in obj)
     {
       if (obj[fld] != undefined && obj[fld].apiObjectType != undefined && obj[fld].apiObjectType == 'resourceDir')
       {
         var postfix = fld.replace(/([a-z0-9])([A-Z])/g, '$dollar$1-$dollar$2').toLowerCase() + '/';
-        $apinamespace$.setContext(obj[fld], url + postfix, secureUrl + postfix, cookieJar);
+        $apinamespace$.setContext(obj[fld], url + postfix, secureUrl + postfix, modifyRequest);
       }
     }
   };

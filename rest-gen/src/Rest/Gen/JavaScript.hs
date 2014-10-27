@@ -51,10 +51,10 @@ mkRes ns node = mkStack $
 mkAccessorConstructor :: String -> ApiResource -> Code
 mkAccessorConstructor ns resource =
   let constrName = jsDir (cleanName (resName resource))
-  in functionDecl constrName ["url", "secureUrl", "cookieJar"] $
+  in functionDecl constrName ["url", "secureUrl", "modifyRequest"] $
        jsIf (code $ "this instanceof " ++ constrName)
-            (proc (ns ++ ".setContext") (code "this, url, secureUrl, cookieJar"))
-         <-> jsElse (ret $ call (constrName ++ ".access") (code "url, secureUrl, cookieJar"))
+            (proc (ns ++ ".setContext") (code "this, url, secureUrl, modifyRequest"))
+         <-> jsElse (ret $ call (constrName ++ ".access") (code "url, secureUrl, modifyRequest"))
 
 mkPreFuncs :: String -> ApiResource -> Code
 mkPreFuncs ns node =
@@ -84,7 +84,7 @@ mkAccessor ns node@(ApiAction _ _ ai) =
       [ var "postfix" $ "'" ++ urlPart ++ "'"
       , var "accessor" $ new "this" . code $  "this.contextUrl + postfix, "
                                            ++ "this.secureContextUrl + postfix, "
-                                           ++ "this.cookieJar"
+                                           ++ "this.modifyRequest"
       , "accessor.get" .=. mkFunction ns node
       , ret "accessor"
       ]
@@ -111,7 +111,7 @@ mkFunction ns (ApiAction _ _ ai) =
           , string $ mOut
           , maybe (code "undefined") (\(p, _, f) -> f (code p)) mInp
           , code "callOpts"
-          , code "this.cookieJar"
+          , code "this.modifyRequest"
           ]
 
 resourceLoc :: String -> ApiResource -> String
