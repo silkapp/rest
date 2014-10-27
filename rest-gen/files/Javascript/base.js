@@ -40,7 +40,7 @@ $apinamespace$.addObject = function (obj1, obj2)
 $apinamespace$.defaultAjaxOptions = {};
 $apinamespace$.defaultHeaders = {};
 
-function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts)
+function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts, cookieJar, modifyRequest)
 {
   var q = window.Q || function (a) { return a };
 
@@ -58,6 +58,9 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
     , xhrFields   : { withCredentials: true }
     , data        : data || []
     };
+
+  if (modifyRequest)
+    callData = modifyRequest(callData);
 
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
