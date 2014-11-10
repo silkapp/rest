@@ -103,3 +103,12 @@ octetStreamOut input
               rHeaders
               (id input)
       in doRequest fromJSON id request
+ 
+onlyInput :: ApiStateC m => () -> m (ApiResponse () ())
+onlyInput input
+  = let rHeaders
+          = [(hAccept, "text/json"), (hContentType, "text/json")]
+        request
+          = makeReq "POST" "v1.0.0" [["test"], ["onlyInput"]] [] rHeaders
+              (toJSON input)
+      in doRequest fromXML (const ()) request

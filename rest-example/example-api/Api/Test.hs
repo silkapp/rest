@@ -63,6 +63,7 @@ resource = mkResourceReader
                 , ("justStringO"        , justStringO        )
                 , ("preferJson"         , preferJson         )
                 , ("octetStreamOut"     , octetStreamOut     )
+                , ("onlyInput"          , onlyInput          )
                 ]
   }
 
@@ -114,3 +115,6 @@ octetStreamOut = mkInputHandler (fileI . fileO . xmlJsonE) $
   \case
     "error" -> throwError $ domainReason Err
     _       -> return ("ok", "ok")
+
+onlyInput :: Handler WithText
+onlyInput = mkInputHandler (jsonI . someI) $ \() -> throwError NotFound
