@@ -11,7 +11,7 @@ noResponse
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
         request
           = makeReq "POST" "v1.0.0" [["test"], ["noResponse"]] [] rHeaders ""
-      in doRequest fromXML (const ()) request
+      in doRequest fromJSON (const ()) request
  
 onlyError :: ApiStateC m => m (ApiResponse Api.Test.Err ())
 onlyError
@@ -111,4 +111,4 @@ onlyInput input
         request
           = makeReq "POST" "v1.0.0" [["test"], ["onlyInput"]] [] rHeaders
               (toJSON input)
-      in doRequest fromXML (const ()) request
+      in doRequest fromJSON (const ()) request

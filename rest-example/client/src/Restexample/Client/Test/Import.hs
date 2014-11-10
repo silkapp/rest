@@ -19,7 +19,7 @@ byIt string
               []
               rHeaders
               ""
-      in doRequest fromXML (const ()) request
+      in doRequest fromJSON (const ()) request
  
 do_ :: ApiStateC m => Identifier -> m (ApiResponse () ())
 do_ import_
@@ -31,4 +31,4 @@ do_ import_
               []
               rHeaders
               ""
-      in doRequest fromXML (const ()) request
+      in doRequest fromJSON (const ()) request

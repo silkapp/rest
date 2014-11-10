@@ -75,4 +75,4 @@ remove post
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
         request
           = makeReq "DELETE" "v1.0.0" [["post"], readId post] [] rHeaders ""
-      in doRequest fromXML (const ()) request
+      in doRequest fromJSON (const ()) request

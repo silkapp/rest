@@ -391,7 +391,7 @@ errorInfo r =
     -- want to make assumptions about the response type if there is no
     -- accept header so in that case we force it to be JSON.
     Nothing -> fromJustNote ("rest-gen bug: toResponseInfo' was called with a data type other than XML or JSON, responseType: " ++ show r)
-             . toResponseInfo' . defaultErrorDataDesc . maybe XML (\x -> case x of { XML -> XML; _ -> JSON })
+             . toResponseInfo' . defaultErrorDataDesc . maybe JSON (\x -> case x of { XML -> XML; _ -> JSON })
              . fmap (L.get dataType) . outputType
              $ r
     Just t -> toResponseInfo [t]
