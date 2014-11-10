@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC-fno-warn-unused-imports#-}
 module Restexample.Client.Post.Comment where
 import Rest.Client.Internal
 import qualified Restexample.Client.Post as Post
@@ -13,7 +13,7 @@ readId :: Identifier -> [String]
 readId x = ["id", showUrl x]
  
 list ::
-       (ApiStateC m) =>
+       ApiStateC m =>
        Post.Identifier ->
          [(String, String)] ->
            m (ApiResponse ()
@@ -29,7 +29,7 @@ list post pList
       in doRequest fromJSON fromJSON request
  
 create ::
-         (ApiStateC m) =>
+         ApiStateC m =>
          Post.Identifier ->
            Type.UserComment.UserComment ->
              m (ApiResponse () Type.Comment.Comment)
