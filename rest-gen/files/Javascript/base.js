@@ -1,4 +1,14 @@
-var isNodeJs = typeof module === "object" && module && typeof module.exports === "object";
+// in nodejs, global is an object
+// in normal browser environment, global is undefined
+// in webpack, global is set to window
+var isNodeJs   = typeof global !== "undefined" && global.window === undefined;
+var isCommonJs = typeof module === "object" && module && typeof module.exports === "object";
+
+// require, that the nodejs will handle, but will remain not processed by webpack and the like
+var obfuscatedRequire = function (moduleName)
+{
+  return module["r" + "equire"](moduleName);
+}
 
 var $apinamespace$ =
   function (url, secureUrl, modifyRequest)
@@ -8,7 +18,7 @@ var $apinamespace$ =
     var contextUrl       = url + postfix;
     var secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
 
-    this.cookieJar = isNodeJs ? require('request').jar() : undefined;
+    this.cookieJar = isNodeJs ? obfuscatedRequire('request').jar() : undefined;
 
     if(!modifyRequest) modifyRequest = function(req) { return req; };
 
@@ -21,6 +31,7 @@ var $apinamespace$ =
     $apinamespace$.setContext(this, contextUrl, secureContextUrl, finalModifyRequest);
   };
 
+var jq;
 if (isNodeJs)
 {
   // Export as Node module.
@@ -30,13 +41,19 @@ if (isNodeJs)
 }
 else
 {
-  if (typeof define === "function" && define.amd)
+  if (isCommonJs) {
+    // Export as CommonJs
+    module.exports = $apinamespace$;
+    jq = require("jquery");
+  } else if (typeof define === "function" && define.amd) {
     // Export as AMD.
     define("$apinamespace$", [], function () { return $apinamespace$; });
-
-  else
+    jq = $dollar$;
+  } else {
     // Export as global.
     window.$apinamespace$ = $apinamespace$;
+    jq = $dollar$;
+  }
 
   $apinamespace$.ajaxCall = jQueryRequest;
 }
@@ -54,12 +71,12 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
 {
   var q = window.Q || function (a) { return a };
 
-  var headers = $dollar$.extend(true, {}, $apinamespace$.defaultHeaders);
+  var headers = jq.extend(true, {}, $apinamespace$.defaultHeaders);
   $apinamespace$.addObject(headers, { Accept : acceptHeader });
 
   var callData =
     { type        : method
-    , url         : url + (params ? '?' + $dollar$.param(params) : '')
+    , url         : url + (params ? '?' + jq.param(params) : '')
     , cache       : false
     , success     : success || function () {}
     , error       : error || function () {}
@@ -74,7 +91,7 @@ function jQueryRequest (method, url, params, success, error, contentType, accept
   $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
   $apinamespace$.addObject(callData, callOpts);
 
-  return q($dollar$.ajax(callData));
+  return q(jq.ajax(callData));
 }
 
 function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, modifyRequest)
@@ -108,7 +125,7 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
 
   return require("q").Promise(function (resolve, reject)
   {
-    require("request")(callData, callback);
+    obfuscatedRequire("request")(callData, callback);
 
     function callback (error, message, body)
     {
