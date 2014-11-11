@@ -20,9 +20,9 @@ var $apinamespace$ =
 
     this.cookieJar = isNodeJs ? obfuscatedRequire('request').jar() : undefined;
 
-    if(!modifyRequest) modifyRequest = function(req) { return req; };
+    if(!modifyRequest) modifyRequest = function (req) { return req; };
 
-    var finalModifyRequest = function(req)
+    var finalModifyRequest = function (req)
     {
       if (isNodeJs) req.jar = self.cookieJar;
       return modifyRequest(req);
