@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC-fno-warn-unused-imports#-}
 module Restexample.Client.User where
 import Rest.Client.Internal
 import qualified Rest.Types.Container
@@ -14,7 +14,7 @@ readId :: Identifier -> [String]
 readId x = ["name", showUrl x]
  
 list ::
-       (ApiStateC m) =>
+       ApiStateC m =>
        [(String, String)] ->
          m (ApiResponse ()
               (Rest.Types.Container.List (Type.UserInfo.UserInfo)))
@@ -25,7 +25,7 @@ list pList
       in doRequest fromJSON fromJSON request
  
 create ::
-         (ApiStateC m) =>
+         ApiStateC m =>
          Type.User.User ->
            m (ApiResponse Type.UserSignupError.UserSignupError
                 Type.UserInfo.UserInfo)

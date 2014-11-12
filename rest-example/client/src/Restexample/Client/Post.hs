@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC-fno-warn-unused-imports#-}
 module Restexample.Client.Post where
 import Rest.Client.Internal
 import qualified Rest.Types.Container
@@ -17,7 +17,7 @@ readId (Id x) = ["id", showUrl x]
 readId Latest = ["latest"]
  
 list ::
-       (ApiStateC m) =>
+       ApiStateC m =>
        [(String, String)] ->
          m (ApiResponse () (Rest.Types.Container.List (Type.Post.Post)))
 list pList
@@ -26,7 +26,7 @@ list pList
         request = makeReq "GET" "v1.0.0" [["post"]] pList rHeaders ""
       in doRequest fromJSON fromJSON request
  
-byId :: (ApiStateC m) => Int -> m (ApiResponse () Type.Post.Post)
+byId :: ApiStateC m => Int -> m (ApiResponse () Type.Post.Post)
 byId integer
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
@@ -37,7 +37,7 @@ byId integer
       in doRequest fromJSON fromJSON request
  
 removeManyId ::
-               (ApiStateC m) =>
+               ApiStateC m =>
                Rest.StringMap.HashMap.Strict.StringHashMap ([(Char)]) (()) ->
                  m (ApiResponse (Rest.Types.Error.Reason (()))
                       (Rest.StringMap.HashMap.Strict.StringHashMap ([(Char)])
@@ -50,7 +50,7 @@ removeManyId input
               (toJSON input)
       in doRequest fromJSON fromJSON request
  
-latest :: (ApiStateC m) => m (ApiResponse () Type.Post.Post)
+latest :: ApiStateC m => m (ApiResponse () Type.Post.Post)
 latest
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
@@ -59,7 +59,7 @@ latest
       in doRequest fromJSON fromJSON request
  
 create ::
-         (ApiStateC m) =>
+         ApiStateC m =>
          Type.UserPost.UserPost ->
            m (ApiResponse Type.PostError.PostError Type.Post.Post)
 create input
@@ -69,10 +69,10 @@ create input
           = makeReq "POST" "v1.0.0" [["post"]] [] rHeaders (toJSON input)
       in doRequest fromJSON fromJSON request
  
-remove :: (ApiStateC m) => Identifier -> m (ApiResponse () ())
+remove :: ApiStateC m => Identifier -> m (ApiResponse () ())
 remove post
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
         request
           = makeReq "DELETE" "v1.0.0" [["post"], readId post] [] rHeaders ""
-      in doRequest fromXML (const ()) request
+      in doRequest fromJSON (const ()) request
