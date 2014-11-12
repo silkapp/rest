@@ -33,7 +33,7 @@ import System.Directory
 import System.FilePath
 import System.Log.Logger
 import Text.Blaze.Html
-import Text.Blaze.Html5 hiding (map, meta)
+import Text.Blaze.Html5 hiding (map, meta, style)
 import Text.Blaze.Html5.Attributes hiding (method, span, title)
 import Text.Blaze.Html.Renderer.String
 import Text.StringTemplate
@@ -184,7 +184,9 @@ mkCode lng cap cd =
           do cdiv "modal-header" $
               do a ! href (toValue "#") ! cls "close" $ toHtml "x"
                  h3 $ toHtml cap
-             cdiv "modal-body" $ pre ! cls ("prettyprint lang-" ++ lng) $ toHtml $ cd
+             cdiv "modal-body" $
+               div ! style (toValue "overflow:auto; max-height:600px") $
+                 pre ! cls ("prettyprint lang-" ++ lng) $ toHtml $ cd
         button ! cls "btn open-modal"
                ! customAttribute (fromString "data-controls-modal") (toValue eid)
                ! customAttribute (fromString "data-backdrop") (toValue "true")
