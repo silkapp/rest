@@ -44,7 +44,7 @@ list = mkListing xmlJsonO $ \r -> do
          . maybe [] Set.toList . H.lookup postId $ comms
 
 create :: Handler WithPost
-create = mkInputHandler (xmlJson) $ \ucomm -> do
+create = mkInputHandler xmlJson $ \ucomm -> do
   postId <- getPostId `orThrow` NotFound
   comm   <- liftIO $ userCommentToComment ucomm
   comms  <- lift . lift $ asks comments
