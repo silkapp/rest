@@ -34,7 +34,9 @@ import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
-import Rest.Dictionary (Dict, Dicts (..), Error (..), Errors, Format (..), Header (..), Input (..), Inputs, Output (..), Outputs, Param (..))
+import Rest.Dictionary ( Dict, Dicts (..), Error (..), Errors, Format (..), Header (..)
+                       , Input (..), Inputs, Output (..), Outputs, Param (..), FromMaybe
+                       )
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
@@ -146,7 +148,7 @@ writeResponse (RunnableHandler run (GenHandler dict act _)) = do
 -------------------------------------------------------------------------------
 -- Fetching the input resource.
 
-fetchInputs :: Rest m => Dict h p j o e -> ErrorT (Reason e) m (Env h p j)
+fetchInputs :: Rest m => Dict h p j o e -> ErrorT (Reason (FromMaybe () e)) m (Env h p (FromMaybe () j))
 fetchInputs dict =
   do bs <- getBody
      ct <- parseContentType
@@ -195,7 +197,7 @@ parameters NoParam      = return ()
 parameters (Param xs p) = mapM (lift . getParameter) xs >>= either throwError return . p
 parameters (TwoParams p1 p2) = (,) <$> parameters p1 <*> parameters p2
 
-parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m j
+parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m (FromMaybe () j)
 parser NoFormat None       _ = return ()
 parser f        None       _ = throwError (UnsupportedFormat (show f))
 parser f        (Dicts ds) v = parserD f ds
@@ -218,7 +220,7 @@ parser f        (Dicts ds) v = parserD f ds
 -------------------------------------------------------------------------------
 -- Failure responses.
 
-failureWriter :: Rest m => Errors e -> Reason e -> m UTF8.ByteString
+failureWriter :: Rest m => Errors e -> Reason (FromMaybe () e) -> m UTF8.ByteString
 failureWriter es err =
   do formats <- accept
      fromMaybeT (printFallback formats) $
@@ -226,7 +228,8 @@ failureWriter es err =
             ++ (tryPrint (fallbackError formats) None <$> formats                 )
             )
   where
-    tryPrint :: forall m e. Rest m => Reason e -> Errors e -> Format -> MaybeT m UTF8.ByteString
+    tryPrint :: forall m e e'. (e ~ FromMaybe () e', Rest m)
+             => Reason e -> Errors e' -> Format -> MaybeT m UTF8.ByteString
     tryPrint e None JsonFormat = printError JsonFormat (toResponseCode e) (encode e)
     tryPrint e None XmlFormat  = printError XmlFormat  (toResponseCode e) (UTF8.fromString (toXML e))
     tryPrint _ None _          = mzero
@@ -292,7 +295,7 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
         tryD []                t            = throwError (UnsupportedFormat (show t))
         tryD (_          : xs) t            = tryD xs t
 
-outputWriter :: forall v m e. Rest m => Outputs v -> v -> ErrorT (Reason e) m UTF8.ByteString
+outputWriter :: forall v m e. Rest m => Outputs v -> FromMaybe () v -> ErrorT (Reason e) m UTF8.ByteString
 outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
   (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
 

@@ -319,7 +319,7 @@ mkMultiHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> p
          return . StringHashMap.fromList $ zipWith (\(k, _) b -> (k, eitherToStatus b)) (StringHashMap.toList vs) bs
 
 mkMultiGetHandler :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Handler m
-mkMultiGetHandler root = mkInputHandler (xmlJsonI . someI . multipartO) $ \(Resources rs) -> multiGetHandler rs
+mkMultiGetHandler root = mkInputHandler (xmlJsonI . multipartO) $ \(Resources rs) -> multiGetHandler rs
   where
     multiGetHandler rs = lift $
       do mapM (runResource root) rs

@@ -1,5 +1,7 @@
 {-# LANGUAGE
-    GADTs
+    DataKinds
+  , GADTs
+  , KindSignatures
   , LambdaCase
   , NoMonomorphismRestriction
   , ScopedTypeVariables
@@ -424,9 +426,9 @@ paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 
 -- | Extract input description from handlers
 handlerInputs :: Handler m -> [DataDescription]
-handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dicts . Dict.inputs) dict)
+handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (Dict.getDicts_ . L.get Dict.inputs $ dict)
   where
-    handlerInput :: Proxy a -> Input a -> DataDescription
+    handlerInput :: Proxy i -> Input i -> DataDescription
     handlerInput d c = case c of
       ReadI    -> L.set (haskellModules . desc) (modString d)
                 $ defaultDescription Other (describe d) (toHaskellType d)
@@ -444,7 +446,7 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dict
 
 -- | Extract output description from handlers
 handlerOutputs :: Handler m -> [DataDescription]
-handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.dicts . Dict.outputs) dict)
+handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (Dict.getDicts_ . L.get Dict.outputs $ dict)
   where
     handlerOutput :: Proxy a -> Output a -> DataDescription
     handlerOutput d c = case c of
@@ -461,7 +463,7 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.di
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]
-handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (L.get (Dict.dicts . Dict.errors) dict)
+handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (Dict.getDicts_ . L.get Dict.errors $ dict)
   where
     handleError :: Proxy a -> Error a -> DataDescription
     handleError d c = case c of
