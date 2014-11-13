@@ -1,6 +1,10 @@
 # Changelog
 
-#### 0.16.1
+#### 0.16.1.1
+
+* Haskell: Fixes a bug where client generation for end points without defined output or errors would default to parsing errors as XML even though the accept header was text/json. It now parses the response as json.
+
+### 0.16.1
 
 ##### JavaScript
 
