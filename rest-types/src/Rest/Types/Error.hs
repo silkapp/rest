@@ -38,6 +38,8 @@ import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
 import qualified Data.JSON.Schema as JSONSchema
 
+import Rest.Types.Void
+
 -- Error utilities.
 
 data DataError
@@ -83,7 +85,7 @@ toEither :: Status a b -> Either a b
 toEither (Success x) = Right x
 toEither (Failure y) = Left  y
 
-type Reason_ = Reason ()
+type Reason_ = Reason Void
 
 data Reason a
   -- Thrown in the router.
@@ -153,10 +155,8 @@ instance JSONSchema SomeReason where
 class ToResponseCode a where
   toResponseCode :: a -> Int
 
--- This instance shouldn't be here, and instead the None dictionary in
--- Rest.Dictionary.Types should have type Dicts f Void.
-instance ToResponseCode () where
-  toResponseCode () = 500
+instance ToResponseCode Void where
+  toResponseCode = magic
 
 instance ToResponseCode a => ToResponseCode (Reason a) where
   toResponseCode e =

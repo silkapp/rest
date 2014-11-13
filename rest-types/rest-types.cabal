@@ -27,6 +27,7 @@ library
     Rest.Types.Info
     Rest.Types.Range
     Rest.Types.ShowUrl
+    Rest.Types.Void
   build-depends:
       base == 4.*
     , aeson >= 0.7 && < 0.9

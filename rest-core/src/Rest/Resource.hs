@@ -12,13 +12,21 @@
 -- | A 'Resource' type for representing a REST resource, as well as
 -- smart constructors for empty resources which can them be filled in
 -- using record updates.
-module Rest.Resource where
+module Rest.Resource
+  ( Resource (..)
+  , mkResource
+  , mkResourceId
+  , mkResourceReader
+  , mkResourceReaderWith
+  , module Rest.Types.Void
+  ) where
 
 import Control.Applicative (Applicative)
 import Control.Monad.Reader
 
 import Rest.Handler
 import Rest.Schema (Schema (..), Step (..))
+import Rest.Types.Void
 
 -- * The @Resource@ type.
 
@@ -91,11 +99,3 @@ mkResourceReader = mkResourceReaderWith id
 
 mkResourceReaderWith :: (Applicative m, Monad m, Applicative s, Monad s) => (forall b. s b -> ReaderT sid m b) -> Resource m s sid Void Void
 mkResourceReaderWith f = mkResource (\a -> flip runReaderT a . f)
-
--- * The @Void@ type.
-
--- | The 'Void' type is used as the identifier for resources that
--- can't be routed to. It contains no values apart from bottom.
-
-newtype Void = Void { magic :: forall a. a }
-

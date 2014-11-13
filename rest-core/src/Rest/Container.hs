@@ -24,6 +24,7 @@ import Rest.Dictionary
 import Rest.Error
 import Rest.StringMap.HashMap.Strict
 import Rest.Types.Container
+import Rest.Types.Void
 
 listI :: Inputs i -> Maybe (Inputs (Just (List (FromMaybe () i))))
 listI None       = Just (Dicts [XmlI, JsonI])
@@ -73,7 +74,7 @@ mappingO (Dicts os) =
     mappingDictO JsonO = Just JsonO
     mappingDictO _     = Nothing
 
-statusO :: (e ~ FromMaybe () e', o ~ FromMaybe () o')
+statusO :: (e ~ FromMaybe Void e', o ~ FromMaybe () o')
         => Errors e' -> Outputs o' -> Maybe (Outputs (Just (Status e o)))
 statusO None       None       = Just (Dicts [XmlO, JsonO])
 statusO None       (Dicts os) = mkStatusDict [XmlE, JsonE] os
@@ -100,7 +101,7 @@ intersect es os = [ (e, o) | e <- es, o <- os, e `eq` o ]
     JsonE `eq` JsonO = True
     _     `eq` _     = False
 
-reasonE :: e ~ FromMaybe () e' => Errors e' -> Errors (Just (Reason e))
+reasonE :: e ~ FromMaybe Void e' => Errors e' -> Errors (Just (Reason e))
 reasonE None       = Dicts [XmlE, JsonE]
 reasonE (Dicts es) = Dicts (map reasonDictE es)
   where

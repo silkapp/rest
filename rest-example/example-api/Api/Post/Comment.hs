@@ -52,7 +52,7 @@ create = mkInputHandler xmlJson $ \ucomm -> do
     modifyTVar' comms (H.insertWith (<>) postId (Set.singleton comm))
   return comm
 
-getPostId :: ErrorT (Reason ()) WithPost (Maybe Post.Id)
+getPostId :: ErrorT Reason_ WithPost (Maybe Post.Id)
 getPostId = do
   postIdent <- ask
   return . fmap Post.id

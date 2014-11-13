@@ -40,6 +40,7 @@ import Rest.Dictionary ( Dict, Dicts (..), Error (..), Errors, Format (..), Head
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
+import Rest.Types.Void
 import qualified Rest.Dictionary   as D
 import qualified Rest.Driver.Types as Rest
 
@@ -148,7 +149,7 @@ writeResponse (RunnableHandler run (GenHandler dict act _)) = do
 -------------------------------------------------------------------------------
 -- Fetching the input resource.
 
-fetchInputs :: Rest m => Dict h p j o e -> ErrorT (Reason (FromMaybe () e)) m (Env h p (FromMaybe () j))
+fetchInputs :: Rest m => Dict h p j o e -> ErrorT (Reason (FromMaybe Void e)) m (Env h p (FromMaybe () j))
 fetchInputs dict =
   do bs <- getBody
      ct <- parseContentType
@@ -220,7 +221,7 @@ parser f        (Dicts ds) v = parserD f ds
 -------------------------------------------------------------------------------
 -- Failure responses.
 
-failureWriter :: Rest m => Errors e -> Reason (FromMaybe () e) -> m UTF8.ByteString
+failureWriter :: Rest m => Errors e -> Reason (FromMaybe Void e) -> m UTF8.ByteString
 failureWriter es err =
   do formats <- accept
      fromMaybeT (printFallback formats) $
@@ -228,7 +229,7 @@ failureWriter es err =
             ++ (tryPrint (fallbackError formats) None <$> formats                 )
             )
   where
-    tryPrint :: forall m e e'. (e ~ FromMaybe () e', Rest m)
+    tryPrint :: forall m e e'. (e ~ FromMaybe Void e', Rest m)
              => Reason e -> Errors e' -> Format -> MaybeT m UTF8.ByteString
     tryPrint e None JsonFormat = printError JsonFormat (toResponseCode e) (encode e)
     tryPrint e None XmlFormat  = printError XmlFormat  (toResponseCode e) (UTF8.fromString (toXML e))

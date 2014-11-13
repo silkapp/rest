@@ -67,6 +67,7 @@ import Text.XML.HXT.Arrow.Pickle
 
 import Rest.Error
 import Rest.Info
+import Rest.Types.Void
 
 -- | The `Format` datatype enumerates all input and output formats we might recognize.
 
@@ -245,7 +246,7 @@ empty = Dict NoHeader NoParam None None None
 -- | Custom existential packing an error together with a Reason.
 
 data SomeError where
-  SomeError :: Errors e -> Reason (FromMaybe () e) -> SomeError
+  SomeError :: Errors e -> Reason (FromMaybe Void e) -> SomeError
 
 -- | Type synonym for dictionary modification.
 
