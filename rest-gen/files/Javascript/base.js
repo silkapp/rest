@@ -31,7 +31,7 @@ var $apinamespace$ =
     $apinamespace$.setContext(this, contextUrl, secureContextUrl, finalModifyRequest);
   };
 
-var jq;
+var jqFun;
 if (isNodeJs)
 {
   // Export as Node module.
@@ -44,15 +44,15 @@ else
   if (isCommonJs) {
     // Export as CommonJs
     module.exports = $apinamespace$;
-    jq = require("jquery");
+    jqFun = function () { return require("jquery"); };
   } else if (typeof define === "function" && define.amd) {
     // Export as AMD.
     define("$apinamespace$", [], function () { return $apinamespace$; });
-    jq = $dollar$;
+    jqFun = function () { return window.$dollar$; };
   } else {
     // Export as global.
     window.$apinamespace$ = $apinamespace$;
-    jq = $dollar$;
+    jqFun = function () { return window.$dollar$; };
   }
 
   $apinamespace$.ajaxCall = jQueryRequest;
@@ -70,6 +70,7 @@ $apinamespace$.defaultHeaders = {};
 function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts, modifyRequest)
 {
   var q = window.Q || function (a) { return a };
+  var jq = jqFun();
 
   var headers = jq.extend(true, {}, $apinamespace$.defaultHeaders);
   $apinamespace$.addObject(headers, { Accept : acceptHeader });
