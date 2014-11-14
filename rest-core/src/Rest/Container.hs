@@ -15,6 +15,7 @@ module Rest.Container
   , mappingO
   , statusO
   , reasonE
+  , defaultE
   ) where
 
 import Data.Maybe
@@ -105,3 +106,6 @@ reasonE (Dicts es) = Dicts (map reasonDictE es)
     reasonDictE :: Error a -> Error (Reason a)
     reasonDictE XmlE  = XmlE
     reasonDictE JsonE = JsonE
+
+defaultE :: Errors ()
+defaultE = Dicts [XmlE, JsonE]
