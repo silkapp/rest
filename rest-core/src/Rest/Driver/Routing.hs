@@ -311,7 +311,8 @@ mkMultiHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> p
     newErrDict = L.modify errors reasonE dict
     mNewDict =  L.traverse inputs mappingI
             <=< L.traverse outputs (mappingO <=< statusO (L.get errors newErrDict))
-             $  newErrDict
+             .  L.set errors defaultE
+             $  dict
     newAct (Env hs ps vs) =
       do bs <- lift $ forM (StringHashMap.toList vs) $ \(k, v) -> runErrorT $
            do i <- parseIdent sBy k
