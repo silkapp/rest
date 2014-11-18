@@ -412,6 +412,6 @@ defaultErrorDataDesc :: DataType -> DataDesc
 defaultErrorDataDesc dt =
   DataDesc
     { _dataType       = dt
-    , _haskellType    = haskellUnitType
-    , _haskellModules = []
+    , _haskellType    = haskellVoidType
+    , _haskellModules = [ModuleName "Rest.Types.Void"]
     }

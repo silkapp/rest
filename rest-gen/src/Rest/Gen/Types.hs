@@ -8,6 +8,7 @@ module Rest.Gen.Types
   , haskellByteStringType
   , haskellUnitType
   , haskellSimpleType
+  , haskellVoidType
   , noLoc
   , ModuleName (..)
   , ImportDecl (..)
@@ -53,3 +54,6 @@ haskellSimpleType = TyCon . UnQual . Ident
 
 haskellUnitType :: Type
 haskellUnitType = TyCon (Special UnitCon)
+
+haskellVoidType :: Type
+haskellVoidType = TyCon (Qual (ModuleName "Rest.Types.Void") (Ident "Void"))
