@@ -83,11 +83,13 @@ deriving instance Show (Ident id)
 -- headers to some Haskell value. The first field in the `Header` constructor
 -- is a white list of headers we can recognize, used in generic validation and
 -- for generating documentation. The second field is a custom parser that can
--- fail with a `DataError` or can produce a some value. When explicitly not
--- interested in the headers we can use `NoHeader`.
+-- fail with a `DataError` or can produce a some value. When we want only the
+-- path from the HTTP request we can use the `PathHeader` constructor. When
+-- explicitly not interested in the headers we can use `NoHeader`.
 
 data Header h where
   NoHeader    ::                                                       Header ()
+  PathHeader  ::                                                       Header String
   Header      :: [String] -> ([Maybe String] -> Either DataError h) -> Header h
   TwoHeaders  :: Header h -> Header k                               -> Header (h,k)
 
