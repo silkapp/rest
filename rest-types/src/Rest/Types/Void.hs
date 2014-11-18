@@ -1,12 +1,15 @@
 {-# LANGUAGE
     DeriveDataTypeable
+  , EmptyDataDecls
   , RankNTypes
+  , TypeFamilies
   #-}
 module Rest.Types.Void (Void (..)) where
 
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import Data.JSON.Schema (JSONSchema (..), Schema(Choice))
 import Data.Typeable (Typeable)
+import GHC.Generics
 import Text.XML.HXT.Arrow.Pickle (XmlPickler (..), PU (..))
 import Text.XML.HXT.Arrow.Pickle.Schema (Schema(Alt))
 import Text.XML.HXT.Arrow.Pickle.Xml (Unpickler (UP))
@@ -34,3 +37,16 @@ instance XmlPickler Void where
 
 instance Show Void where
   show = magic
+
+-- | Generic. Can't derive it, sadly.
+
+instance Generic Void where
+  type Rep Void = D1 D1Void V1
+  from = magic
+  to (M1 x) = x `seq` Void (error "Impossible: constructing a Void in Generic instance.")
+
+data D1Void
+
+instance Datatype D1Void where
+  datatypeName _ = "Void"
+  moduleName _ = "Rest.Types.Void"
