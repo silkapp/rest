@@ -4,7 +4,7 @@
   #-}
 module Rest.Types.Void (Void (..)) where
 
-import Data.Aeson (ToJSON (..))
+import Data.Aeson (FromJSON (..), ToJSON (..))
 import Data.JSON.Schema (JSONSchema (..), Schema(Choice))
 import Data.Typeable (Typeable)
 import Text.XML.HXT.Arrow.Pickle (XmlPickler (..), PU (..))
@@ -18,15 +18,19 @@ import Text.XML.HXT.Arrow.Pickle.Xml (Unpickler (UP))
 
 newtype Void = Void { magic :: forall a. a } deriving (Typeable)
 
+-- This instance is needed for generated API clients.
+
+instance FromJSON Void where
+  parseJSON = fail "Cannot parse Void in FromJSON."
+
 instance ToJSON Void where
   toJSON = magic
 
 instance JSONSchema Void where
   schema _ = Choice []
 
--- | We'd rather not have the unpickler (like we don't have
--- `FromJSON`) but they are packed together. Unpickling gives an
--- error.
-
 instance XmlPickler Void where
   xpickle = PU magic (UP (\st -> (Left ("Cannot unpickle Void.", st), st))) (Alt [])
+
+instance Show Void where
+  show = magic
