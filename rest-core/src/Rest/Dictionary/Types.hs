@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    DataKinds
+    CPP
+  , DataKinds
   , FlexibleContexts
   , GADTs
   , KindSignatures
@@ -189,9 +190,15 @@ data Dicts f a where
 -- Needs UndecidableInstances
 deriving instance Show (f (FromMaybe Void a)) => Show (Dicts f a)
 
+#if GLASGOW_HASKELL < 708
+type family FromMaybe d (m :: Maybe *) :: *
+type instance FromMaybe b Nothing  = b
+type instance FromMaybe b (Just a) = a
+#else
 type family FromMaybe d (m :: Maybe *) :: * where
   FromMaybe b Nothing  = b
   FromMaybe b (Just a) = a
+#endif
 
 {-# DEPRECATED dicts "The modifier for this lens doesn't do anything when Dicts is None. Use getDicts and modDicts instead." #-}
 dicts :: forall a o f. o ~ FromMaybe o a => Dicts f a :-> [f o]
