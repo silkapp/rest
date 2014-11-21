@@ -1,5 +1,11 @@
 # Changelog
 
+#### 0.33.1.1
+
+* Declare correct error return type for derived multi handlers. These
+  were declared as `Reason (Reason e)`, now they are `Reason ()`. This
+  generated confusing documentation.
+
 ### 0.33.1
 
 * Move `Range` from `Rest.Handler` into `rest-types`. Still re-exported.
