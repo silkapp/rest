@@ -1,5 +1,9 @@
 # Changelog
 
+#### 1.11.1.1
+
+* Return a 405 for unsupported methods.
+
 ### 1.11.1
 
 * Moved `Range` from `rest-core` to `Rest.Types.Range`.
