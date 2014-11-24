@@ -163,7 +163,7 @@ instance ToResponseCode a => ToResponseCode (Reason a) where
     case e of
       NotFound                          -> 404
       UnsupportedRoute                  -> 404
-      UnsupportedMethod                 -> 404
+      UnsupportedMethod                 -> 405
       UnsupportedVersion                -> 404
       NotAllowed                        -> 403
       AuthenticationFailed              -> 401
