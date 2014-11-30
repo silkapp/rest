@@ -170,7 +170,7 @@ mkConstHandler :: Monad m => Modifier () () () o e -> ErrorT (Reason e) m o -> H
 mkConstHandler d a = mkHandler d (const a)
 
 -- | Create a handler for a single resource. Take body information and
--- the resource identifier as input. The monad @m@ should be a
+-- the resource identifier as input. The monad @m@ must be a
 -- 'Reader'-like type containing the idenfier.
 
 mkIdHandler :: MonadReader id m => Modifier h p i o e -> (i -> id -> ErrorT (Reason e) m o) -> Handler m
