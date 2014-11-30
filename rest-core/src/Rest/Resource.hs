@@ -10,7 +10,7 @@
   , NamedFieldPuns
   #-}
 -- | A 'Resource' type for representing a REST resource, as well as
--- smart constructors for empty resources which can them be filled in
+-- smart constructors for empty resources which can then be filled in
 -- using record updates.
 module Rest.Resource where
 
@@ -85,7 +85,7 @@ mkResourceReader :: (Applicative m, Monad m) => Resource m (ReaderT sid m) sid V
 mkResourceReader = mkResourceReaderWith id
 
 -- | Make a resource that provides the single resource identifier to
--- its subresources, by giving a convertion function to a 'ReaderT'.
+-- its subresources, by giving a conversion function to a 'ReaderT'.
 -- If @s@ is a newtype around 'ReaderT', for example, the function
 -- should unwrap the newtype.
 

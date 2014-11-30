@@ -121,7 +121,7 @@ instance Show (Param p) where
                                                   . showsPrec 10 q
                                                   )
 
--- | The explicitly dictionary `Input` describes how to translate the request
+-- | The explicit dictionary `Input` describes how to translate the request
 -- body into some Haskell value. We currently use a constructor for every
 -- combination of input type to output type. For example, we can use XML input
 -- in multiple ways, parsed, as plain/text or as raw bytes, depending on the
@@ -140,7 +140,7 @@ deriving instance Show (Input i)
 deriving instance Eq   (Input i)
 deriving instance Ord  (Input i)
 
--- | The explicitly dictionary `Output` describes how to translate some Haskell
+-- | The explicit dictionary `Output` describes how to translate some Haskell
 -- value to a response body. We currently use a constructor for every
 -- combination of input type to output type.
 
@@ -156,7 +156,7 @@ deriving instance Show (Output o)
 deriving instance Eq   (Output o)
 deriving instance Ord  (Output o)
 
--- | The explicitly dictionary `Error` describes how to translate some Haskell
+-- | The explicit dictionary `Error` describes how to translate some Haskell
 -- error value to a response body.
 
 data Error e where
