@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.33.1.2
+
+* Typo fixes in documentation.
+
 #### 0.33.1.1
 
 * Declare correct error return type for derived multi handlers. These
