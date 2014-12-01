@@ -96,11 +96,6 @@ mkResourceReaderWith f = mkResource (\a -> flip runReaderT a . f)
 
 -- | The 'Void' type is used as the identifier for resources that
 -- can't be routed to. It contains no values apart from bottom.
---
--- (The void package also provides a type with the same name that has
--- no inhabitants, not even bottom.  In contrast, this variant makes
--- it possible to populate 'Void'-typed record fields, as long as they
--- are never evaluated.)
 
 newtype Void = Void { magic :: forall a. a }
 
