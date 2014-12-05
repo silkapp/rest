@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.16.1.3
+
+* Allow semigroups 0.16.*
+
 #### 0.16.1.2
 
 * JavaScript: Add support for webpack (and any other preprocessor that tries to import all `require` function calls)
