@@ -46,7 +46,6 @@ library
     , generic-aeson == 0.2.*
     , hxt == 9.3.*
     , json-schema >= 0.6 && < 0.8
-    , monad-control == 0.3.*
     , mtl >= 2.0 && < 2.3
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*
