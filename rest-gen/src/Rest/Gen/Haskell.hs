@@ -4,6 +4,7 @@
   , LambdaCase
   , PatternGuards
   , TemplateHaskell
+  , ViewPatterns
   #-}
 module Rest.Gen.Haskell
   ( HaskellContext (..)
@@ -11,6 +12,7 @@ module Rest.Gen.Haskell
   ) where
 
 import Control.Applicative
+import Data.Char
 import Control.Arrow (first, second)
 import Control.Category
 import Control.Monad
@@ -330,12 +332,24 @@ hsName []       = H.Ident ""
 hsName (x : xs) = H.Ident $ cleanHsName $ downFirst x ++ concatMap upFirst xs
 
 cleanHsName :: String -> String
-cleanHsName s = if s `elem` reservedNames then s ++ "_" else s
+cleanHsName s =
+  if s `elem` reservedNames
+    then s ++ "_"
+    else stripBadChars s
   where
     reservedNames =
       ["as","case","class","data","instance","default","deriving","do"
       ,"foreign","if","then","else","import","infix","infixl","infixr","let"
       ,"in","module","newtype","of","qualified","type","where"]
+    stripBadChars [] = []
+    stripBadChars ((toLower -> c):cs) =
+      (if isAlpha c
+        then c
+        else 'x'
+      ) : map replaceSpecialChar cs
+    replaceSpecialChar c
+      | isAlphaNum c || c == '_' = c
+      | otherwise = '_'
 
 qualModName :: ResourceId -> String
 qualModName = intercalate "." . map modName
