@@ -26,7 +26,6 @@ import Prelude hiding (catch)
 #endif
 
 import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Cont hiding (mapM)
 import Control.Monad.Error hiding (mapM)
