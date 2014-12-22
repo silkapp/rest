@@ -3,6 +3,7 @@
 #### 0.1.2.1
 
 * Allow time 1.5.*
+* Remove unneeded dependency on monad-control.
 
 ### 0.1.2
 
