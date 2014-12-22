@@ -78,6 +78,17 @@ instance MonadTrans ApiT where
 instance MonadBase b m => MonadBase b (ApiT m) where
   liftBase = liftBaseDefault
 
+#if MIN_VERSION_monad_control(1,0,0)
+instance MonadTransControl ApiT where
+  type StT ApiT a = StT ResourceT (StT (ReaderT ApiInfo) (StT (StateT ApiState) a))
+  liftWith f = ApiT (liftWith (\runs -> liftWith (\runrr -> liftWith (\runrs -> f (runrs . runrr . runs . unApiT)))))
+  restoreT = ApiT . restoreT . restoreT . restoreT
+
+instance MonadBaseControl v m => MonadBaseControl v (ApiT m) where
+  type StM (ApiT m) a = ComposeSt ApiT m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
+#else
 instance MonadTransControl ApiT where
   newtype StT ApiT a = StTApiT { unStTApiT :: StT ResourceT (StT (ReaderT ApiInfo) (StT (StateT ApiState) a)) }
   liftWith f = ApiT (liftWith (\runs -> liftWith (\runrr -> liftWith (\runrs -> f (liftM StTApiT . runrs . runrr . runs . unApiT)))))
@@ -87,6 +98,7 @@ instance MonadBaseControl v m => MonadBaseControl v (ApiT m) where
   newtype StM (ApiT m) a = StMApiT { unStMApiT :: ComposeSt ApiT m a }
   liftBaseWith = defaultLiftBaseWith StMApiT
   restoreM     = defaultRestoreM unStMApiT
+#endif
 
 instance (MonadException m, MonadBaseControl IO m) => MonadException (ResourceT m) where
   throw     = lift . throw
