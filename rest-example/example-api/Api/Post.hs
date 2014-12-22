@@ -72,44 +72,56 @@ postFromIdentifier i pv = finder <$> readTVar pv
       Latest     -> headMay . sortBy (flip $ comparing Post.createdTime) . Set.toList
 
 get :: Handler WithPost
-get = mkIdHandler xmlJsonO $ \_ i -> do
-  mpost <- liftIO . atomically . postFromIdentifier i =<< (lift . lift) (asks posts)
-  case mpost of
-    Nothing -> throwError NotFound
-    Just a  -> return a
+get = mkIdHandler xmlJsonO handler
+  where
+    handler :: () -> Identifier -> ErrorT Reason_ WithPost Post
+    handler _ i = do
+      mpost <- liftIO . atomically . postFromIdentifier i =<< (lift . lift) (asks posts)
+      case mpost of
+        Nothing -> throwError NotFound
+        Just a  -> return a
 
 -- | List Posts with the most recent posts first.
 list :: ListHandler BlogApi
-list = mkListing xmlJsonO $ \r -> do
-  psts <- liftIO . atomically . readTVar =<< asks posts
-  return . take (count r) . drop (offset r) . sortBy (flip $ comparing Post.createdTime) . Set.toList $ psts
+list = mkListing xmlJsonO handler
+  where
+    handler :: Range -> ErrorT Reason_ BlogApi [Post]
+    handler r = do
+      psts <- liftIO . atomically . readTVar =<< asks posts
+      return . take (count r) . drop (offset r) . sortBy (flip $ comparing Post.createdTime) . Set.toList $ psts
 
 create :: Handler BlogApi
-create = mkInputHandler (xmlJsonE . xmlJson) $ \(UserPost usr pst) -> do
-  -- Make sure the credentials are valid
-  checkLogin usr
-  pstsVar <- asks posts
-  psts <- liftIO . atomically . readTVar $ pstsVar
-  post <- liftIO $ toPost (Set.size psts + 1) usr pst
-  -- Validate and save the post in the same transaction.
-  merr <- liftIO . atomically $ do
-    let vt = validTitle pst psts
-    if not vt
-      then return . Just $ domainReason InvalidTitle
-      else if not (validContent pst)
-        then return . Just $ domainReason InvalidContent
-        else modifyTVar pstsVar (Set.insert post) >> return Nothing
-  maybe (return post) throwError merr
+create = mkInputHandler (xmlJsonE . xmlJson) handler
+  where
+    handler :: UserPost -> ErrorT (Reason PostError) BlogApi Post
+    handler (UserPost usr pst) = do
+      -- Make sure the credentials are valid
+      checkLogin usr
+      pstsVar <- asks posts
+      psts <- liftIO . atomically . readTVar $ pstsVar
+      post <- liftIO $ toPost (Set.size psts + 1) usr pst
+      -- Validate and save the post in the same transaction.
+      merr <- liftIO . atomically $ do
+        let vt = validTitle pst psts
+        if not vt
+          then return . Just $ domainReason InvalidTitle
+          else if not (validContent pst)
+            then return . Just $ domainReason InvalidContent
+            else modifyTVar pstsVar (Set.insert post) >> return Nothing
+      maybe (return post) throwError merr
 
 remove :: Handler WithPost
-remove = mkIdHandler id $ \_ i -> do
-  pstsVar <- lift . lift $ asks posts
-  merr <- liftIO . atomically $ do
-    mpost <- postFromIdentifier i pstsVar
-    case mpost of
-      Nothing -> return . Just $ NotFound
-      Just post -> modifyTVar pstsVar (Set.delete post) >> return Nothing
-  maybe (return ()) throwError merr
+remove = mkIdHandler id handler
+  where
+    handler :: () -> Identifier -> ErrorT Reason_ WithPost ()
+    handler _ i = do
+      pstsVar <- lift . lift $ asks posts
+      merr <- liftIO . atomically $ do
+        mpost <- postFromIdentifier i pstsVar
+        case mpost of
+          Nothing -> return . Just $ NotFound
+          Just post -> modifyTVar pstsVar (Set.delete post) >> return Nothing
+      maybe (return ()) throwError merr
 
 -- | Convert a User and CreatePost into a Post that can be saved.
 toPost :: Int -> User -> CreatePost -> IO Post

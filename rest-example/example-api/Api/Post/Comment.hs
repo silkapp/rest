@@ -35,24 +35,30 @@ resource = mkResourceReader
   }
 
 list :: ListHandler WithPost
-list = mkListing xmlJsonO $ \r -> do
-  postId <- getPostId `orThrow` NotFound
-  comms <- liftIO . atomically . readTVar
-       =<< (lift . lift) (asks comments)
-  return . take (count r) . drop (offset r)
-         . sortBy (flip $ comparing Comment.createdTime)
-         . maybe [] Set.toList . H.lookup postId $ comms
+list = mkListing xmlJsonO handler
+  where
+    handler :: Range -> ErrorT Reason_ WithPost [Comment]
+    handler r = do
+      postId <- getPostId `orThrow` NotFound
+      comms <- liftIO . atomically . readTVar
+           =<< (lift . lift) (asks comments)
+      return . take (count r) . drop (offset r)
+             . sortBy (flip $ comparing Comment.createdTime)
+             . maybe [] Set.toList . H.lookup postId $ comms
 
 create :: Handler WithPost
-create = mkInputHandler xmlJson $ \ucomm -> do
-  postId <- getPostId `orThrow` NotFound
-  comm   <- liftIO $ userCommentToComment ucomm
-  comms  <- lift . lift $ asks comments
-  liftIO . atomically $
-    modifyTVar' comms (H.insertWith (<>) postId (Set.singleton comm))
-  return comm
+create = mkInputHandler xmlJson handler
+  where
+    handler :: UserComment -> ErrorT Reason_ WithPost Comment
+    handler ucomm = do
+      postId <- getPostId `orThrow` NotFound
+      comm   <- liftIO $ userCommentToComment ucomm
+      comms  <- lift . lift $ asks comments
+      liftIO . atomically $
+        modifyTVar' comms (H.insertWith (<>) postId (Set.singleton comm))
+      return comm
 
-getPostId :: ErrorT (Reason ()) WithPost (Maybe Post.Id)
+getPostId :: ErrorT Reason_ WithPost (Maybe Post.Id)
 getPostId = do
   postIdent <- ask
   return . fmap Post.id
