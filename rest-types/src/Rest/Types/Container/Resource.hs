@@ -18,6 +18,8 @@ module Rest.Types.Container.Resource
 import Data.Aeson hiding (Value)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
 import Data.Typeable
+import Data.CaseInsensitive (CI, foldedCase)
+import Data.String.ToString
 import GHC.Generics
 import Generics.Generic.Aeson
 import Generics.Regular (PF, deriveAll)
@@ -27,6 +29,7 @@ import Text.XML.HXT.Arrow.Pickle
 import qualified Data.JSON.Schema.Combinators as Json
 
 type KeyValues = StringHashMap String Value
+type CaseInsensitiveKeyValues = StringHashMap (CI String) Value
 
 newtype Value = Value { unValue :: String }
   deriving (Show, Typeable)
@@ -41,7 +44,7 @@ instance XmlPickler Value where
 
 data Resource = Resource
   { uri        :: String
-  , headers    :: KeyValues
+  , headers    :: CaseInsensitiveKeyValues
   , parameters :: KeyValues
   , input      :: String
   } deriving (Generic, Show, Typeable)
@@ -51,6 +54,9 @@ type instance PF Resource = PFResource
 
 instance XmlPickler Resource where
   xpickle = gxpickle
+
+instance ToString s => ToString (CI s) where
+    toString = toString . foldedCase
 
 instance ToJSON     Resource where toJSON    = gtoJson
 instance FromJSON   Resource where parseJSON = gparseJson
