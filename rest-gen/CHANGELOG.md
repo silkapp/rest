@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.16.1.4
+
+* Allow Cabal 1.22.*.
+
 #### 0.16.1.3
 
 * Allow semigroups 0.16.*

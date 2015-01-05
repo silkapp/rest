@@ -94,7 +94,7 @@ mkGenericPackageDescription name modules = Cabal.GenericPackageDescription pkg [
 
 mkCondLibrary :: [Cabal.ModuleName] -> Cabal.CondTree Cabal.ConfVar [Cabal.Dependency] Cabal.Library
 mkCondLibrary modules = Cabal.CondNode
-  { Cabal.condTreeData        = Cabal.Library modules True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
+  { Cabal.condTreeData        = cabalLibrary modules
   , Cabal.condTreeConstraints =
      [ Cabal.Dependency (Cabal.PackageName "base")        (Cabal.withinVersion $ Cabal.Version [4]     [])
      , Cabal.Dependency (Cabal.PackageName "rest-types")  (Cabal.withinVersion $ Cabal.Version [1, 10] [])
@@ -102,6 +102,13 @@ mkCondLibrary modules = Cabal.CondNode
      ]
   , Cabal.condTreeComponents  = []
   }
+
+cabalLibrary :: [Cabal.ModuleName] -> Cabal.Library
+#if MIN_VERSION_Cabal(1,22,0)
+cabalLibrary mods = Cabal.Library mods [] [] [] True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
+#else
+cabalLibrary mods = Cabal.Library mods True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
+#endif
 
 writeRes :: HaskellContext -> ApiResource -> IO ()
 writeRes ctx node =
