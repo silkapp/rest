@@ -1,5 +1,12 @@
 # Changelog
 
+#### 0.33.2
+
+* Allow top level multi handler as a POST as well as a GET.
+  Technically, you're not allowed to vary the response based on the
+  body of a GET. Also, in some frameworks (e.g. jQuery) it isn't
+  possible to set the body of a GET.
+
 #### 0.33.1.2
 
 * Typo fixes in documentation.

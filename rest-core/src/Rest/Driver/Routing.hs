@@ -96,7 +96,7 @@ routeRoot router@(Rest.Embed resource _) = do
 routeMultiGet :: Rest.Router m s -> MaybeT Router (RunnableHandler m)
 routeMultiGet root@(Rest.Embed Rest.Resource{} _) =
   do guardNullPath
-     guardMethod GET
+     guardMethods [GET, POST]
      return (RunnableHandler id (mkMultiGetHandler root))
 
 routeRouter :: Rest.Router m s -> Router (RunnableHandler m)
@@ -291,6 +291,9 @@ hasMethod wantedMethod = ask >>= \method ->
 
 guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)
+
+guardMethods :: (MonadPlus m, MonadReader Method m) => [Method] -> m ()
+guardMethods methods = ask >>= guard . (`elem` methods)
 
 mkListHandler :: Monad m => ListHandler m -> Maybe (Handler m)
 mkListHandler (GenHandler dict act sec) =
