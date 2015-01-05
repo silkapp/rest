@@ -28,7 +28,7 @@ type WithUser = ReaderT User.Name BlogApi
 resource :: Resource BlogApi WithUser User.Name () Void
 resource = mkResourceReader
   { R.name   = "user" -- Name of the HTTP path segment.
-  , R.schema = withListing () $ named [("name", singleRead id)]
+  , R.schema = withListing () $ named [("name", singleBy T.pack)]
   , R.list   = const list -- requested by GET /user, gives a paginated listing of users.
   , R.create = Just create -- PUT /user creates a new user
   }
