@@ -36,9 +36,9 @@ instance Rest Snap where
   setHeader nm v     = modifyResponse (Snap.setHeader (CI.mk . UTF8.fromString $ nm) (UTF8.fromString v))
   setResponseCode cd = modifyResponse (Snap.setResponseCode cd)
 
-toRestMethod :: Snap.Method -> Rest.Method
-toRestMethod Snap.GET    = Rest.GET
-toRestMethod Snap.POST   = Rest.POST
-toRestMethod Snap.PUT    = Rest.PUT
-toRestMethod Snap.DELETE = Rest.DELETE
-toRestMethod mthd        = Rest.Unknown (show mthd)
+toRestMethod :: Snap.Method -> Maybe Rest.Method
+toRestMethod Snap.GET    = Just Rest.GET
+toRestMethod Snap.POST   = Just Rest.POST
+toRestMethod Snap.PUT    = Just Rest.PUT
+toRestMethod Snap.DELETE = Just Rest.DELETE
+toRestMethod _           = Nothing

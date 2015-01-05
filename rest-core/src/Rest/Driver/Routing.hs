@@ -81,8 +81,9 @@ runRouter method uri = runIdentity
                      . flip runReaderT method
                      . unRouter
 
-route :: Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
-route method uri api = runRouter method uri $
+route :: Maybe Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
+route Nothing       _   _   = apiError UnsupportedMethod
+route (Just method) uri api = runRouter method uri $
   do versionStr <- popSegment
      case versionStr `Rest.lookupVersion` api of
           Just (Some1 router) -> routeRoot router
