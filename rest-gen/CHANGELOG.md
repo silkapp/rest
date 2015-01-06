@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.16.1.5
+
+* Haskell: Escape special characters in parameter names
+
 #### 0.16.1.4
 
 * Allow Cabal 1.22.*.
