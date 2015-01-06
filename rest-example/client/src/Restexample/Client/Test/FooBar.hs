@@ -27,7 +27,7 @@ removeManyId input
       in doRequest fromJSON fromJSON request
  
 remove :: ApiStateC m => Identifier -> m (ApiResponse () ())
-remove foo_bar
+remove fooBar
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
         request
