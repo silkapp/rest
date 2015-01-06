@@ -26,6 +26,7 @@ library
     Api.Test
     Api.Test.Err2
     Api.Test.ReservedName
+    Api.Test.DashedName
     Api.User
     ApiTypes
     Example

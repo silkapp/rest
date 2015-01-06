@@ -4,8 +4,8 @@ module Restexample.Client.Post where
 import Rest.Client.Internal
 import qualified Rest.Types.Container
 import qualified Type.Post
-import qualified Rest.Types.Error
 import qualified Rest.StringMap.HashMap.Strict
+import qualified Rest.Types.Error
 import qualified Type.PostError
 import qualified Type.UserPost
  
@@ -39,7 +39,7 @@ byId integer
 removeManyId ::
                ApiStateC m =>
                Rest.StringMap.HashMap.Strict.StringHashMap ([(Char)]) (()) ->
-                 m (ApiResponse (Rest.Types.Error.Reason (()))
+                 m (ApiResponse ()
                       (Rest.StringMap.HashMap.Strict.StringHashMap ([(Char)])
                          (Rest.Types.Error.Status (Rest.Types.Error.Reason (())) (()))))
 removeManyId input

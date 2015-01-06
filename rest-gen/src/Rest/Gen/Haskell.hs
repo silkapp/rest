@@ -4,6 +4,7 @@
   , LambdaCase
   , PatternGuards
   , TemplateHaskell
+  , ViewPatterns
   #-}
 module Rest.Gen.Haskell
   ( HaskellContext (..)
@@ -337,7 +338,10 @@ hsName []       = H.Ident ""
 hsName (x : xs) = H.Ident $ cleanHsName $ downFirst x ++ concatMap upFirst xs
 
 cleanHsName :: String -> String
-cleanHsName s = if s `elem` reservedNames then s ++ "_" else s
+cleanHsName s =
+  if s `elem` reservedNames
+    then s ++ "_"
+    else intercalate "" . cleanName $ s
   where
     reservedNames =
       ["as","case","class","data","instance","default","deriving","do"
