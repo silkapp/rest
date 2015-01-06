@@ -38,9 +38,9 @@ instance (Functor m, MonadPlus m, MonadIO m) => Rest (ServerPartT m) where
   setHeader       = Happstack.setHeaderM
   setResponseCode = Happstack.setResponseCode
 
-toRestMethod :: Happstack.Method -> Rest.Method
-toRestMethod Happstack.GET    = Rest.GET
-toRestMethod Happstack.POST   = Rest.POST
-toRestMethod Happstack.PUT    = Rest.PUT
-toRestMethod Happstack.DELETE = Rest.DELETE
-toRestMethod mthd             = Rest.Unknown (show mthd)
+toRestMethod :: Happstack.Method -> Maybe Rest.Method
+toRestMethod Happstack.GET    = Just Rest.GET
+toRestMethod Happstack.POST   = Just Rest.POST
+toRestMethod Happstack.PUT    = Just Rest.PUT
+toRestMethod Happstack.DELETE = Just Rest.DELETE
+toRestMethod _                = Nothing

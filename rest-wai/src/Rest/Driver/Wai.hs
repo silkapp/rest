@@ -53,11 +53,11 @@ toRestInput req =
        , body       = bs
 
        , method     = case requestMethod req of
-                        "GET"    -> Rest.GET
-                        "POST"   -> Rest.POST
-                        "PUT"    -> Rest.PUT
-                        "DELETE" -> Rest.DELETE
-                        other    -> Rest.Unknown (string other)
+                        "GET"    -> Just Rest.GET
+                        "POST"   -> Just Rest.POST
+                        "PUT"    -> Just Rest.PUT
+                        "DELETE" -> Just Rest.DELETE
+                        _        -> Nothing
 
        , paths      = text <$> filter (not . Text.null) (pathInfo req)
 

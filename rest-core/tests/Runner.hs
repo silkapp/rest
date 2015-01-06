@@ -42,7 +42,6 @@ main = do
               , testCase "Simple subresource." testSubresource
               , testCase "Root router is skipped." testRootRouter
               , testCase "Multi-PUT." testMultiPut
-              , testCase "Multi-GET." testMultiGet
               , testCase "Multi-POST" testMultiPost
               , testCase "Accept headers." testAcceptHeaders
               ]
@@ -163,11 +162,8 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.root -/ Rest.route res
       , update = Just (mkConstHandler xmlJsonO (liftM void ask))
       }
 
-testMultiGet :: Assertion
-testMultiGet = checkRouteSuccess GET "" (Rest.root :: Rest.Router IO IO)
-
 testMultiPost :: Assertion
-testMultiPost = checkRouteSuccess POST "" (Rest.root :: Rest.Router IO IO)
+testMultiPost = checkRoute POST "" (Rest.root :: Rest.Router IO IO)
 
 type Uri = String
 
@@ -195,13 +191,13 @@ checkRouteWithIgnoredMethods ignoredMethods router method uri =
 
 checkRouteFailure :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteFailure method uri router =
-  case route method (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
+  case route (Just method) (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
     Left _  -> return ()
     Right _ -> assertFailure ("Should be no route to " ++ show method ++ " " ++ uri ++ ".")
 
 checkRouteSuccess :: Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteSuccess method uri router =
-  case route method (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
+  case route (Just method) (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
     Left e  -> assertFailure ("No route to " ++ show method ++ " " ++ uri ++ ": " ++ show e)
     Right _ -> return ()
 

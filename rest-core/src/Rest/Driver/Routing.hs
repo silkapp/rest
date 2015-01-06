@@ -81,8 +81,9 @@ runRouter method uri = runIdentity
                      . flip runReaderT method
                      . unRouter
 
-route :: Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
-route method uri api = runRouter method uri $
+route :: Maybe Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
+route Nothing       _   _   = apiError UnsupportedMethod
+route (Just method) uri api = runRouter method uri $
   do versionStr <- popSegment
      case versionStr `Rest.lookupVersion` api of
           Just (Some1 router) -> routeRoot router
@@ -96,7 +97,7 @@ routeRoot router@(Rest.Embed resource _) = do
 routeMultiGet :: Rest.Router m s -> MaybeT Router (RunnableHandler m)
 routeMultiGet root@(Rest.Embed Rest.Resource{} _) =
   do guardNullPath
-     guardMethods [GET, POST]
+     guardMethod POST
      return (RunnableHandler id (mkMultiGetHandler root))
 
 routeRouter :: Rest.Router m s -> Router (RunnableHandler m)
@@ -292,9 +293,6 @@ hasMethod wantedMethod = ask >>= \method ->
 guardMethod :: (MonadPlus m, MonadReader Method m) => Method -> m ()
 guardMethod method = ask >>= guard . (== method)
 
-guardMethods :: (MonadPlus m, MonadReader Method m) => [Method] -> m ()
-guardMethods methods = ask >>= guard . (`elem` methods)
-
 mkListHandler :: Monad m => ListHandler m -> Maybe (Handler m)
 mkListHandler (GenHandler dict act sec) =
   do newDict <- L.traverse outputs listO . addPar range $ dict
@@ -343,6 +341,7 @@ runResource root res
       { Rest.headers    = H.map (R.unValue) . StringHashMap.toHashMap . R.headers    $ r
       , Rest.parameters = H.map (R.unValue) . StringHashMap.toHashMap . R.parameters $ r
       , Rest.body       = LUTF8.fromString (R.input r)
+      , Rest.method     = Just (R.method r)
       , Rest.paths      = splitUriString (R.uri r)
       }
 

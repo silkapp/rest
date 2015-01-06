@@ -23,7 +23,7 @@ data RestInput = RestInput
   { headers    :: HashMap String String
   , parameters :: HashMap String String
   , body       :: UTF8.ByteString
-  , method     :: Rest.Method
+  , method     :: Maybe Rest.Method
   , paths      :: [String]
   , mimeTypes  :: HashMap String String
   }
@@ -33,7 +33,7 @@ emptyInput = RestInput
   { headers    = H.empty
   , parameters = H.empty
   , body       = mempty
-  , method     = Rest.GET
+  , method     = Just Rest.GET
   , paths      = []
   , mimeTypes  = H.empty
   }

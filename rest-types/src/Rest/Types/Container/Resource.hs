@@ -23,6 +23,7 @@ import Generics.Generic.Aeson
 import Generics.Regular (PF, deriveAll)
 import Generics.Regular.XmlPickler (gxpickle)
 import Rest.StringMap.HashMap.Strict (StringHashMap)
+import Rest.Types.Method
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.JSON.Schema.Combinators as Json
 
@@ -41,6 +42,7 @@ instance XmlPickler Value where
 
 data Resource = Resource
   { uri        :: String
+  , method     :: Method
   , headers    :: KeyValues
   , parameters :: KeyValues
   , input      :: String
