@@ -344,6 +344,7 @@ runResource root res
       { Rest.headers    = H.map (R.unValue) . StringHashMap.toHashMap . R.headers    $ r
       , Rest.parameters = H.map (R.unValue) . StringHashMap.toHashMap . R.parameters $ r
       , Rest.body       = LUTF8.fromString (R.input r)
+      , Rest.method     = Just (R.method r)
       , Rest.paths      = splitUriString (R.uri r)
       }
 
