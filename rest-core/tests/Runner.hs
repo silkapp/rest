@@ -47,14 +47,14 @@ main = do
               ]
 
 testListing :: Assertion
-testListing = checkRoute GET "resource" (Rest.route resource)
+testListing = checkRoute GET "resource" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
     resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     listHandler () = mkListing id $ \_ -> return []
 
 testListingTrailingSlash :: Assertion
-testListingTrailingSlash = checkRoute GET "resource/" (Rest.route resource)
+testListingTrailingSlash = checkRoute GET "resource/" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
     resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
@@ -75,7 +75,7 @@ testUnnamedSingle = checkSingleRoute "resource/foo" resource handler_
     handler_ = mkConstHandler stringO ask
 
 testUnnamedMulti :: Assertion
-testUnnamedMulti = checkRoute GET "resource/foo" (Rest.route resource)
+testUnnamedMulti = checkRoute GET "resource/foo" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO Void String Void
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Unnamed (Many (Id StringId id))), list = listHandler }
@@ -96,14 +96,14 @@ testNamedSingleBy = checkSingleRoute "resource/foo/bar" resource handler_
     handler_ = mkConstHandler stringO ask
 
 testNamedListing :: Assertion
-testNamedListing = checkRoute GET "resource/foo" (Rest.route resource)
+testNamedListing = checkRoute GET "resource/foo" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (Singleton ())))]), list = listHandler }
     listHandler () = mkListing id $ \_rng -> return []
 
 testNamedListingBy :: Assertion
-testNamedListingBy = checkRoute GET "resource/foo/bar" (Rest.route resource)
+testNamedListingBy = checkRoute GET "resource/foo/bar" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO Void String Void
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("foo", Right (Many (By (Id StringId id))))]), list = listHandler }
@@ -121,7 +121,7 @@ testCreate = checkRoute POST "resource" (root -/ Rest.route resource)
 -- contains no list handler.
 
 testCreateWithListing :: Assertion
-testCreateWithListing = checkRoutes [(GET, "resource"), (POST, "resource")] (Rest.route resource)
+testCreateWithListing = checkRoutes [(GET, "resource"), (POST, "resource")] (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO Void () Void
     resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler, create = Just createHandler }
@@ -129,14 +129,14 @@ testCreateWithListing = checkRoutes [(GET, "resource"), (POST, "resource")] (Res
     listHandler () = mkListing id $ \_rng -> return []
 
 testStaticAction :: Assertion
-testStaticAction = checkRoute POST "resource/action" (Rest.route resource)
+testStaticAction = checkRoute POST "resource/action" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO IO () Void ()
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("action", Left ())]), statics = staticHandler }
     staticHandler () = mkConstHandler id $ return ()
 
 testSubresource :: Assertion
-testSubresource = checkRoute GET "resource/single/subresource" (Rest.route resource -/ Rest.route subResource)
+testSubresource = checkRoute GET "resource/single/subresource" (Rest.root -/ Rest.route resource --/ Rest.route subResource)
   where
     resource :: Resource IO IO () Void Void
     resource = mkResourceId { name = "resource", schema = Schema Nothing (Named [("single", Right (Single (Singleton ())))]), get = Just getHandler }
@@ -153,7 +153,7 @@ testRootRouter = checkRoute GET "resource/single" (Rest.root -/ Rest.route resou
     getHandler = mkConstHandler id $ return ()
 
 testMultiPut :: Assertion
-testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.route resource)
+testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.root -/ Rest.route resource)
   where
     resource :: Resource IO (ReaderT String IO) String Void Void
     resource = mkResourceReader
