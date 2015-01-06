@@ -42,7 +42,6 @@ main = do
               , testCase "Simple subresource." testSubresource
               , testCase "Root router is skipped." testRootRouter
               , testCase "Multi-PUT." testMultiPut
-              , testCase "Multi-GET." testMultiGet
               , testCase "Multi-POST" testMultiPost
               , testCase "Accept headers." testAcceptHeaders
               ]
@@ -163,11 +162,8 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.root -/ Rest.route res
       , update = Just (mkConstHandler xmlJsonO (liftM void ask))
       }
 
-testMultiGet :: Assertion
-testMultiGet = checkRouteSuccess GET "" (Rest.root :: Rest.Router IO IO)
-
 testMultiPost :: Assertion
-testMultiPost = checkRouteSuccess POST "" (Rest.root :: Rest.Router IO IO)
+testMultiPost = checkRoute POST "" (Rest.root :: Rest.Router IO IO)
 
 type Uri = String
 
