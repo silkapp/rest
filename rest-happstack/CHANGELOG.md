@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.10.4
+
+* Allow `happstack-server == 7.4.*`
+
 #### 0.2.10.3
 
 * Bump `rest-types` and `rest-core`
