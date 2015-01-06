@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.10.5
+
+* Use new version of `rest-core`.
+
 #### 0.2.10.4
 
 * Allow `happstack-server == 7.4.*`

@@ -1,5 +1,13 @@
 # Changelog
 
+#### 0.1.17.15
+
+* Use new version of `rest-core`.
+
+#### 0.1.17.14
+
+# Bump `rest-core`.
+
 #### 0.1.17.13
 
 * Bump `rest-types` and `rest-core`.

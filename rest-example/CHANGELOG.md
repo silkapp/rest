@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.1.2.2
+
+* Bump `rest-core`.
+
 #### 0.1.2.1
 
 * Allow time 1.5.*

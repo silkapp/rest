@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.34
+
+* Allow setting the method in the requests in a top level multi
+  handler.
+* The `getMethod` `Rest` class function now returns a `Maybe`.
+* The `route` method in `Rest.Driver.Routing` now takes a `Maybe
+  Method`.
+* The `Method` type was removed from `Rest.Driver.Types` and moved to
+  rest-types' `Rest.Types.Method`.
+
 #### 0.33.2
 
 * Allow top level multi handler as a POST as well as a GET.

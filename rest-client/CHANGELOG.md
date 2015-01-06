@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.4.0.3
+
+* Bump `rest-core`.
+
 #### 0.4.0.2
 
 * Support `monad-control == 1.0.*`.

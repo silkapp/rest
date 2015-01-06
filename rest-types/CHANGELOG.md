@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12
+
+* Add `method` field to `Resource`, allowing you to use different
+  methods than GET in a multi-action.
+* Add `Method` data type.
+
 #### 1.11.1.1
 
 * Return a 405 for unsupported methods.
