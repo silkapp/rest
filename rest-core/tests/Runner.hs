@@ -43,6 +43,7 @@ main = do
               , testCase "Root router is skipped." testRootRouter
               , testCase "Multi-PUT." testMultiPut
               , testCase "Multi-GET." testMultiGet
+              , testCase "Multi-POST" testMultiPost
               , testCase "Accept headers." testAcceptHeaders
               ]
 
@@ -164,6 +165,9 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.root -/ Rest.route res
 
 testMultiGet :: Assertion
 testMultiGet = checkRouteSuccess GET "" (Rest.root :: Rest.Router IO IO)
+
+testMultiPost :: Assertion
+testMultiPost = checkRouteSuccess POST "" (Rest.root :: Rest.Router IO IO)
 
 type Uri = String
 
