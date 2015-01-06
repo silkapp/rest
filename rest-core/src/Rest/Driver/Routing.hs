@@ -335,7 +335,7 @@ runResource root res
   $ R.uri res
   where
     routeResource :: String -> Either Reason_ (RunnableHandler m)
-    routeResource uri = runRouter GET (splitUriString uri) (routeRoot root)
+    routeResource uri = runRouter (R.method res) (splitUriString uri) (routeRoot root)
 
     toRestInput r = Rest.emptyInput
       { Rest.headers    = H.map (R.unValue) . StringHashMap.toHashMap . R.headers    $ r

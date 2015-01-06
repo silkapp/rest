@@ -3,6 +3,7 @@
 #### 0.1.2.2
 
 * Bump `rest-core`.
+* Allow `happstack-server` 7.4.*.
 
 #### 0.1.2.1
 
