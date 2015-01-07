@@ -6,7 +6,7 @@
 
 #### 0.1.17.14
 
-# Bump `rest-core`.
+* Bump `rest-core`.
 
 #### 0.1.17.13
 
