@@ -2,6 +2,10 @@
 
 #### 0.16.1.5
 
+* Bump `rest-core`.
+
+#### 0.16.1.5
+
 * Haskell: Escape special characters in parameter names
 
 #### 0.16.1.4
