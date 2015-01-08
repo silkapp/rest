@@ -1,6 +1,10 @@
 # Changelog
 
-#### 0.16.1.5
+#### 0.16.1.7
+
+* Allow base 4.8 and HStringTemplate 0.8 for GHC 7.10 compatibility.
+
+#### 0.16.1.6
 
 * Bump `rest-core`.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.34.0.1
+
+* Fix for base 4.8/GHC 7.10.
+
 ## 0.34
 
 * Allow setting the method in the requests in a top level multi
