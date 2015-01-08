@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.3
+
+* Allow base 4.8/GHC 7.10
+
 #### 0.2.0.2
 
 * Use `json-schema == 0.6.*`
