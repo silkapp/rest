@@ -283,6 +283,7 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
     try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
     try (Dicts ds) f = tryD ds f
       where
+        tryD :: [Output v] -> Format -> ErrorT DataError m ()
         tryD (XmlO       : _ ) XmlFormat    = return ()
         tryD (RawXmlO    : _ ) XmlFormat    = return ()
         tryD (JsonO      : _ ) JsonFormat   = return ()
@@ -306,6 +307,7 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
     try None MultipartFormat = contentType NoFormat >> ok ""
     try (Dicts ds) f = tryD ds f
       where
+        tryD :: [Output v] -> Format -> ErrorT DataError m UTF8.ByteString
         tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
         tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
         tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
