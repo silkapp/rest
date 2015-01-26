@@ -2,7 +2,7 @@
 
 #### 0.1.0.6
 
-* Allow utf8-string 1.
+* Remove unneeded dependency on utf8-string.
 
 #### 0.1.0.5
 
