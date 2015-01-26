@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.34.0.2
+
+* Allow utf8-string 1.
+
 #### 0.34.0.1
 
 * Fix for base 4.8/GHC 7.10.

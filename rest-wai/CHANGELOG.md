@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.1.0.6
+
+* Allow utf8-string 1.
+
 #### 0.1.0.5
 
 * Use new version of `rest-core`.

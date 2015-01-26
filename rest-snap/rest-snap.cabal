@@ -1,5 +1,5 @@
 name:                rest-snap
-version:             0.1.17.15
+version:             0.1.17.16
 description:         Rest driver for Snap.
 synopsis:            Rest driver for Snap.
 maintainer:          code@silk.co
@@ -30,4 +30,4 @@ library
     , snap-core == 0.9.*
     , unordered-containers == 0.2.*
     , uri-encode == 1.5.*
-    , utf8-string == 0.3.*
+    , utf8-string >= 0.3 && < 1.1
