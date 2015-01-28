@@ -41,7 +41,7 @@ library
   build-depends:
       base >= 4.5 && < 4.9
     , aeson >= 0.7 && < 0.9
-    , aeson-utils == 0.2.*
+    , aeson-utils >= 0.2 && < 0.4
     , bytestring >= 0.9 && < 0.11
     , either >= 3.4 && < 4.4
     , errors == 1.4.*
