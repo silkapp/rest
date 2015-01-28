@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.34.0.3
+
+* Allow `aeson-utils 0.3.*`
+
 #### 0.34.0.2
 
 * Allow utf8-string 1.
