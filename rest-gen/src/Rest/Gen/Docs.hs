@@ -31,7 +31,6 @@ import Data.List hiding (head, span)
 import Data.String
 import System.Directory
 import System.FilePath
-import System.Log.Logger
 import Text.Blaze.Html
 import Text.Blaze.Html5 hiding (map, meta)
 import Text.Blaze.Html5.Attributes hiding (method, span, title)
@@ -66,7 +65,7 @@ writeSingleResource ctx loc r =
 mkAllResources :: DocsContext -> ApiResource -> IO String
 mkAllResources ctx tree =
   do tmpls <- directoryGroup (templates ctx)
-     tmpl  <- maybe (errorM "Doc generation" "Couldn't find template api-docs-all" >> return (newSTMP "")) return $
+     tmpl  <- maybe (putStrLn "Couldn't find template api-docs-all" >> return (newSTMP "")) return $
                      getStringTemplate "api-docs-all" tmpls
      return $ render
             $ setManyAttrib
@@ -80,7 +79,7 @@ mkAllResources ctx tree =
 mkSingleResource :: DocsContext -> ApiResource -> IO String
 mkSingleResource ctx tree =
   do tmpls <- directoryGroup (templates ctx)
-     tmpl  <- maybe (errorM "Doc Generation" "Couldn't find template api-docs-resource" >> return (newSTMP "")) return $
+     tmpl  <- maybe (putStrLn "Couldn't find template api-docs-resource" >> return (newSTMP "")) return $
                      getStringTemplate "api-docs-resource" tmpls
      return $ render
             $ setManyAttrib
