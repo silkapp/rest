@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.16.1.8
+
+* Remove dependency on hslogger.
+
 #### 0.16.1.7
 
 * Allow base 4.8 and HStringTemplate 0.8 for GHC 7.10 compatibility.
