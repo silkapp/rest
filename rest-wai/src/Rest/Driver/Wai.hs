@@ -8,7 +8,6 @@ import Control.Monad.Trans (lift)
 import Network.HTTP.Types.Status (status200)
 import Network.Mime (defaultMimeMap)
 import Network.Wai
-
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy  as Lazy
 import qualified Data.CaseInsensitive  as CI
@@ -17,11 +16,10 @@ import qualified Data.Map              as Map
 import qualified Data.Text             as Text
 
 import Rest.Api (Api)
-import Rest.Driver.Types (Run)
 import Rest.Driver.RestM (RestInput(..), RestOutput(..), runRestM)
-
-import qualified Rest.Run          as Rest
+import Rest.Driver.Types (Run)
 import qualified Rest.Driver.Types as Rest
+import qualified Rest.Run          as Rest
 
 apiToApplication :: Run m IO -> Api m -> Application
 apiToApplication run api req =
@@ -41,7 +39,7 @@ toRestInput req =
   do bs <- lazyRequestBody req
      return $ RestInput
        { headers    = HashMap.fromList
-                    . map (string . CI.original *** string)
+                    . map (CI.mk . string . CI.original *** string)
                     . requestHeaders
                     $ req
 
@@ -73,4 +71,3 @@ fromRestOutput (RestOutput hs rc) bs =
   responseLBS (maybe status200 toEnum rc)
               ((CI.mk . Char8.pack *** Char8.pack) <$> HashMap.toList hs)
               bs
-

@@ -11,6 +11,7 @@ module Rest.Driver.RestM
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.Writer
+import Data.CaseInsensitive (CI, mk)
 import Data.HashMap.Strict (HashMap)
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.HashMap.Strict       as H
@@ -20,7 +21,7 @@ import qualified Rest.Driver.Perform as Rest
 import qualified Rest.Driver.Types   as Rest
 
 data RestInput = RestInput
-  { headers    :: HashMap String String
+  { headers    :: HashMap (CI String) String
   , parameters :: HashMap String String
   , body       :: UTF8.ByteString
   , method     :: Maybe Rest.Method
@@ -69,11 +70,11 @@ runRestM_ :: Functor m => RestInput -> RestM m a -> m a
 runRestM_ i = fmap fst . runRestM i
 
 instance (Functor m, Applicative m, Monad m) => Rest (RestM m) where
-  getHeader    h     = RestM $ asks (H.lookup h . headers   )
-  getParameter p     = RestM $ asks (H.lookup p . parameters)
+  getHeader    h     = RestM $ asks (H.lookup (mk h) . headers   )
+  getParameter p     = RestM $ asks (H.lookup p      . parameters)
   getBody            = RestM $ asks body
   getMethod          = RestM $ asks method
   getPaths           = RestM $ asks paths
-  lookupMimeType t   = RestM $ asks (H.lookup t . mimeTypes)
+  lookupMimeType t   = RestM $ asks (H.lookup t      . mimeTypes)
   setHeader h v      = RestM $ tell (outputHeader h v)
   setResponseCode cd = RestM $ tell (outputCode cd)
