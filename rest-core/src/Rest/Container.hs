@@ -110,5 +110,5 @@ reasonE (Dicts es) = Dicts (map reasonDictE es)
     reasonDictE XmlE  = XmlE
     reasonDictE JsonE = JsonE
 
-defaultE :: Errors ()
+defaultE :: Errors (Just Reason_)
 defaultE = Dicts [XmlE, JsonE]

@@ -117,4 +117,4 @@ octetStreamOut = mkInputHandler (fileI . fileO . xmlJsonE) $
     _       -> return ("ok", "ok")
 
 onlyInput :: Handler WithText
-onlyInput = mkInputHandler (jsonI . someI) $ \() -> throwError NotFound
+onlyInput = mkInputHandler jsonI $ \() -> throwError NotFound
