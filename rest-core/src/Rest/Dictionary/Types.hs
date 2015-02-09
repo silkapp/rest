@@ -100,8 +100,8 @@ instance Show (Header h) where
                                                    . showsPrec 10 k
                                                    )
 
--- | The explicit dictionary `Parameter` describes how to translate the request
--- parameters to some Haskell value. The first field in the `Header`
+-- | The explicit dictionary `Param` describes how to translate the request
+-- parameters to some Haskell value. The first field in the `Param`
 -- constructor is a white list of paramters we can recognize, used in generic
 -- validation and for generating documentation. The second field is a custom
 -- parser that can fail with a `DataError` or can produce a some value. When
