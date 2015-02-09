@@ -111,7 +111,7 @@ mkLabel ''DataDesc
 data DataMeta = DataMeta
   { _dataTypeDesc :: String       -- ^ The name of the DataType, or a custom value if dataType is Other
   , _dataSchema   :: Maybe String -- ^ Just if dataType is XML
-  , _dataExample  :: Maybe String -- ^ Just if dataType is XML or JSON
+  , _dataExample  :: [String]     -- ^ Non empty if dataType is XML or JSON
   } deriving (Show, Eq)
 
 mkLabel ''DataMeta
@@ -153,7 +153,7 @@ defaultDescription typ typeDesc htype =
     , _meta = DataMeta
         { _dataTypeDesc = typeDesc
         , _dataSchema   = Nothing
-        , _dataExample  = Nothing
+        , _dataExample  = []
         }
     }
 
@@ -432,13 +432,13 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (L.get (Dict.dict
                 $ defaultDescription Other (describe d) (toHaskellType d)
       StringI  -> defaultDescription String "String" haskellStringType
       XmlI     -> L.set (haskellModules . desc) (modString d)
-                . L.set (dataSchema     . meta) (Just . X.showSchema  . X.getXmlSchema $ d)
-                . L.set (dataExample    . meta) (Just . X.showExample . X.getXmlSchema $ d)
+                . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
+                . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
                 $ defaultDescription XML "XML" (toHaskellType d)
       XmlTextI -> defaultDescription XML "XML" haskellStringType
       RawXmlI  -> defaultDescription XML "XML" haskellStringType
       JsonI    -> L.set (haskellModules . desc) (modString d)
-                . L.set (dataExample    . meta) (Just . J.showExample . J.schema $ d)
+                . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
                 $ defaultDescription JSON "JSON" (toHaskellType d)
       FileI    -> defaultDescription File "File" haskellByteStringType
 
@@ -450,12 +450,12 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (L.get (Dict.di
     handlerOutput d c = case c of
       StringO -> defaultDescription String "String" haskellStringType
       XmlO    -> L.set (haskellModules . desc) (modString d)
-               . L.set (dataSchema     . meta) (Just . X.showSchema  . X.getXmlSchema $ d)
-               . L.set (dataExample    . meta) (Just . X.showExample . X.getXmlSchema $ d)
+               . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
+               . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
                $ defaultDescription XML "XML" (toHaskellType d)
       RawXmlO -> defaultDescription XML "XML" haskellStringType
       JsonO   -> L.set (haskellModules . desc) (modString d)
-               . L.set (dataExample    . meta) (Just . J.showExample . J.schema $ d)
+               . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
                $ defaultDescription JSON "JSON" (toHaskellType d)
       FileO   -> defaultDescription File "File" haskellByteStringType
 
@@ -465,11 +465,11 @@ handlerErrors (GenHandler dict _ _) = map (handleError Proxy) (L.get (Dict.dicts
   where
     handleError :: Proxy a -> Error a -> DataDescription
     handleError d c = case c of
-      XmlE  -> L.set (dataSchema     . meta) (Just . X.showSchema  . X.getXmlSchema $ d)
-             . L.set (dataExample    . meta) (Just . X.showExample . X.getXmlSchema $ d)
+      XmlE  -> L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
+             . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
              . L.set (haskellModules . desc) (modString d)
              $ defaultDescription XML "XML" (toHaskellType d)
-      JsonE -> L.set (dataExample    . meta) (Just . J.showExample . J.schema $ d)
+      JsonE -> L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
              . L.set (haskellModules . desc) (modString d)
              $ defaultDescription JSON "JSON" (toHaskellType d)
 
