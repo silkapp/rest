@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    DeriveDataTypeable
+    DataKinds
+  , DeriveDataTypeable
   , GADTs
   , KindSignatures
   , TupleSections
@@ -43,6 +44,7 @@ import Safe
 
 import Rest.Dictionary
 import Rest.Error
+import Rest.Types.Void
 
 -------------------------------------------------------------------------------
 
@@ -68,8 +70,8 @@ data Env h p i = Env
 -- running the API.
 
 data GenHandler m f where
-  GenHandler ::
-    { dictionary :: Dict h p i o e
+  GenHandler :: (i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e') =>
+    { dictionary :: Dict h p i' o' e'
     , handler    :: Env h p i -> ErrorT (Reason e) m (Apply f o)
     , secure     :: Bool
     } -> GenHandler m f
@@ -77,7 +79,10 @@ data GenHandler m f where
 -- | Construct a 'GenHandler' using a 'Modifier' instead of a 'Dict'.
 -- The 'secure' flag will be 'False'.
 
-mkGenHandler :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m (Apply f o)) -> GenHandler m f
+mkGenHandler :: (Monad m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
+             => Modifier h p i' o' e'
+             -> (Env h p i -> ErrorT (Reason e) m (Apply f o))
+             -> GenHandler m f
 mkGenHandler d a = GenHandler (d empty) a False
 
 -- | Apply a Functor @f@ to a type @a@. In general will result in @f
@@ -102,8 +107,8 @@ secureHandler h = h { secure = True }
 -- Restricts the type of the 'Input' dictionary to 'None'
 
 mkListing
-  :: Monad m
-  => Modifier h p () o e
+  :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
+  => Modifier h p Nothing o' e'
   -> (Range -> ErrorT (Reason e) m [o])
   -> ListHandler m
 mkListing d a = mkGenHandler (mkPar range . d) (a . param)
@@ -129,8 +134,8 @@ range = Param ["offset", "count"] $ \xs ->
 -- Restricts the type of the 'Input' dictionary to 'None'
 
 mkOrderedListing
-  :: Monad m
-  => Modifier h p () o e
+  :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
+  => Modifier h p Nothing o' e'
   -> ((Range, Maybe String, Maybe String) -> ErrorT (Reason e) m [o])
   -> ListHandler m
 mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
@@ -155,23 +160,27 @@ orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
 -- | Create a handler for a single resource. Takes the entire
 -- environmend as input.
 
-mkHandler :: Monad m => Modifier h p i o e -> (Env h p i -> ErrorT (Reason e) m o) -> Handler m
+mkHandler :: (Monad m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
+          => Modifier h p i' o' e' -> (Env h p i -> ErrorT (Reason e) m o) -> Handler m
 mkHandler = mkGenHandler
 
 -- | Create a handler for a single resource. Takes only the body
 -- information as input.
 
-mkInputHandler :: Monad m => Modifier () () i o e -> (i -> ErrorT (Reason e) m o) -> Handler m
+mkInputHandler :: (Monad m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
+               => Modifier () () i' o' e' -> (i -> ErrorT (Reason e) m o) -> Handler m
 mkInputHandler d a = mkHandler d (a . input)
 
 -- | Create a handler for a single resource. Doesn't take any input.
 
-mkConstHandler :: Monad m => Modifier () () () o e -> ErrorT (Reason e) m o -> Handler m
+mkConstHandler :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
+               => Modifier () () Nothing o' e' -> ErrorT (Reason e) m o -> Handler m
 mkConstHandler d a = mkHandler d (const a)
 
 -- | Create a handler for a single resource. Take body information and
 -- the resource identifier as input. The monad @m@ must be a
 -- 'Reader'-like type containing the idenfier.
 
-mkIdHandler :: MonadReader id m => Modifier h p i o e -> (i -> id -> ErrorT (Reason e) m o) -> Handler m
+mkIdHandler :: (MonadReader id m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
+            => Modifier h p i' o' e' -> (i -> id -> ErrorT (Reason e) m o) -> Handler m
 mkIdHandler d a = mkHandler d (\env -> ask >>= a (input env))

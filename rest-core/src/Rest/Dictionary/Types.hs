@@ -1,9 +1,15 @@
 {-# LANGUAGE
-    FlexibleContexts
+    CPP
+  , DataKinds
+  , FlexibleContexts
   , GADTs
+  , KindSignatures
+  , ScopedTypeVariables
   , StandaloneDeriving
   , TemplateHaskell
+  , TypeFamilies
   , TypeOperators
+  , UndecidableInstances
   #-}
 module Rest.Dictionary.Types
   (
@@ -36,10 +42,15 @@ module Rest.Dictionary.Types
 
   , Dicts (..)
   , dicts
+  , getDicts
+  , getDicts_
+  , modDicts
   , Inputs
   , Outputs
   , Errors
   , SomeError (..)
+
+  , FromMaybe
 
   )
 
@@ -57,6 +68,7 @@ import Text.XML.HXT.Arrow.Pickle
 
 import Rest.Error
 import Rest.Info
+import Rest.Types.Void
 
 -- | The `Format` datatype enumerates all input and output formats we might recognize.
 
@@ -172,19 +184,51 @@ type Outputs o = Dicts Output o
 type Errors  e = Dicts Error  e
 
 data Dicts f a where
-  None  :: Dicts f ()
-  Dicts :: [f a] -> Dicts f a
+  None  :: Dicts f Nothing
+  Dicts :: [f a] -> Dicts f (Just a)
 
-deriving instance Show (f a) => Show (Dicts f a)
+-- Needs UndecidableInstances
+deriving instance Show (f (FromMaybe Void a)) => Show (Dicts f a)
 
-dicts :: Dicts f a :-> [f a]
-dicts = lens getDicts modDicts
+#if GLASGOW_HASKELL < 708
+type family FromMaybe d (m :: Maybe *) :: *
+type instance FromMaybe b Nothing  = b
+type instance FromMaybe b (Just a) = a
+#else
+type family FromMaybe d (m :: Maybe *) :: * where
+  FromMaybe b Nothing  = b
+  FromMaybe b (Just a) = a
+#endif
+
+{-# DEPRECATED dicts "The modifier for this lens doesn't do anything when Dicts is None. Use getDicts and modDicts instead." #-}
+dicts :: forall a o f. o ~ FromMaybe o a => Dicts f a :-> [f o]
+dicts = lens get modify
   where
-    getDicts None       = []
-    getDicts (Dicts ds) = ds
-    modDicts :: ([f a] -> [f a]) -> Dicts f a -> Dicts f a
-    modDicts _ None       = None
-    modDicts f (Dicts ds) = Dicts (f ds)
+    get :: Dicts f a -> [f o]
+    get None       = []
+    get (Dicts ds) = ds
+    modify :: ([f o] -> [f o]) -> Dicts f a -> Dicts f a
+    modify _ None       = None
+    modify f (Dicts ds) = Dicts (f ds)
+
+-- | Get the list of dictionaries. If there are none, you get a [o].
+-- If this is too polymorphic, try `getDicts_`.
+
+getDicts :: o ~ FromMaybe o a => Dicts f a -> [f o]
+getDicts None       = []
+getDicts (Dicts ds) = ds
+
+-- | Get the list of dictionaries. If there are none, you get a [()].
+-- Sometimes useful to constraint the types if the element type of the
+-- list isn't clear from the context.
+
+getDicts_ :: o ~ FromMaybe () a => Dicts f a -> [f o]
+getDicts_ None = []
+getDicts_ (Dicts ds) = ds
+
+modDicts :: (FromMaybe o i ~ o) => ([f o] -> [f o]) -> Dicts f i -> Dicts f (Just o)
+modDicts f None       = Dicts (f [])
+modDicts f (Dicts ds) = Dicts (f ds)
 
 -- | The `Dict` datatype containing sub-dictionaries for translation of
 -- identifiers (i), headers (h), parameters (p), inputs (i), outputs (o), and
@@ -203,14 +247,14 @@ fclabels [d|
 
 -- | The empty dictionary, recognizing no types.
 
-empty :: Dict () () () () ()
+empty :: Dict () () Nothing Nothing Nothing
 empty = Dict NoHeader NoParam None None None
 
 -- | Custom existential packing an error together with a Reason.
 
 data SomeError where
-  SomeError :: Errors e -> Reason e -> SomeError
+  SomeError :: Errors e -> Reason (FromMaybe Void e) -> SomeError
 
 -- | Type synonym for dictionary modification.
 
-type Modifier h p i o e = Dict () () () () () -> Dict h p i o e
+type Modifier h p i o e = Dict () () Nothing Nothing Nothing -> Dict h p i o e

@@ -71,41 +71,41 @@ noResponse :: Handler WithText
 noResponse = mkConstHandler id $ return ()
 
 onlyError :: Handler WithText
-onlyError = mkConstHandler (jsonE . someE) $
+onlyError = mkConstHandler jsonE $
   throwError $ domainReason Err
 
 differentFormats :: Handler WithText
-differentFormats = mkInputHandler (jsonE . someE . xmlO . someO . stringI . someI) $
+differentFormats = mkInputHandler (jsonE . xmlO . stringI) $
   \case
     "error" -> throwError $ domainReason Err
     _       -> return Ok
 
 intersectedFormats :: Handler WithText
-intersectedFormats = mkInputHandler (jsonE . someE . xmlO . jsonO . someO . stringI . someI) $
+intersectedFormats = mkInputHandler (jsonE . xmlO . jsonO . stringI) $
   \case
     "error" -> throwError $ domainReason Err
     _       -> return Ok
 
 intersectedFormats2 :: Handler WithText
-intersectedFormats2 = mkInputHandler (xmlE . someE . xmlO . jsonO . someO . stringI . someI) $
+intersectedFormats2 = mkInputHandler (xmlE . xmlO . jsonO . stringI) $
   \case
     "error" -> throwError $ domainReason Err
     _       -> return Ok
 
 errorImport :: Handler WithText
-errorImport = mkIdHandler (stringI . rawXmlO . xmlE . someE) $ \s (_::Text) ->
+errorImport = mkIdHandler (stringI . rawXmlO . xmlE) $ \s (_::Text) ->
   case s of
     "error" -> throwError $ domainReason E2.Err
     _       -> return "<ok/>"
 
 noError :: Handler WithText
-noError = mkConstHandler (jsonO . someO) $ return Ok
+noError = mkConstHandler jsonO $ return Ok
 
 justStringO :: Handler WithText
-justStringO = mkConstHandler (stringO . someO) $ return "Ok"
+justStringO = mkConstHandler stringO $ return "Ok"
 
 preferJson :: Handler WithText
-preferJson = mkInputHandler (xmlJsonO . xmlJsonE . stringI . someI) $
+preferJson = mkInputHandler (xmlJsonO . xmlJsonE . stringI) $
   \case
     "error" -> throwError $ domainReason Err
     _       -> return Ok
