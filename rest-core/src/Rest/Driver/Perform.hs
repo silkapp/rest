@@ -334,7 +334,7 @@ tryOutputs try outputs = do
   rethrowLast $ (msum $ try outputs <$> formats) <|> unsupportedFormat formats
   where
     rethrowLast :: Monad m => ExceptT (Last DataError) m a -> ExceptT (Reason e) m a
-    rethrowLast = either (maybe (error "impossible") (throwError . OutputError) . getLast) return <=< lift . runExceptT
+    rethrowLast = either (maybe (error "Rest.Driver.Perform: ExceptT threw Last Nothing, this is a bug") (throwError . OutputError) . getLast) return <=< lift . runExceptT
 
 outputMultipart :: Rest m => [BodyPart] -> m UTF8.ByteString
 outputMultipart vs =
