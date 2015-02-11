@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    GADTs
+    FlexibleContexts
+  , GADTs
   , OverloadedStrings
   , RankNTypes
   , ScopedTypeVariables
@@ -270,45 +271,42 @@ contentType c = setHeader "Content-Type" $
     XmlFormat  -> "application/xml; charset=UTF-8"
     _          -> "text/plain; charset=UTF-8"
 
-validator :: forall v m e. Rest m => Outputs v -> ExceptT (Reason e) m ()
-validator outputs = lift accept >>= \formats -> OutputError `mapE`
-   (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
 
+validator :: forall v m e. Rest m => Outputs v -> ExceptT (Reason e) m ()
+validator = tryOutputs try
   where
-    try :: Outputs v -> Format -> ExceptT DataError m ()
+    try :: Outputs v -> Format -> ExceptT (Last DataError) m ()
     try None NoFormat        = return ()
     try None XmlFormat       = return ()
     try None JsonFormat      = return ()
     try None StringFormat    = return ()
     try None MultipartFormat = return ()
-    try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
+    try None FileFormat      = unsupportedFormat FileFormat
     try (Dicts ds) f = tryD ds f
       where
-        tryD :: forall v'. [Output v'] -> Format -> ExceptT DataError m ()
+        tryD :: forall v'. [Output v'] -> Format -> ExceptT (Last DataError) m ()
         tryD (XmlO       : _ ) XmlFormat    = return ()
         tryD (RawXmlO    : _ ) XmlFormat    = return ()
         tryD (JsonO      : _ ) JsonFormat   = return ()
         tryD (StringO    : _ ) StringFormat = return ()
         tryD (FileO      : _ ) FileFormat   = return ()
         tryD (MultipartO : _ ) _            = return () -- Multipart is always ok, subparts can fail.
-        tryD []                t            = throwError (UnsupportedFormat (show t))
+        tryD []                t            = unsupportedFormat t
         tryD (_          : xs) t            = tryD xs t
 
 outputWriter :: forall v m e. Rest m => Outputs v -> FromMaybe () v -> ExceptT (Reason e) m UTF8.ByteString
-outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
-  (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
-
+outputWriter outputs v = tryOutputs try outputs
   where
-    try :: Outputs v -> Format -> ExceptT DataError m UTF8.ByteString
+    try :: Outputs v -> Format -> ExceptT (Last DataError) m UTF8.ByteString
     try None NoFormat        = contentType NoFormat >> ok ""
     try None XmlFormat       = contentType NoFormat >> ok "<done/>"
     try None JsonFormat      = contentType NoFormat >> ok "{}"
     try None StringFormat    = contentType NoFormat >> ok "done"
-    try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
+    try None FileFormat      = unsupportedFormat FileFormat
     try None MultipartFormat = contentType NoFormat >> ok ""
     try (Dicts ds) f = tryD ds f
       where
-        tryD :: forall v'. FromMaybe () v ~ v' => [Output v'] -> Format -> ExceptT DataError m UTF8.ByteString
+        tryD :: forall v'. FromMaybe () v ~ v' => [Output v'] -> Format -> ExceptT (Last DataError) m UTF8.ByteString
         tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
         tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
         tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
@@ -321,11 +319,22 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
              setHeader "Cache-Control" "max-age=604800"
              setHeader "Content-Disposition" ("filename=\"" ++ escapeQuotes (snd v) ++ "\"")
              ok (fst v)
-        tryD []                t            = throwError (UnsupportedFormat (show t))
+        tryD []                t            = unsupportedFormat t
         tryD (_          : xs) t            = tryD xs t
     ok r = setResponseCode 200 >> return r
     escapeQuotes :: String -> String
     escapeQuotes = intercalate "\\\"" . splitOn "\""
+
+unsupportedFormat :: (Monad m, Show a) => a -> ExceptT (Last DataError) m a1
+unsupportedFormat = throwError . Last . Just . UnsupportedFormat . show
+
+tryOutputs :: Rest m => (t -> Format -> ExceptT (Last DataError) m a) -> t -> ExceptT (Reason e) m a
+tryOutputs try outputs = do
+  formats <- lift accept
+  rethrowLast $ (msum $ try outputs <$> formats) <|> unsupportedFormat formats
+  where
+    rethrowLast :: Monad m => ExceptT (Last DataError) m a -> ExceptT (Reason e) m a
+    rethrowLast = either (maybe (error "impossible") (throwError . OutputError) . getLast) return <=< lift . runExceptT
 
 outputMultipart :: Rest m => [BodyPart] -> m UTF8.ByteString
 outputMultipart vs =

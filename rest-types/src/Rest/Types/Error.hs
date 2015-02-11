@@ -26,7 +26,6 @@ module Rest.Types.Error
 import Data.Aeson hiding (Success)
 import Data.Foldable (Foldable)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
-import Data.Monoid (Monoid (..))
 import Data.Traversable (Traversable)
 import Data.Typeable
 import GHC.Generics
@@ -48,10 +47,6 @@ data DataError
   | MissingField      String
   | UnsupportedFormat String
   deriving (Eq, Generic, Show)
-
-instance Monoid DataError where
-  mempty = ParseError ""
-  mappend _ b = b
 
 newtype DomainReason a = DomainReason { reason :: a }
   deriving (Eq, Generic, Functor, Foldable, Show, Traversable)
