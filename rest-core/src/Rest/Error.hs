@@ -19,7 +19,7 @@ module Rest.Error
   ) where
 
 import Control.Applicative
-import Control.Monad.Error
+import Control.Monad.Except
 
 import Rest.Types.Error
 
@@ -27,8 +27,8 @@ import Rest.Types.Error
 
 infixl 8 `mapE`
 
-mapE :: (Applicative m, Monad m) => (e -> e') -> ErrorT e m a -> ErrorT e' m a
-mapE f = mapErrorT (either (Left . f) Right <$>)
+mapE :: (Applicative m, Monad m) => (e -> e') -> ExceptT e m a -> ExceptT e' m a
+mapE f = mapExceptT (either (Left . f) Right <$>)
 
 orThrow :: MonadError e m => m (Maybe b) -> e -> m b
 orThrow a e = a >>= throwError e `maybe` return

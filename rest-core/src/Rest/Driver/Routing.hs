@@ -27,7 +27,7 @@ import Control.Arrow
 import Control.Category
 import Control.Error.Util
 import Data.List.Split
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.State (StateT, evalStateT, MonadState)
@@ -299,9 +299,9 @@ mkListHandler (GenHandler dict act sec) =
      return $ GenHandler newDict (mkListAction act) sec
 
 mkListAction :: Monad m
-            => (Env h p i -> ErrorT (Reason e) m [a])
+            => (Env h p i -> ExceptT (Reason e) m [a])
             -> Env h (Range, p) i
-            -> ErrorT (Reason e) m (List a)
+            -> ExceptT (Reason e) m (List a)
 mkListAction act (Env h (Range f c, p) i) = do
   xs <- act (Env h p i)
   return (List f (min c (length xs)) (take c xs))
@@ -315,9 +315,9 @@ mkMultiHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> p
              .  L.set errors defaultE
              $  dict
     newAct (Env hs ps vs) =
-      do bs <- lift $ forM (StringHashMap.toList vs) $ \(k, v) -> runErrorT $
+      do bs <- lift $ forM (StringHashMap.toList vs) $ \(k, v) -> runExceptT $
            do i <- parseIdent sBy k
-              mapErrorT (run i) (act (Env hs ps v))
+              mapExceptT (run i) (act (Env hs ps v))
          return . StringHashMap.fromList $ zipWith (\(k, _) b -> (k, eitherToStatus b)) (StringHashMap.toList vs) bs
 
 mkMultiGetHandler :: forall m s. (Applicative m, Monad m) => Rest.Router m s -> Handler m

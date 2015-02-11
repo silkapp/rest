@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Api.Test.DashedName (resource) where
 
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.Reader
 import Rest
 import qualified Rest.Resource as R
@@ -22,5 +22,5 @@ resource = mkResourceReader
 remove :: Handler WithSiteSubscription
 remove = mkConstHandler id handler
   where
-    handler :: ErrorT Reason_ WithSiteSubscription ()
+    handler :: ExceptT Reason_ WithSiteSubscription ()
     handler = return ()

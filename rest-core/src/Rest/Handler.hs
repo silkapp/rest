@@ -36,7 +36,7 @@ module Rest.Handler
 
 import Control.Applicative hiding (empty)
 import Control.Arrow
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Rest.Types.Range
@@ -72,7 +72,7 @@ data Env h p i = Env
 data GenHandler m f where
   GenHandler :: (i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e') =>
     { dictionary :: Dict h p i' o' e'
-    , handler    :: Env h p i -> ErrorT (Reason e) m (Apply f o)
+    , handler    :: Env h p i -> ExceptT (Reason e) m (Apply f o)
     , secure     :: Bool
     } -> GenHandler m f
 
@@ -81,7 +81,7 @@ data GenHandler m f where
 
 mkGenHandler :: (Monad m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
              => Modifier h p i' o' e'
-             -> (Env h p i -> ErrorT (Reason e) m (Apply f o))
+             -> (Env h p i -> ExceptT (Reason e) m (Apply f o))
              -> GenHandler m f
 mkGenHandler d a = GenHandler (d empty) a False
 
@@ -109,7 +109,7 @@ secureHandler h = h { secure = True }
 mkListing
   :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
   => Modifier h p Nothing o' e'
-  -> (Range -> ErrorT (Reason e) m [o])
+  -> (Range -> ExceptT (Reason e) m [o])
   -> ListHandler m
 mkListing d a = mkGenHandler (mkPar range . d) (a . param)
 
@@ -136,7 +136,7 @@ range = Param ["offset", "count"] $ \xs ->
 mkOrderedListing
   :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
   => Modifier h p Nothing o' e'
-  -> ((Range, Maybe String, Maybe String) -> ErrorT (Reason e) m [o])
+  -> ((Range, Maybe String, Maybe String) -> ExceptT (Reason e) m [o])
   -> ListHandler m
 mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
 
@@ -161,20 +161,20 @@ orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
 -- environmend as input.
 
 mkHandler :: (Monad m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
-          => Modifier h p i' o' e' -> (Env h p i -> ErrorT (Reason e) m o) -> Handler m
+          => Modifier h p i' o' e' -> (Env h p i -> ExceptT (Reason e) m o) -> Handler m
 mkHandler = mkGenHandler
 
 -- | Create a handler for a single resource. Takes only the body
 -- information as input.
 
 mkInputHandler :: (Monad m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
-               => Modifier () () i' o' e' -> (i -> ErrorT (Reason e) m o) -> Handler m
+               => Modifier () () i' o' e' -> (i -> ExceptT (Reason e) m o) -> Handler m
 mkInputHandler d a = mkHandler d (a . input)
 
 -- | Create a handler for a single resource. Doesn't take any input.
 
 mkConstHandler :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
-               => Modifier () () Nothing o' e' -> ErrorT (Reason e) m o -> Handler m
+               => Modifier () () Nothing o' e' -> ExceptT (Reason e) m o -> Handler m
 mkConstHandler d a = mkHandler d (const a)
 
 -- | Create a handler for a single resource. Take body information and
@@ -182,5 +182,5 @@ mkConstHandler d a = mkHandler d (const a)
 -- 'Reader'-like type containing the idenfier.
 
 mkIdHandler :: (MonadReader id m, i ~ FromMaybe () i', o ~ FromMaybe () o', e ~ FromMaybe Void e')
-            => Modifier h p i' o' e' -> (i -> id -> ErrorT (Reason e) m o) -> Handler m
+            => Modifier h p i' o' e' -> (i -> id -> ExceptT (Reason e) m o) -> Handler m
 mkIdHandler d a = mkHandler d (\env -> ask >>= a (input env))

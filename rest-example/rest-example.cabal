@@ -48,6 +48,7 @@ library
     , hxt == 9.3.*
     , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
+    , mtl-compat == 0.1.*
     , regular == 0.3.*
     , regular-xmlpickler == 0.2.*
     , rest-core >= 0.33 && < 0.35
@@ -93,6 +94,7 @@ executable rest-example-happstack
         base >= 4.6 && < 4.8
       , happstack-server >= 7.1 && < 7.5
       , mtl >= 2.0 && < 2.3
+      , mtl-compat == 0.1.*
       , rest-core >= 0.33 && < 0.35
       , rest-example
       , rest-happstack == 0.2.*
@@ -109,6 +111,7 @@ executable rest-example-wai
     build-depends:
         base >= 4.6 && < 4.8
       , mtl >= 2.0 && < 2.3
+      , mtl-compat == 0.1.*
       , rest-core >= 0.33 && < 0.35
       , rest-example
       , rest-wai == 0.1.*
@@ -127,6 +130,7 @@ executable rest-example-snap
     build-depends:
         base >= 4.6 && < 4.8
       , mtl >= 2.0 && < 2.3
+      , mtl-compat == 0.1.*
       , rest-core >= 0.33 && < 0.35
       , rest-example
       , rest-snap == 0.1.*
@@ -145,6 +149,7 @@ executable rest-example-gen
     build-depends:
         base >= 4.6 && < 4.8
       , mtl >= 2.0 && < 2.3
+      , mtl-compat == 0.1.*
       , rest-core >= 0.33 && < 0.35
       , rest-example
       , rest-gen >= 0.14 && < 0.17

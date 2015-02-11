@@ -2,6 +2,7 @@
 module Api.Post.Comment (resource) where
 
 import Control.Concurrent.STM (atomically, modifyTVar', readTVar)
+import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.Trans.Error
 import Data.List
@@ -37,7 +38,7 @@ resource = mkResourceReader
 list :: ListHandler WithPost
 list = mkListing xmlJsonO handler
   where
-    handler :: Range -> ErrorT Reason_ WithPost [Comment]
+    handler :: Range -> ExceptT Reason_ WithPost [Comment]
     handler r = do
       postId <- getPostId `orThrow` NotFound
       comms <- liftIO . atomically . readTVar
@@ -49,7 +50,7 @@ list = mkListing xmlJsonO handler
 create :: Handler WithPost
 create = mkInputHandler xmlJson handler
   where
-    handler :: UserComment -> ErrorT Reason_ WithPost Comment
+    handler :: UserComment -> ExceptT Reason_ WithPost Comment
     handler ucomm = do
       postId <- getPostId `orThrow` NotFound
       comm   <- liftIO $ userCommentToComment ucomm
@@ -58,7 +59,7 @@ create = mkInputHandler xmlJson handler
         modifyTVar' comms (H.insertWith (<>) postId (Set.singleton comm))
       return comm
 
-getPostId :: ErrorT Reason_ WithPost (Maybe Post.Id)
+getPostId :: ExceptT Reason_ WithPost (Maybe Post.Id)
 getPostId = do
   postIdent <- ask
   return . fmap Post.id
