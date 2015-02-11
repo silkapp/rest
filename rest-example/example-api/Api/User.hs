@@ -2,7 +2,7 @@ module Api.User (resource) where
 
 import Control.Applicative ((<$>))
 import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
-import Control.Monad.Error (ErrorT, throwError)
+import Control.Monad.Except (ExceptT, throwError)
 import Control.Monad.Reader (ReaderT, asks)
 import Control.Monad.Trans (liftIO)
 import Data.Set (Set)
@@ -36,7 +36,7 @@ resource = mkResourceReader
 list :: ListHandler BlogApi
 list = mkListing xmlJsonO handler
   where
-    handler :: Range -> ErrorT Reason_ BlogApi [UserInfo]
+    handler :: Range -> ExceptT Reason_ BlogApi [UserInfo]
     handler r = do
       usrs <- liftIO . atomically . readTVar =<< asks users
       return . map toUserInfo . take (count r) . drop (offset r) . Set.toList $ usrs
@@ -48,7 +48,7 @@ toUserInfo u = UserInfo { UserInfo.name = User.name u }
 create :: Handler BlogApi
 create = mkInputHandler (xmlJsonE . xmlJsonO . xmlJsonI) handler
   where
-    handler :: User -> ErrorT (Reason UserSignupError) BlogApi UserInfo
+    handler :: User -> ExceptT (Reason UserSignupError) BlogApi UserInfo
     handler usr = do
       usrs <- asks users
       merr <- liftIO . atomically $ do

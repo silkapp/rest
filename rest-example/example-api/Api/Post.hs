@@ -9,7 +9,7 @@ module Api.Post
 import Control.Applicative
 import Control.Concurrent.STM (STM, TVar, atomically, modifyTVar, readTVar)
 import Control.Monad (unless)
-import Control.Monad.Error (ErrorT, throwError)
+import Control.Monad.Except (ExceptT, throwError)
 import Control.Monad.Reader (ReaderT, asks)
 import Control.Monad.Trans (lift, liftIO)
 import Data.List (sortBy)
@@ -74,7 +74,7 @@ postFromIdentifier i pv = finder <$> readTVar pv
 get :: Handler WithPost
 get = mkIdHandler xmlJsonO handler
   where
-    handler :: () -> Identifier -> ErrorT Reason_ WithPost Post
+    handler :: () -> Identifier -> ExceptT Reason_ WithPost Post
     handler _ i = do
       mpost <- liftIO . atomically . postFromIdentifier i =<< (lift . lift) (asks posts)
       case mpost of
@@ -85,7 +85,7 @@ get = mkIdHandler xmlJsonO handler
 list :: ListHandler BlogApi
 list = mkListing xmlJsonO handler
   where
-    handler :: Range -> ErrorT Reason_ BlogApi [Post]
+    handler :: Range -> ExceptT Reason_ BlogApi [Post]
     handler r = do
       psts <- liftIO . atomically . readTVar =<< asks posts
       return . take (count r) . drop (offset r) . sortBy (flip $ comparing Post.createdTime) . Set.toList $ psts
@@ -93,7 +93,7 @@ list = mkListing xmlJsonO handler
 create :: Handler BlogApi
 create = mkInputHandler (xmlJsonE . xmlJson) handler
   where
-    handler :: UserPost -> ErrorT (Reason PostError) BlogApi Post
+    handler :: UserPost -> ExceptT (Reason PostError) BlogApi Post
     handler (UserPost usr pst) = do
       -- Make sure the credentials are valid
       checkLogin usr
@@ -113,7 +113,7 @@ create = mkInputHandler (xmlJsonE . xmlJson) handler
 remove :: Handler WithPost
 remove = mkIdHandler id handler
   where
-    handler :: () -> Identifier -> ErrorT Reason_ WithPost ()
+    handler :: () -> Identifier -> ExceptT Reason_ WithPost ()
     handler _ i = do
       pstsVar <- lift . lift $ asks posts
       merr <- liftIO . atomically $ do
@@ -148,7 +148,7 @@ validContent :: CreatePost -> Bool
 validContent = (>= 1) . T.length . CreatePost.content
 
 -- | Throw an error if the user isn't logged in.
-checkLogin :: User -> ErrorT (Reason e) BlogApi ()
+checkLogin :: User -> ExceptT (Reason e) BlogApi ()
 checkLogin usr = do
   usrs <- liftIO . atomically . readTVar =<< asks users
   unless (usr `F.elem` usrs) $ throwError NotAllowed

@@ -9,7 +9,7 @@ module Rest.Driver.Perform where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Cont
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.RWS
 import Control.Monad.Reader
 import Control.Monad.State
@@ -29,7 +29,6 @@ import System.IO.Unsafe
 import System.Random (randomIO)
 import Text.Xml.Pickle
 
-import qualified Control.Monad.Error       as E
 import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
@@ -62,7 +61,7 @@ instance Rest m => Rest (ContT r m) where
   setHeader nm    = lift . setHeader nm
   setResponseCode = lift . setResponseCode
 
-instance (E.Error e, Rest m) => Rest (ErrorT e m) where
+instance Rest m => Rest (ExceptT e m) where
   getHeader       = lift . getHeader
   getParameter    = lift . getParameter
   getBody         = lift getBody
@@ -134,11 +133,11 @@ instance Rest m => Rest (MaybeT m) where
 
 writeResponse :: Rest m => RunnableHandler m -> m UTF8.ByteString
 writeResponse (RunnableHandler run (GenHandler dict act _)) = do
-  res <- runErrorT $ do
+  res <- runExceptT $ do
     let os = L.get D.outputs dict
     validator os
     inp <- fetchInputs dict
-    output <- mapErrorT run (act inp)
+    output <- mapExceptT run (act inp)
     outputWriter os output
   case res of
     Left  er -> failureWriter (L.get D.errors dict) er
@@ -147,7 +146,7 @@ writeResponse (RunnableHandler run (GenHandler dict act _)) = do
 -------------------------------------------------------------------------------
 -- Fetching the input resource.
 
-fetchInputs :: Rest m => Dict h p j o e -> ErrorT (Reason (FromMaybe Void e)) m (Env h p (FromMaybe () j))
+fetchInputs :: Rest m => Dict h p j o e -> ExceptT (Reason (FromMaybe Void e)) m (Env h p (FromMaybe () j))
 fetchInputs dict =
   do bs <- getBody
      ct <- parseContentType
@@ -186,22 +185,22 @@ parseContentType =
                      _                               -> []
      return (headMay types)
 
-headers :: Rest m => Header h -> ErrorT DataError m h
+headers :: Rest m => Header h -> ExceptT DataError m h
 headers NoHeader      = return ()
 headers (Header xs h) = mapM getHeader xs >>= either throwError return . h
 headers (TwoHeaders h1 h2) = (,) <$> headers h1 <*> headers h2
 
-parameters :: Rest m => Param p -> ErrorT DataError m p
+parameters :: Rest m => Param p -> ExceptT DataError m p
 parameters NoParam      = return ()
 parameters (Param xs p) = mapM (lift . getParameter) xs >>= either throwError return . p
 parameters (TwoParams p1 p2) = (,) <$> parameters p1 <*> parameters p2
 
-parser :: Monad m => Format -> Inputs j -> B.ByteString -> ErrorT DataError m (FromMaybe () j)
+parser :: Monad m => Format -> Inputs j -> B.ByteString -> ExceptT DataError m (FromMaybe () j)
 parser NoFormat None       _ = return ()
 parser f        None       _ = throwError (UnsupportedFormat (show f))
 parser f        (Dicts ds) v = parserD f ds
   where
-    parserD :: Monad m => Format -> [D.Input j] -> ErrorT DataError m j
+    parserD :: Monad m => Format -> [D.Input j] -> ExceptT DataError m j
     parserD XmlFormat     (XmlI     : _ ) = case eitherFromXML (UTF8.toString v) of
                                               Left err -> throwError (ParseError err)
                                               Right  r -> return r
@@ -271,12 +270,12 @@ contentType c = setHeader "Content-Type" $
     XmlFormat  -> "application/xml; charset=UTF-8"
     _          -> "text/plain; charset=UTF-8"
 
-validator :: forall v m e. Rest m => Outputs v -> ErrorT (Reason e) m ()
+validator :: forall v m e. Rest m => Outputs v -> ExceptT (Reason e) m ()
 validator outputs = lift accept >>= \formats -> OutputError `mapE`
    (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
 
   where
-    try :: Outputs v -> Format -> ErrorT DataError m ()
+    try :: Outputs v -> Format -> ExceptT DataError m ()
     try None NoFormat        = return ()
     try None XmlFormat       = return ()
     try None JsonFormat      = return ()
@@ -285,7 +284,7 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
     try None FileFormat      = throwError (UnsupportedFormat (show FileFormat))
     try (Dicts ds) f = tryD ds f
       where
-        tryD :: forall v'. [Output v'] -> Format -> ErrorT DataError m ()
+        tryD :: forall v'. [Output v'] -> Format -> ExceptT DataError m ()
         tryD (XmlO       : _ ) XmlFormat    = return ()
         tryD (RawXmlO    : _ ) XmlFormat    = return ()
         tryD (JsonO      : _ ) JsonFormat   = return ()
@@ -295,12 +294,12 @@ validator outputs = lift accept >>= \formats -> OutputError `mapE`
         tryD []                t            = throwError (UnsupportedFormat (show t))
         tryD (_          : xs) t            = tryD xs t
 
-outputWriter :: forall v m e. Rest m => Outputs v -> FromMaybe () v -> ErrorT (Reason e) m UTF8.ByteString
+outputWriter :: forall v m e. Rest m => Outputs v -> FromMaybe () v -> ExceptT (Reason e) m UTF8.ByteString
 outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
   (msum (try outputs <$> formats) <|> throwError (UnsupportedFormat (show formats)))
 
   where
-    try :: Outputs v -> Format -> ErrorT DataError m UTF8.ByteString
+    try :: Outputs v -> Format -> ExceptT DataError m UTF8.ByteString
     try None NoFormat        = contentType NoFormat >> ok ""
     try None XmlFormat       = contentType NoFormat >> ok "<done/>"
     try None JsonFormat      = contentType NoFormat >> ok "{}"
@@ -309,7 +308,7 @@ outputWriter outputs v = lift accept >>= \formats -> OutputError `mapE`
     try None MultipartFormat = contentType NoFormat >> ok ""
     try (Dicts ds) f = tryD ds f
       where
-        tryD :: forall v'. FromMaybe () v ~ v' => [Output v'] -> Format -> ErrorT DataError m UTF8.ByteString
+        tryD :: forall v'. FromMaybe () v ~ v' => [Output v'] -> Format -> ExceptT DataError m UTF8.ByteString
         tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
         tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
         tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)

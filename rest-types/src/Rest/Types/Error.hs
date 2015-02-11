@@ -23,10 +23,10 @@ module Rest.Types.Error
   , ToResponseCode(..)
   ) where
 
-import Control.Monad.Error
 import Data.Aeson hiding (Success)
 import Data.Foldable (Foldable)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
+import Data.Monoid (Monoid (..))
 import Data.Traversable (Traversable)
 import Data.Typeable
 import GHC.Generics
@@ -49,6 +49,10 @@ data DataError
   | UnsupportedFormat String
   deriving (Eq, Generic, Show)
 
+instance Monoid DataError where
+  mempty = ParseError ""
+  mappend _ b = b
+
 newtype DomainReason a = DomainReason { reason :: a }
   deriving (Eq, Generic, Functor, Foldable, Show, Traversable)
 
@@ -66,7 +70,7 @@ instance JSONSchema a => JSONSchema (DomainReason a) where
 data Status a b = Failure a | Success b
   deriving (Eq, Show, Generic, Typeable, Functor, Foldable, Traversable)
 
-$(deriveAll ''Status "PFStatus")
+deriveAll ''Status "PFStatus"
 type instance PF (Status a b) = PFStatus a b
 
 instance (XmlPickler a, XmlPickler b) => XmlPickler (Status a b) where
@@ -111,12 +115,8 @@ data Reason a
   | CustomReason (DomainReason a)
   deriving (Eq, Generic, Show, Typeable, Functor, Foldable, Traversable)
 
-instance Error DataError
-
-instance Error (Reason e)
-
-$(deriveAll ''DataError "PFDataError")
-$(deriveAll ''Reason    "PFReason")
+deriveAll ''DataError "PFDataError"
+deriveAll ''Reason    "PFReason"
 
 type instance PF DataError  = PFDataError
 type instance PF (Reason e) = PFReason e
@@ -134,8 +134,6 @@ instance JSONSchema e => JSONSchema (Reason e) where schema = gSchema
 
 data SomeReason where
   SomeReason :: (XmlPickler e, JSONSchema e, ToJSON e) => Reason e -> SomeReason
-
-instance Error SomeReason
 
 deriving instance Typeable SomeReason
 
