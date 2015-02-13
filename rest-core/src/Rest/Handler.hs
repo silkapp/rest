@@ -36,7 +36,7 @@ module Rest.Handler
 
 import Control.Applicative hiding (empty)
 import Control.Arrow
-import Control.Monad.Except
+import Control.Monad.Trans.Except
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Rest.Types.Range

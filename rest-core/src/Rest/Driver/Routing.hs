@@ -1,16 +1,15 @@
-{-# LANGUAGE ExistentialQuantification
-           , GeneralizedNewtypeDeriving
-           , RankNTypes
-           , NamedFieldPuns
-           , FlexibleContexts
-           , StandaloneDeriving
-    , ViewPatterns
-    , NamedFieldPuns
-           , GADTs
-           , ScopedTypeVariables
-           , DeriveDataTypeable
-           , TupleSections
-           #-}
+{-# LANGUAGE
+    DeriveDataTypeable
+  , ExistentialQuantification
+  , FlexibleContexts
+  , GADTs
+  , GeneralizedNewtypeDeriving
+  , NamedFieldPuns
+  , RankNTypes
+  , ScopedTypeVariables
+  , StandaloneDeriving
+  , TupleSections
+  #-}
 module Rest.Driver.Routing
   ( route
   , mkListHandler
@@ -26,13 +25,14 @@ import Control.Applicative
 import Control.Arrow
 import Control.Category
 import Control.Error.Util
-import Data.List.Split
-import Control.Monad.Except
+import Control.Monad.Error.Class
 import Control.Monad.Identity
 import Control.Monad.Reader
-import Control.Monad.State (StateT, evalStateT, MonadState)
+import Control.Monad.State (MonadState, StateT, evalStateT)
 import Control.Monad.Trans.Either
+import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
+import Data.List.Split
 import Network.Multipart (BodyPart (..), HeaderName (..))
 import Safe
 import qualified Control.Monad.State       as State
@@ -41,21 +41,21 @@ import qualified Data.HashMap.Strict       as H
 import qualified Data.Label.Total          as L
 
 import Network.URI.Encode (decode)
-import Rest.Api (Some1(..))
+import Rest.Api (Some1 (..))
 import Rest.Container
 import Rest.Dictionary
-import qualified Rest.StringMap.HashMap.Strict as StringHashMap
 import Rest.Error
-import Rest.Handler (ListHandler, Handler, GenHandler (..), Env (..), range, mkInputHandler, Range (..))
+import Rest.Handler (Env (..), GenHandler (..), Handler, ListHandler, Range (..), mkInputHandler, range)
 import Rest.Types.Container.Resource (Resource, Resources (..))
-import qualified Rest.Types.Container.Resource as R
 import qualified Rest.Api                      as Rest
 import qualified Rest.Resource                 as Rest
 import qualified Rest.Schema                   as Rest
+import qualified Rest.StringMap.HashMap.Strict as StringHashMap
+import qualified Rest.Types.Container.Resource as R
 
-import Rest.Driver.Types
-import Rest.Driver.Perform (writeResponse, failureWriter)
+import Rest.Driver.Perform (failureWriter, writeResponse)
 import Rest.Driver.RestM (runRestM)
+import Rest.Driver.Types
 
 import qualified Rest.Driver.RestM as Rest
 

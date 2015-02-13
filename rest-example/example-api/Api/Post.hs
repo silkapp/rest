@@ -9,9 +9,10 @@ module Api.Post
 import Control.Applicative
 import Control.Concurrent.STM (STM, TVar, atomically, modifyTVar, readTVar)
 import Control.Monad (unless)
-import Control.Monad.Except (ExceptT, throwError)
+import Control.Monad.Error.Class
 import Control.Monad.Reader (ReaderT, asks)
 import Control.Monad.Trans (lift, liftIO)
+import Control.Monad.Trans.Except (ExceptT)
 import Data.List (sortBy)
 import Data.Ord (comparing)
 import Data.Set (Set)

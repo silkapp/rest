@@ -9,7 +9,7 @@
   #-}
 module Api.Test where
 
-import Control.Monad.Except
+import Control.Monad.Error.Class
 import Control.Monad.Reader
 import Data.Aeson
 import Data.Data

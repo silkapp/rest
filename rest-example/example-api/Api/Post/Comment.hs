@@ -2,9 +2,8 @@
 module Api.Post.Comment (resource) where
 
 import Control.Concurrent.STM (atomically, modifyTVar', readTVar)
-import Control.Monad.Except
 import Control.Monad.Reader
-import Control.Monad.Trans.Error
+import Control.Monad.Trans.Except
 import Data.List
 import Data.Monoid
 import Data.Ord

@@ -2,9 +2,10 @@ module Api.User (resource) where
 
 import Control.Applicative ((<$>))
 import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
-import Control.Monad.Except (ExceptT, throwError)
+import Control.Monad.Error.Class (throwError)
 import Control.Monad.Reader (ReaderT, asks)
 import Control.Monad.Trans (liftIO)
+import Control.Monad.Trans.Except (ExceptT)
 import Data.Set (Set)
 import qualified Data.Foldable as F
 import qualified Data.Set      as Set

@@ -19,7 +19,8 @@ module Rest.Error
   ) where
 
 import Control.Applicative
-import Control.Monad.Except
+import Control.Monad.Error.Class
+import Control.Monad.Trans.Except
 
 import Rest.Types.Error
 

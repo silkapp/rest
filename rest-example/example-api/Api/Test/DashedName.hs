@@ -1,8 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Api.Test.DashedName (resource) where
 
-import Control.Monad.Except
 import Control.Monad.Reader
+import Control.Monad.Trans.Except
 import Rest
 import qualified Rest.Resource as R
 

@@ -10,10 +10,11 @@ module Rest.Driver.Perform where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Cont
-import Control.Monad.Except
+import Control.Monad.Error.Class
 import Control.Monad.RWS
 import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.Trans.Except
 import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Writer
