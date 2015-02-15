@@ -1,4 +1,4 @@
-{-# OPTIONS -fno-warn-orphans #-}
+{-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
     CPP
   , FlexibleContexts
@@ -36,6 +36,7 @@ import Control.Monad.RWS hiding (mapM)
 import Control.Monad.Reader hiding (mapM)
 import Control.Monad.State hiding (mapM)
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Resource
 import Control.Monad.Writer hiding (mapM)
 import Data.ByteString
@@ -112,6 +113,11 @@ instance MonadThrow m => MonadThrow (ApiT m) where throwM = ApiT . lift . lift .
 
 instance (MonadIO m, MonadThrow m, MonadBase IO m, PrimMonad IO, Functor m, Applicative m) => MonadResource (ApiT m) where
   liftResourceT = ApiT . lift . lift . transResourceT liftIO
+
+instance ApiStateC m => ApiStateC (ExceptT e m) where
+  getApiState = lift getApiState
+  askApiInfo  = lift askApiInfo
+  putApiState = lift . putApiState
 
 instance (Error e, ApiStateC m) => ApiStateC (ErrorT e m) where
   getApiState = lift getApiState
