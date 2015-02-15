@@ -56,7 +56,6 @@ library
     , rest-stringmap == 0.2.*
     , rest-types == 1.12.*
     , safe >= 0.2 && < 0.4
-    , semigroupoids == 4.3.*
     , semigroups == 0.16.*
     , split >= 0.1 && < 0.3
     , text >= 0.11 && < 1.3
