@@ -80,5 +80,6 @@ test-suite rest-tests
     , rest-core
     , test-framework == 0.8.*
     , test-framework-hunit == 0.3.*
-    , transformers-compat == 0.4.*
+    , transformers >= 0.3 && < 0.5
+    , transformers-compat >= 0.3 && < 0.5
     , unordered-containers == 0.2.*
