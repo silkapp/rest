@@ -27,9 +27,9 @@ import Prelude hiding (catch)
 
 import Control.Applicative
 import Control.Monad.Base
+import Control.Monad.Catch (MonadCatch (catch))
 import Control.Monad.Cont hiding (mapM)
 import Control.Monad.Error hiding (mapM)
-import Control.Monad.Exception
 import Control.Monad.List hiding (mapM)
 import Control.Monad.Primitive (PrimMonad)
 import Control.Monad.RWS hiding (mapM)
@@ -101,15 +101,9 @@ instance MonadBaseControl v m => MonadBaseControl v (ApiT m) where
   restoreM     = defaultRestoreM unStMApiT
 #endif
 
-instance (MonadException m, MonadBaseControl IO m) => MonadException (ResourceT m) where
-  throw     = lift . throw
-  catch c f = lift (runResourceT c `catch` (runResourceT . f))
-
-instance (MonadException m, MonadBaseControl IO m) => MonadException (ApiT m) where
-  throw     = lift . throw
-  catch c f = ApiT (unApiT c `catch` (unApiT . f))
-
 instance MonadThrow m => MonadThrow (ApiT m) where throwM = ApiT . lift . lift . lift . throwM
+
+instance MonadCatch m => MonadCatch (ApiT m) where catch c f = ApiT (unApiT c `catch` (unApiT . f))
 
 instance (MonadIO m, MonadThrow m, MonadBase IO m, PrimMonad IO, Functor m, Applicative m) => MonadResource (ApiT m) where
   liftResourceT = ApiT . lift . lift . transResourceT liftIO
