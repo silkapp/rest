@@ -37,7 +37,7 @@ Library
     , monad-control (>= 0.3.3.1 && < 0.4) || (>= 1.0.0.3 && < 1.1)
     , mtl >= 2.0 && < 2.3
     , primitive == 0.5.*
-    , resourcet == 1.1.*
+    , resourcet >= 1.1.4 && < 1.2
     , rest-types >= 1.11 && < 1.13
     , tostring == 0.2.*
     , transformers-base >= 0.4.4 && < 0.5
