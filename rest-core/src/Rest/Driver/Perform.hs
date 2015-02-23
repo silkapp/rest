@@ -5,7 +5,12 @@
   , RankNTypes
   , ScopedTypeVariables
   #-}
-module Rest.Driver.Perform where
+module Rest.Driver.Perform
+  ( Rest (..)
+  , failureWriter
+  , writeResponse
+  , accept
+  ) where
 
 import Control.Applicative
 import Control.Monad
