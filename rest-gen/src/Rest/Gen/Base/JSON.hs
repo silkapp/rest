@@ -2,12 +2,15 @@
     CPP
   , OverloadedStrings
   #-}
-module Rest.Gen.Base.JSON (showExample, showExamples) where
+module Rest.Gen.Base.JSON
+  ( showExample
+  , showExamples
+  ) where
 
 import Data.Aeson ((.=))
 import Data.JSON.Schema
-import Data.List ( transpose )
-import Data.List.Split ( chunksOf )
+import Data.List (transpose)
+import Data.List.Split (chunksOf)
 import Data.Maybe
 import Text.PrettyPrint.HughesPJ
 import qualified Data.Aeson  as A
