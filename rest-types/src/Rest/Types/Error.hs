@@ -12,15 +12,15 @@
   , TypeFamilies
   #-}
 module Rest.Types.Error
-  ( DataError(..)
-  , DomainReason(..)
-  , Status(..)
+  ( DataError (..)
+  , DomainReason (..)
+  , Status (..)
   , fromEither
   , toEither
   , Reason_
-  , Reason(..)
-  , SomeReason(..)
-  , ToResponseCode(..)
+  , Reason (..)
+  , SomeReason (..)
+  , ToResponseCode (..)
   ) where
 
 import Data.Aeson hiding (Success)

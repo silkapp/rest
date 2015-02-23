@@ -3,7 +3,7 @@
   , TypeSynonymInstances
   #-}
 -- | Module facilitating informative inspection of datatypes.
-module Rest.Types.Info where
+module Rest.Types.Info (Info (..)) where
 
 import Data.Text (Text)
 import Data.Typeable
