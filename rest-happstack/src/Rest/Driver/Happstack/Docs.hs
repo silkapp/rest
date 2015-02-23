@@ -1,7 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Rest.Driver.Happstack.Docs
-  ( apiDocsHandler
-  ) where
+module Rest.Driver.Happstack.Docs (apiDocsHandler) where
 
 import Control.Monad
 import Control.Monad.Trans

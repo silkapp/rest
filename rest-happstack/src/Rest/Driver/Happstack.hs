@@ -1,6 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE RankNTypes #-}
-module Rest.Driver.Happstack (apiToHandler, apiToHandler') where
+module Rest.Driver.Happstack
+  ( apiToHandler
+  , apiToHandler'
+  ) where
 
 import Control.Applicative
 import Control.Concurrent.MVar (readMVar)
@@ -16,8 +19,8 @@ import Rest.Api (Api)
 import Rest.Driver.Perform (Rest (..))
 import Rest.Driver.Types (Run)
 
-import qualified Rest.Run          as Rest
 import qualified Rest.Driver.Types as Rest
+import qualified Rest.Run          as Rest
 
 apiToHandler :: (Functor m, MonadPlus m, MonadIO m) => Api (ServerPartT m) -> ServerPartT m Response
 apiToHandler = apiToHandler' id
