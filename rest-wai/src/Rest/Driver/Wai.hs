@@ -1,5 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE CPP, GeneralizedNewtypeDeriving, OverloadedStrings, RankNTypes #-}
+{-# LANGUAGE
+    CPP
+  , GeneralizedNewtypeDeriving
+  , OverloadedStrings
+  , RankNTypes
+  #-}
 module Rest.Driver.Wai (apiToApplication) where
 
 import Control.Applicative
@@ -16,7 +21,7 @@ import qualified Data.Map              as Map
 import qualified Data.Text             as Text
 
 import Rest.Api (Api)
-import Rest.Driver.RestM (RestInput(..), RestOutput(..), runRestM)
+import Rest.Driver.RestM (RestInput (..), RestOutput (..), runRestM)
 import Rest.Driver.Types (Run)
 import qualified Rest.Driver.Types as Rest
 import qualified Rest.Run          as Rest
