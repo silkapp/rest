@@ -1,6 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE RankNTypes #-}
-module Rest.Driver.Snap (apiToHandler, apiToHandler') where
+module Rest.Driver.Snap
+  ( apiToHandler
+  , apiToHandler'
+  ) where
 
 import Safe
 import Snap.Core
@@ -17,8 +20,8 @@ import Rest.Api (Api)
 import Rest.Driver.Perform (Rest (..))
 import Rest.Driver.Types (Run)
 
-import qualified Rest.Run          as Rest
 import qualified Rest.Driver.Types as Rest
+import qualified Rest.Run          as Rest
 
 apiToHandler :: Api Snap -> Snap ()
 apiToHandler = apiToHandler' id
