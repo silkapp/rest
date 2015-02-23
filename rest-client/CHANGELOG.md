@@ -1,5 +1,14 @@
 # Changelog
 
+#### 0.5.0.0
+
+* Add `ApiStateC ExceptT` instance
+
+* Add `MonadCatch ApiT` instance.
+
+* Remove dependency on `exception-transformers` and drop `MonadException` instances. Use `MonadCatch` and `MonadThrow` instead.
+
+
 #### 0.4.0.5
 
 * Allow `aeson-utils 0.3.*`

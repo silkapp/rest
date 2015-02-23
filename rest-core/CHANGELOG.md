@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.35
+
+* Change input/output dictionaries to indicate separately if there are
+  dictionaries, and for what type. This is a breaking change. The most
+  likely problems are where `Reason ()` is explicitly used in handlers
+  without error dictionaries. Simply replace these with `Reason_`.
+  Additionally, all `some*` combinators are deprecated now. They are
+  just the identity function and can be removed.
+
+* The types of all dictionary combinators have changed, the Dicts
+  type, the dicts smart constructor, empty, SomeError, Modifier, many
+  internal (but exported) things in Rest.Driver.Perform, some types in
+  Rest.Handler, and Void was moved.
+
+* Switched all usages of `ErrorT` to `ExceptT`. To stay backwards
+  compatible with older versions of `transformers` and `mtl` you can
+  use the `transformers-compat` and `mtl-compat` packages. To update
+  your code: `s/ErrorT/ExceptT` and
+  `s/Control.Monad.Error/Control.Monad.Except/`.
+
+* Add `>|<` to `Rest.Error`. It combines two `ExceptT` computations
+  yielding the last error if both fail. This is a replacement for
+  using `<|>` with `ErrorT` since the `Alternative ExceptT` instance
+  needs a `Monoid` instance for the error.
+
+* Fix typos in haddock for `Param` dictionary.
+
+* Switch to explicit export lists where missing.
+
 #### 0.34.0.3
 
 * Allow `aeson-utils 0.3.*`

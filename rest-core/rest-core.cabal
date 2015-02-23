@@ -1,5 +1,5 @@
 name:                rest-core
-version:             0.34.0.3
+version:             0.35
 description:         Rest API library.
 synopsis:            Rest API library.
 maintainer:          code@silk.co
@@ -14,8 +14,8 @@ extra-source-files:
   LICENSE
 
 source-repository head
-  Type:              Git
-  Location:          https://github.com/silkapp/rest.git
+  type:              git
+  location:          https://github.com/silkapp/rest.git
 
 library
   ghc-options:       -Wall
@@ -55,7 +55,7 @@ library
     , multipart >= 0.1.1 && < 0.2
     , random >= 1.0 && < 1.2
     , rest-stringmap == 0.2.*
-    , rest-types == 1.12.*
+    , rest-types == 1.13.*
     , safe >= 0.2 && < 0.4
     , semigroups == 0.16.*
     , split >= 0.1 && < 0.3

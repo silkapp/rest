@@ -1,5 +1,10 @@
 # Changelog
 
+#### 0.17.0.0
+
+* Docs: More exhaustive examples of JSON messages showing each possible node in the schema at least once.
+* Docs: Make example popup scrollable.
+
 #### 0.16.1.8
 
 * Remove dependency on hslogger.

@@ -1,5 +1,5 @@
 name:                rest-wai
-version:             0.1.0.6
+version:             0.1.0.7
 description:         Rest driver for WAI applications.
 synopsis:            Rest driver for WAI applications.
 maintainer:          code@silk.co
@@ -29,7 +29,7 @@ library
     , http-types == 0.8.*
     , mime-types == 0.1.*
     , mtl >= 2.0 && < 2.3
-    , rest-core == 0.34.*
+    , rest-core >= 0.34 && < 0.36
     , text >= 0.11 && < 1.3
     , unordered-containers == 0.2.*
     , wai >= 2.1 && < 3.1

@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.0
+
+* Change to use `ExceptT` and bump rest dependencies
+
 #### 0.1.2.2
 
 * Bump `rest-core`.

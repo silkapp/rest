@@ -1,8 +1,12 @@
 # Changelog
 
+#### 0.2.10.7
+
+* Bump `rest-core` and `rest-gen` upper bounds.
+
 #### 0.2.10.6
 
-* Allow utf8-string 1.
+* Allow `utf8-string 1.0.*`.
 
 #### 0.2.10.5
 

@@ -1,5 +1,11 @@
 # Changelog
 
+#### 0.1.0.7
+
+* Make header comparison case-insensitive.
+
+* Bump `rest-core` upper bound.
+
 #### 0.1.0.6
 
 * Remove unneeded dependency on utf8-string.

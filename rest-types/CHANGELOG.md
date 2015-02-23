@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13
+
+* Change the type of `Reason_` from `Reason ()` to `Reason Void`
+* Remove the no longer needed `ToResponseCode ()` instance
+* Removed `Error` instances for `DataError`, `Reason e`, and `SomeReason`.
+
 ## 1.12
 
 * Add `method` field to `Resource`, allowing you to use different

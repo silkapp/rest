@@ -3,17 +3,22 @@ version: 0.1.1
 cabal-version: >=1.8
 build-type: Simple
 license: AllRightsReserved
- 
+
 library
-    build-depends: base ==4.*, rest-types ==1.12.*,
-                   rest-client ==0.4.*, text >=0.10 && <1.3, rest-example -any,
-                   rest-stringmap ==0.2.*
-    exposed-modules: Restexample.Client.Post
-                     Restexample.Client.Post.Comment Restexample.Client.Test
-                     Restexample.Client.Test.FooBar Restexample.Client.Test.Import
-                     Restexample.Client.User
+    build-depends:
+        base ==4.*,
+        rest-types ==1.13.*,
+        rest-client ==0.5.*,
+        text >=0.10 && <1.3,
+        rest-example ==0.2.*,
+        rest-stringmap ==0.2.*
+    exposed-modules:
+        Restexample.Client.Post
+        Restexample.Client.Post.Comment
+        Restexample.Client.Test
+        Restexample.Client.Test.FooBar
+        Restexample.Client.Test.Import
+        Restexample.Client.User
     exposed: True
     buildable: True
     hs-source-dirs: src
- 
- 
