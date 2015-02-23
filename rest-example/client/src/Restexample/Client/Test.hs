@@ -2,10 +2,12 @@
 {-# OPTIONS_GHC-fno-warn-unused-imports#-}
 module Restexample.Client.Test where
 import Rest.Client.Internal
+import qualified Rest.Types.Void
 import qualified Api.Test
 import qualified Api.Test.Err2
  
-noResponse :: ApiStateC m => m (ApiResponse () ())
+noResponse ::
+             ApiStateC m => m (ApiResponse Rest.Types.Void.Void ())
 noResponse
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
@@ -64,7 +66,8 @@ errorImport input
               (fromString input)
       in doRequest fromXML fromXML request
  
-noError :: ApiStateC m => m (ApiResponse () Api.Test.Ok)
+noError ::
+          ApiStateC m => m (ApiResponse Rest.Types.Void.Void Api.Test.Ok)
 noError
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
@@ -72,7 +75,8 @@ noError
           = makeReq "POST" "v1.0.0" [["test"], ["noError"]] [] rHeaders ""
       in doRequest fromJSON fromJSON request
  
-justStringO :: ApiStateC m => m (ApiResponse () String)
+justStringO ::
+              ApiStateC m => m (ApiResponse Rest.Types.Void.Void String)
 justStringO
   = let rHeaders
           = [(hAccept, "text/plain,text/json"), (hContentType, "text/plain")]
@@ -104,7 +108,8 @@ octetStreamOut input
               (id input)
       in doRequest fromJSON id request
  
-onlyInput :: ApiStateC m => () -> m (ApiResponse () ())
+onlyInput ::
+            ApiStateC m => () -> m (ApiResponse Rest.Types.Void.Void ())
 onlyInput input
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/json")]

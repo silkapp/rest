@@ -3,6 +3,7 @@
 module Restexample.Client.Post.Comment where
 import Rest.Client.Internal
 import qualified Restexample.Client.Post as Post
+import qualified Rest.Types.Void
 import qualified Rest.Types.Container
 import qualified Type.Comment
 import qualified Type.UserComment
@@ -16,7 +17,7 @@ list ::
        ApiStateC m =>
        Post.Identifier ->
          [(String, String)] ->
-           m (ApiResponse ()
+           m (ApiResponse Rest.Types.Void.Void
                 (Rest.Types.Container.List (Type.Comment.Comment)))
 list post pList
   = let rHeaders
@@ -32,7 +33,7 @@ create ::
          ApiStateC m =>
          Post.Identifier ->
            Type.UserComment.UserComment ->
-             m (ApiResponse () Type.Comment.Comment)
+             m (ApiResponse Rest.Types.Void.Void Type.Comment.Comment)
 create post input
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/json")]

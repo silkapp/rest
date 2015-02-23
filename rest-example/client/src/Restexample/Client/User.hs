@@ -2,13 +2,13 @@
 {-# OPTIONS_GHC-fno-warn-unused-imports#-}
 module Restexample.Client.User where
 import Rest.Client.Internal
+import qualified Rest.Types.Void
 import qualified Rest.Types.Container
 import qualified Type.UserInfo
 import qualified Type.UserSignupError
 import qualified Type.User
-import qualified Data.Text
  
-type Identifier = Data.Text.Text
+type Identifier = String
  
 readId :: Identifier -> [String]
 readId x = ["name", showUrl x]
@@ -16,7 +16,7 @@ readId x = ["name", showUrl x]
 list ::
        ApiStateC m =>
        [(String, String)] ->
-         m (ApiResponse ()
+         m (ApiResponse Rest.Types.Void.Void
               (Rest.Types.Container.List (Type.UserInfo.UserInfo)))
 list pList
   = let rHeaders
