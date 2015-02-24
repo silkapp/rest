@@ -38,6 +38,15 @@ instance XmlPickler Void where
 instance Show Void where
   show = magic
 
+instance Eq Void where
+  x == _ = magic x
+
+instance Ord Void where
+  compare x _ = magic x
+
+instance Read Void where
+  readsPrec _ _ = []
+
 -- | Generic. Can't derive it, sadly.
 
 instance Generic Void where
