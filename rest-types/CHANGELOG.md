@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.13.1
+
+* Add `Applicative` and `Monad` instances for `Reason`.
+* Add `Eq`, `Ord` and `Read` instances for `Void`.
+
 ## 1.13
 
 * Change the type of `Reason_` from `Reason ()` to `Reason Void`

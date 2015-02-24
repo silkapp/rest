@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.35.1
+
+* Remove unneeded constraint from `domainReason`.
+
 ## 0.35
 
 * Change input/output dictionaries to indicate separately if there are
