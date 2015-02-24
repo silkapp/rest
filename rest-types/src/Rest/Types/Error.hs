@@ -23,6 +23,8 @@ module Rest.Types.Error
   , ToResponseCode (..)
   ) where
 
+import Control.Applicative (Applicative (..))
+import Control.Monad (ap)
 import Data.Aeson hiding (Success)
 import Data.Foldable (Foldable)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
@@ -109,6 +111,28 @@ data Reason a
   -- Custom domain reasons.
   | CustomReason (DomainReason a)
   deriving (Eq, Generic, Show, Typeable, Functor, Foldable, Traversable)
+
+instance Applicative Reason where
+  pure = return
+  (<*>) = ap
+
+instance Monad Reason where
+  return a = CustomReason (DomainReason a)
+  r >>= f = case r of
+    CustomReason (DomainReason a) -> f a
+    UnsupportedRoute              -> UnsupportedRoute
+    UnsupportedMethod             -> UnsupportedMethod
+    UnsupportedVersion            -> UnsupportedVersion
+    IdentError   e                -> IdentError   e
+    HeaderError  e                -> HeaderError  e
+    ParamError   e                -> ParamError   e
+    InputError   e                -> InputError   e
+    OutputError  e                -> OutputError  e
+    NotFound                      -> NotFound
+    NotAllowed                    -> NotAllowed
+    AuthenticationFailed          -> AuthenticationFailed
+    Busy                          -> Busy
+    Gone                          -> Gone
 
 deriveAll ''DataError "PFDataError"
 deriveAll ''Reason    "PFReason"
