@@ -39,9 +39,8 @@ eitherToStatus (Left  e) = Failure e
 eitherToStatus (Right e) = Success e
 
 -- | Wrap your custom error type in a 'Reason'.
--- This requires the ToResponseCode dictionary to pick a response code when
--- the error is served.
-domainReason :: ToResponseCode a => a -> Reason a
+
+domainReason :: a -> Reason a
 domainReason = CustomReason . DomainReason
 
 infixl 3 >|<
