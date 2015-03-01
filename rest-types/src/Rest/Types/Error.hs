@@ -8,8 +8,6 @@
   , GADTs
   , ScopedTypeVariables
   , StandaloneDeriving
-  , TemplateHaskell
-  , TypeFamilies
   #-}
 module Rest.Types.Error
   ( DataError (..)
@@ -32,8 +30,7 @@ import Data.Traversable (Traversable)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
-import Generics.Regular (PF, deriveAll)
-import Generics.Regular.XmlPickler (gxpickle)
+import Generics.XmlPickler (gxpickle)
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
@@ -66,9 +63,6 @@ instance JSONSchema a => JSONSchema (DomainReason a) where
 
 data Status a b = Failure a | Success b
   deriving (Eq, Show, Generic, Typeable, Functor, Foldable, Traversable)
-
-deriveAll ''Status "PFStatus"
-type instance PF (Status a b) = PFStatus a b
 
 instance (XmlPickler a, XmlPickler b) => XmlPickler (Status a b) where
   xpickle = gxpickle
@@ -134,13 +128,7 @@ instance Monad Reason where
     Busy                          -> Busy
     Gone                          -> Gone
 
-deriveAll ''DataError "PFDataError"
-deriveAll ''Reason    "PFReason"
-
-type instance PF DataError  = PFDataError
-type instance PF (Reason e) = PFReason e
-
-instance XmlPickler DataError  where xpickle = gxpickle
+instance XmlPickler DataError where xpickle = gxpickle
 instance XmlPickler e => XmlPickler (Reason e) where xpickle = gxpickle
 
 instance ToJSON DataError where toJSON = gtoJson

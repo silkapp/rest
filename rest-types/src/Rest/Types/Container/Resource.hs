@@ -4,8 +4,6 @@
   , EmptyDataDecls
   , GeneralizedNewtypeDeriving
   , StandaloneDeriving
-  , TemplateHaskell
-  , TypeFamilies
   #-}
 module Rest.Types.Container.Resource
   ( Resource (..)
@@ -21,8 +19,7 @@ import Data.JSON.Schema (JSONSchema (..), gSchema)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
-import Generics.Regular (PF, deriveAll)
-import Generics.Regular.XmlPickler (gxpickle)
+import Generics.XmlPickler (gxpickle)
 import Rest.StringMap.HashMap.Strict (StringHashMap)
 import Rest.Types.Method
 import Text.XML.HXT.Arrow.Pickle
@@ -50,9 +47,6 @@ data Resource = Resource
   , input      :: String
   } deriving (Generic, Show, Typeable)
 
-deriveAll ''Resource "PFResource"
-type instance PF Resource = PFResource
-
 instance XmlPickler Resource where
   xpickle = gxpickle
 
@@ -63,9 +57,6 @@ instance JSONSchema Resource where schema    = gSchema
 -------------------------------------------------------------------------------
 
 newtype Resources = Resources [Resource] deriving (Generic, Typeable)
-
-deriveAll ''Resources "PFResources"
-type instance PF Resources = PFResources
 
 instance XmlPickler Resources where
   xpickle = gxpickle

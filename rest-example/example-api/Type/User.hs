@@ -1,8 +1,6 @@
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveGeneric
-  , TemplateHaskell
-  , TypeFamilies
   #-}
 module Type.User where
 
@@ -11,8 +9,7 @@ import Data.JSON.Schema
 import Data.Text (Text)
 import Data.Typeable
 import GHC.Generics
-import Generics.Regular
-import Generics.Regular.XmlPickler
+import Generics.XmlPickler
 import Text.XML.HXT.Arrow.Pickle
 
 type Name = Text
@@ -22,9 +19,6 @@ data User = User
   { name     :: Name
   , password :: Password
   } deriving (Eq, Generic, Ord, Show, Typeable)
-
-deriveAll ''User "PFUser"
-type instance PF User = PFUser
 
 instance XmlPickler User where xpickle = gxpickle
 instance JSONSchema User where schema = gSchema
