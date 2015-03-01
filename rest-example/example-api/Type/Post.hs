@@ -2,8 +2,6 @@
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveGeneric
-  , TemplateHaskell
-  , TypeFamilies
   #-}
 module Type.Post where
 
@@ -13,8 +11,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Typeable
 import GHC.Generics
-import Generics.Regular
-import Generics.Regular.XmlPickler
+import Generics.XmlPickler
 import Text.XML.HXT.Arrow.Pickle
 
 import qualified Type.User as User
@@ -29,9 +26,6 @@ data Post = Post
   , title       :: Title
   , content     :: Text
   } deriving (Eq, Generic, Ord, Show, Typeable)
-
-deriveAll ''Post "PFPost"
-type instance PF Post = PFPost
 
 instance XmlPickler Post where xpickle = gxpickle
 instance JSONSchema Post where schema = gSchema

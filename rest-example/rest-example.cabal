@@ -48,8 +48,7 @@ library
     , hxt == 9.3.*
     , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
-    , regular == 0.3.*
-    , regular-xmlpickler == 0.2.*
+    , generic-xmlpickler == 0.2.*
     , rest-core == 0.35.*
     , safe >= 0.2 && < 0.4
     , transformers >= 0.2 && < 0.5

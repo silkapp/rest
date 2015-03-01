@@ -8,9 +8,7 @@
   , GADTs
   , ScopedTypeVariables
   , StandaloneDeriving
-  , TemplateHaskell
   , TupleSections
-  , TypeFamilies
   , UndecidableInstances
   #-}
 module Rest.Types.Container
@@ -25,8 +23,7 @@ import Data.JSON.Schema (JSONSchema (..), gSchema)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
-import Generics.Regular (PF, deriveAll)
-import Generics.Regular.XmlPickler (gxpickle)
+import Generics.XmlPickler (gxpickle)
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 import Text.XML.HXT.Arrow.Pickle.Xml
@@ -39,9 +36,6 @@ data List a = List
   , count  :: Int
   , items  :: [a]
   } deriving (Generic, Show, Typeable)
-
-deriveAll ''List "PFList"
-type instance PF (List a) = PFList a
 
 instance XmlPickler a => XmlPickler (List a) where xpickle   = gxpickle
 instance ToJSON     a => ToJSON     (List a) where toJSON    = gtoJson
