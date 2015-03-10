@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.17.0.1
+
+* Allow `blaze-html 0.8.*`.
+
 #### 0.17.0.0
 
 * Docs: More exhaustive examples of JSON messages showing each possible node in the schema at least once.
