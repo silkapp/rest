@@ -12,6 +12,7 @@ module Rest.Error
   , eitherToStatus
   , domainReason
   , (>|<)
+  , (>?<)
   ) where
 
 import Control.Applicative
@@ -46,3 +47,11 @@ infixl 3 >|<
 -- This prevents the need for a Semigroup or Monoid instance for the error type, which is necessary if using (<!>) or (<|>) respectively.
 (>|<) :: (Monad m) => ExceptT f m a -> ExceptT e m a -> ExceptT e m a
 ExceptT m >|< ExceptT n = ExceptT $ m >>= either (const n) (return . Right)
+
+infixl 3 >?<
+-- | Try to get a Just from Maybe computations (left to right), otherwise gives Nothing.
+-- This is the unwrapped version of <|> for MaybeT without a Functor constraint.
+-- Example: f >?< g `orThrow` NotFound.
+-- f >?< g `orThrow` e = (f `orThrow` e) >|< (g `orThrow` e)
+(>?<) :: Monad m => m (Maybe a) -> m (Maybe a) -> m (Maybe a)
+(>?<) m n = m >>= maybe n (return . Just)
