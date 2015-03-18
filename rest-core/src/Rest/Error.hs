@@ -15,9 +15,7 @@ module Rest.Error
   ) where
 
 import Control.Applicative
-import Control.Monad.Error.Class
-import Control.Monad.Trans.Except
-import Data.Semigroup
+import Control.Monad.Except
 
 import Rest.Types.Error
 
@@ -44,13 +42,7 @@ domainReason :: a -> Reason a
 domainReason = CustomReason . DomainReason
 
 infixl 3 >|<
--- | Combine two ExceptT computations yielding the last error if both fail.
+-- | Try two ExceptT computations left to right yielding the last error if both fail.
 -- This prevents the need for a Semigroup or Monoid instance for the error type, which is necessary if using (<!>) or (<|>) respectively.
-(>|<) :: (Applicative m, Monad m) => ExceptT e m a -> ExceptT e m a -> ExceptT e m a
-a >|< b = mapE getLast (mapE Last a <!> mapE Last b)
-  where
-    ExceptT m <!> ExceptT n = ExceptT $ do
-      v <- m
-      case v of
-        Left e -> fmap (either (Left . (<>) e) Right) n
-        Right x -> return (Right x)
+(>|<) :: (Monad m) => ExceptT f m a -> ExceptT e m a -> ExceptT e m a
+ExceptT m >|< ExceptT n = ExceptT $ m >>= either (const n) (return . Right)
