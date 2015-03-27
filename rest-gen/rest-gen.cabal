@@ -55,7 +55,7 @@ library
     , code-builder == 0.1.*
     , directory >= 1.1 && < 1.3
     , fclabels >= 1.0.4 && < 2.1
-    , filepath >= 1.2 && < 1.4
+    , filepath >= 1.2 && < 1.5
     , hashable >= 1.1 && < 1.3
     , haskell-src-exts >= 1.15.0 && < 1.17
     , hxt >= 9.2 && < 9.4
