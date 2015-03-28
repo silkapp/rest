@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.5.0.1
+
+* Allow `primitive 0.6.*`
+
 #### 0.5.0.0
 
 * Add `ApiStateC ExceptT` instance
