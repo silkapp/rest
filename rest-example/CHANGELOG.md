@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.1
+
+* Allow filepath 1.4 and base 4.9/GHC 7.10.
+
 #### 0.2.0.0
 
 * Change to use `ExceptT` and bump rest dependencies
