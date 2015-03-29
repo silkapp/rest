@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.5.0.2
+
+* Remove dependency on primitive.
+
 #### 0.5.0.1
 
 * Allow `primitive 0.6.*`
