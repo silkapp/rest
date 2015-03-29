@@ -31,7 +31,6 @@ import Control.Monad.Catch (MonadCatch (catch))
 import Control.Monad.Cont hiding (mapM)
 import Control.Monad.Error hiding (mapM)
 import Control.Monad.List hiding (mapM)
-import Control.Monad.Primitive (PrimMonad)
 import Control.Monad.RWS hiding (mapM)
 import Control.Monad.Reader hiding (mapM)
 import Control.Monad.State hiding (mapM)
@@ -63,12 +62,12 @@ newtype ApiT m a = ApiT { unApiT :: StateT ApiState (ReaderT ApiInfo (ResourceT 
 
 type Api = ApiT IO
 
-class (MonadResource m, MonadBaseControl IO m, Monad m, Functor m, MonadBase IO m, PrimMonad IO) => ApiStateC m where
+class (MonadResource m, MonadBaseControl IO m, Monad m, Functor m, MonadBase IO m) => ApiStateC m where
   getApiState     :: m ApiState
   putApiState     :: ApiState -> m ()
   askApiInfo      :: m ApiInfo
 
-instance (MonadBaseControl IO m, Monad m, Functor m, MonadBase IO m, PrimMonad IO, MonadIO m, MonadThrow m) => ApiStateC (ApiT m) where
+instance (MonadBaseControl IO m, Monad m, Functor m, MonadBase IO m, MonadIO m, MonadThrow m) => ApiStateC (ApiT m) where
   getApiState    = ApiT get
   putApiState    = ApiT . put
   askApiInfo     = ApiT (lift ask)
@@ -105,7 +104,7 @@ instance MonadThrow m => MonadThrow (ApiT m) where throwM = ApiT . lift . lift .
 
 instance MonadCatch m => MonadCatch (ApiT m) where catch c f = ApiT (unApiT c `catch` (unApiT . f))
 
-instance (MonadIO m, MonadThrow m, MonadBase IO m, PrimMonad IO, Functor m, Applicative m) => MonadResource (ApiT m) where
+instance (MonadIO m, MonadThrow m, MonadBase IO m, Functor m, Applicative m) => MonadResource (ApiT m) where
   liftResourceT = ApiT . lift . lift . transResourceT liftIO
 
 instance ApiStateC m => ApiStateC (ExceptT e m) where
