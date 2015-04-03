@@ -31,7 +31,7 @@ library
     , hashable == 1.2.*
     , hxt == 9.3.*
     , json-schema >= 0.6 && < 0.8
-    , tagged >= 0.2 && < 0.8
+    , tagged >= 0.2 && < 0.9
     , text >= 0.10 && < 1.3
     , tostring >= 0.2.1 && < 0.3
     , unordered-containers == 0.2.*
