@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.4
+
+* Allow `tagged 0.8.*`
+
 #### 0.2.0.3
 
 * Allow base 4.8/GHC 7.10
