@@ -1,6 +1,7 @@
 name:                rest-stringmap
 version:             0.2.0.4
 license:             BSD3
+license-file:        LICENSE
 synopsis:            Maps with stringy keys that can be transcoded to JSON and XML.
 description:         Maps with stringy keys that can be transcoded to JSON and XML.
 author:              Silk B.V.
