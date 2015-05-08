@@ -4,22 +4,24 @@ import Control.Applicative ((<$>))
 import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Reader (ReaderT, asks)
-import Control.Monad.Trans (liftIO)
+import Control.Monad.Trans (lift, liftIO)
 import Control.Monad.Trans.Except (ExceptT)
 import Data.Set (Set)
-import qualified Data.Foldable as F
-import qualified Data.Set      as Set
-import qualified Data.Text     as T
+import qualified Data.Foldable    as F
+import qualified Data.Set         as Set
+import qualified Data.Text        as T
+import qualified Database.Persist as P
 
 import Rest
 import qualified Rest.Resource as R
 
-import ApiTypes (BlogApi, ServerData (..))
+import ApiTypes
 import Type.User (User)
 import Type.UserInfo (UserInfo (..))
 import Type.UserSignupError (UserSignupError (..))
-import qualified Type.User     as User
-import qualified Type.UserInfo as UserInfo
+import qualified Type.PersistUser as PU
+import qualified Type.User        as User
+import qualified Type.UserInfo    as UserInfo
 
 -- | User extends the root of the API with a reader containing the ways to identify a user in our URLs.
 -- Currently only by the user name.
@@ -59,6 +61,8 @@ create = mkInputHandler (xmlJsonE . xmlJsonO . xmlJsonI) handler
           else if not vu
             then return . Just $ domainReason InvalidUserName
             else modifyTVar usrs (Set.insert usr) >> return Nothing
+      let puser = PU.User { PU.userName = User.name usr, PU.userPassword = User.password usr }
+      _pres <- lift . lift $ P.insert puser
       maybe (return $ toUserInfo usr) throwError merr
 
 validPassword :: User.User -> Bool

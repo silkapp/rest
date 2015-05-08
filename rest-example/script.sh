@@ -1,4 +1,8 @@
 #!/bin/bash
+
+echo "# Create a user"
+curl -X POST 'http://localhost:3000/v1.0/user' -H 'Content-Type: application/json' -d '{"name":"adam","password":"1234"}'
+
 echo "# User list in XML:"
 echo ""
 curl -s 'http://localhost:3000/v1.0/user' | xmllint --format -

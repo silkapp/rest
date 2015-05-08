@@ -5,6 +5,7 @@ import Control.Applicative
 import Control.Concurrent.STM (newTVarIO)
 import Data.HashMap.Strict (HashMap)
 import Data.Set (Set)
+import Database.Persist.Postgresql
 import qualified Data.HashMap.Strict as H
 import qualified Data.Set            as Set
 
@@ -19,6 +20,7 @@ exampleBlog = ServerData
           <$> newTVarIO mockUsers
           <*> newTVarIO mockPosts
           <*> newTVarIO mockComments
+          <*> createPostgresqlPool "" 1
 
 -- | Prepoulated users
 mockUsers :: Set User
