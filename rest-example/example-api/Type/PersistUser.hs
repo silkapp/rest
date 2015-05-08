@@ -2,6 +2,8 @@
     EmptyDataDecls
   , FlexibleContexts
   , GADTs
+  , GeneralizedNewtypeDeriving
+  , MultiParamTypeClasses
   , OverloadedStrings
   , QuasiQuotes
   , TemplateHaskell
@@ -12,7 +14,7 @@ module Type.PersistUser where
 import Data.Text (Text)
 import Database.Persist.TH
 
-share [mkPersist sqlOnlySettings, mkMigrate "migrateAll"] [persistLowerCase|
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User
     name Text
     password Text

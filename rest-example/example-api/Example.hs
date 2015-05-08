@@ -1,8 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE
+    FlexibleContexts
+  , OverloadedStrings
+  #-}
 module Example (exampleBlog) where
 
 import Control.Applicative
 import Control.Concurrent.STM (newTVarIO)
+import Control.Monad.Logger
 import Data.HashMap.Strict (HashMap)
 import Data.Set (Set)
 import Database.Persist.Postgresql
@@ -20,7 +24,7 @@ exampleBlog = ServerData
           <$> newTVarIO mockUsers
           <*> newTVarIO mockPosts
           <*> newTVarIO mockComments
-          <*> createPostgresqlPool "" 1
+          <*> runStdoutLoggingT  (createPostgresqlPool "" 1)
 
 -- | Prepoulated users
 mockUsers :: Set User
