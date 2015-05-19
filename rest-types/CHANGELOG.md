@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.14
+
+* Switch XML serialization from `regular` (`regular-xmlpickler`) to
+  GHC Generics (`generic-xmlpickler`). The derived serialization
+  formats should be equivalent. Instead of deriving `PF` instances
+  datatypes you should now `derive Generic`. The PF instances have
+  also been removed from this package.
+
 ### 1.13.1
 
 * Add `Applicative` and `Monad` instances for `Reason`.

@@ -8,6 +8,9 @@
   change. You can add a third element `False` to the return value to
   get the old behaviour.
 
+* Re-exported XML serializable types from `rest-types` no longer have
+  `regular` `PF` instances since they are now using GHC Generics.
+
 #### 0.35.1
 
 * Remove unneeded constraint from `domainReason`.
