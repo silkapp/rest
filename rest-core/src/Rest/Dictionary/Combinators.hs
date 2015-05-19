@@ -147,7 +147,7 @@ stringO = L.set outputs (Dicts [StringO])
 
 -- | Allow file output using a combination of the raw data and a mime type.
 
-fileO :: Dict h p i Nothing e -> Dict h p i (Just (ByteString, String)) e
+fileO :: Dict h p i Nothing e -> Dict h p i (Just (ByteString, String, Bool)) e
 fileO = L.set outputs (Dicts [FileO])
 
 -- | Allow output as XML using the `XmlPickler` type class.

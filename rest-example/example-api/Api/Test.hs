@@ -114,7 +114,7 @@ octetStreamOut :: Handler WithText
 octetStreamOut = mkInputHandler (fileI . fileO . xmlJsonE) $
   \case
     "error" -> throwError $ domainReason Err
-    _       -> return ("ok", "ok")
+    _       -> return ("ok", "ok", False)
 
 onlyInput :: Handler WithText
 onlyInput = mkInputHandler jsonI $ \() -> throwError NotFound

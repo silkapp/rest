@@ -319,12 +319,15 @@ outputWriter outputs v = tryOutputs try outputs
         tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
         tryD (MultipartO : _ ) _            = outputMultipart v
         tryD (FileO      : _ ) FileFormat   =
-          do let ext = (reverse . takeWhile (/='.') . reverse) $ snd v
+          do let (content, filename, isAttachment) = v
+                 ext = (reverse . takeWhile (/='.') . reverse) filename
              mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower ext)
              setHeader "Content-Type" mime
              setHeader "Cache-Control" "max-age=604800"
-             setHeader "Content-Disposition" ("filename=\"" ++ escapeQuotes (snd v) ++ "\"")
-             ok (fst v)
+             setHeader "Content-Disposition" (  (if isAttachment then "attachment; " else "")
+                                             ++ "filename=\"" ++ escapeQuotes filename ++ "\""
+                                             )
+             ok content
         tryD []                t            = unsupportedFormat t
         tryD (_          : xs) t            = tryD xs t
     ok r = setResponseCode 200 >> return r
