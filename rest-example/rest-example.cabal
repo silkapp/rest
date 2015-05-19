@@ -1,5 +1,5 @@
 name:                rest-example
-version:             0.2.0.1
+version:             0.2.0.2
 synopsis:            Example project for rest
 homepage:            http://www.github.com/silkapp/rest
 license:             BSD3
@@ -49,7 +49,7 @@ library
     , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
     , generic-xmlpickler >= 0.1.0.1 && < 0.2
-    , rest-core == 0.35.*
+    , rest-core == 0.36.*
     , safe >= 0.2 && < 0.4
     , transformers >= 0.2 && < 0.5
     , transformers-compat == 0.4.*
@@ -110,7 +110,7 @@ executable rest-example-wai
     build-depends:
         base >= 4.6 && < 4.9
       , mtl >= 2.0 && < 2.3
-      , rest-core == 0.35.*
+      , rest-core == 0.36.*
       , rest-example
       , rest-wai == 0.1.*
       , wai >= 2.1 && < 3.1
@@ -129,7 +129,7 @@ executable rest-example-snap
     build-depends:
         base >= 4.6 && < 4.9
       , mtl >= 2.0 && < 2.3
-      , rest-core == 0.35.*
+      , rest-core == 0.36.*
       , rest-example
       , rest-snap == 0.1.*
       , snap-core == 0.9.*
@@ -148,7 +148,7 @@ executable rest-example-gen
     build-depends:
         base >= 4.6 && < 4.9
       , mtl >= 2.0 && < 2.3
-      , rest-core == 0.35.*
+      , rest-core == 0.36.*
       , rest-example
       , rest-gen >= 0.14 && < 0.18
       , transformers-compat == 0.4.*

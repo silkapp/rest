@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.1.17.18
+
+* Allow `rest-core 0.36.*`
+
 #### 0.1.17.17
 
 * Bump `rest-core` upper bound.

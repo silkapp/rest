@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.5.0.3
+
+* Allow `rest-types 1.14.*`
+
 #### 0.5.0.2
 
 * Remove dependency on primitive.

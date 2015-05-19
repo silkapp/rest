@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.17.0.4
+
+* Allow `rest-core 0.36.*`
+
 #### 0.17.0.3
 
 * Allow `tagged 0.8.*`

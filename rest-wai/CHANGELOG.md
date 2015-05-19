@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.1.0.8
+
+* Allow `rest-core 0.36.*`
+
 #### 0.1.0.7
 
 * Make header comparison case-insensitive.

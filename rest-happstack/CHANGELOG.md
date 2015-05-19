@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.10.8
+
+* Allow `rest-core 0.36.*`
+
 #### 0.2.10.7
 
 * Bump `rest-core` and `rest-gen` upper bounds.
