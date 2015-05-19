@@ -83,7 +83,7 @@ test-suite rest-gen-tests
     , HUnit == 1.2.*
     , fclabels >= 1.0.4 && < 2.1
     , haskell-src-exts >= 1.15.0 && < 1.17
-    , rest-core == 0.35.*
+    , rest-core >= 0.35 && < 0.37
     , rest-gen
     , test-framework == 0.8.*
     , test-framework-hunit == 0.3.*
