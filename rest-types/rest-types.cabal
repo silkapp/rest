@@ -37,8 +37,7 @@ library
     , hxt >= 9.2 && < 9.4
     , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
-    , regular == 0.3.*
-    , regular-xmlpickler == 0.2.*
+    , generic-xmlpickler == 0.2.*
     , rest-stringmap == 0.2.*
     , text >= 0.11 && < 1.3
     , transformers >= 0.3 && < 0.5
