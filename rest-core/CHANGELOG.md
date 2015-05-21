@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.36.0.1
+
+* Allow `errors 2.0.*`
+
 ## 0.36
 
 * File output now needs a third component, specifying if the file is

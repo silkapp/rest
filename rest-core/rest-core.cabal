@@ -1,5 +1,5 @@
 name:                rest-core
-version:             0.36
+version:             0.36.0.1
 description:         Rest API library.
 synopsis:            Rest API library.
 maintainer:          code@silk.co
@@ -45,7 +45,7 @@ library
     , bytestring >= 0.9 && < 0.11
     , case-insensitive >= 1.2 && < 1.3
     , either >= 3.4 && < 4.4
-    , errors == 1.4.*
+    , errors >= 1.4 && < 2.1
     , fclabels == 2.0.*
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
