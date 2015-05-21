@@ -43,7 +43,6 @@ library
       base >= 4.6 && < 4.9
     , aeson >= 0.7 && < 0.9
     , containers >= 0.3 && < 0.6
-    , filepath >= 1.1 && < 1.5
     , generic-aeson == 0.2.*
     , hxt == 9.3.*
     , json-schema >= 0.6 && < 0.8
@@ -56,7 +55,6 @@ library
     , stm >= 2.1 && < 2.5
     , text >= 0.11 && < 1.3
     , time >= 1.1 && < 1.6
-    , transformers-base >= 0.4.4 && < 0.5
     , unordered-containers == 0.2.*
 
 -------------------------------------------------------------------------------
@@ -93,7 +91,6 @@ executable rest-example-happstack
         base >= 4.6 && < 4.9
       , happstack-server >= 7.1 && < 7.5
       , mtl >= 2.0 && < 2.3
-      , rest-core == 0.35.*
       , rest-example
       , rest-happstack == 0.2.*
       , transformers-compat == 0.4.*
@@ -109,13 +106,9 @@ executable rest-example-wai
     buildable: True
     build-depends:
         base >= 4.6 && < 4.9
-      , mtl >= 2.0 && < 2.3
-      , rest-core == 0.36.*
       , rest-example
       , rest-wai == 0.1.*
-      , wai >= 2.1 && < 3.1
       , warp >= 2.1 && < 3.1
-      , transformers-compat == 0.4.*
   else
     buildable: False
 
@@ -147,10 +140,7 @@ executable rest-example-gen
     buildable: True
     build-depends:
         base >= 4.6 && < 4.9
-      , mtl >= 2.0 && < 2.3
-      , rest-core == 0.36.*
       , rest-example
       , rest-gen >= 0.14 && < 0.18
-      , transformers-compat == 0.4.*
   else
     buildable: False
