@@ -1,5 +1,9 @@
 # Changelog
 
+#### 1.14.0.1
+
+* Allow `aeson 0.9.*`
+
 ## 1.14
 
 * Switch XML serialization from `regular` (`regular-xmlpickler`) to

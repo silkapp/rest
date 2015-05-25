@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.36.0.2
+
+* Allow `aeson 0.9.*`
+
 #### 0.36.0.1
 
 * Allow `errors 2.0.*`
