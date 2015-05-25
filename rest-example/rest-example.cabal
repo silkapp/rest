@@ -41,7 +41,7 @@ library
     Type.UserSignupError
   build-depends:
       base >= 4.6 && < 4.9
-    , aeson >= 0.7 && < 0.9
+    , aeson >= 0.7 && < 0.10
     , containers >= 0.3 && < 0.6
     , generic-aeson == 0.2.*
     , hxt == 9.3.*
