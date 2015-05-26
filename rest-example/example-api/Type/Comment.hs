@@ -1,8 +1,6 @@
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveGeneric
-  , TemplateHaskell
-  , TypeFamilies
   #-}
 module Type.Comment (Comment (..)) where
 
@@ -12,8 +10,7 @@ import Data.Text (Text)
 import Data.Time
 import Data.Typeable
 import GHC.Generics
-import Generics.Regular
-import Generics.Regular.XmlPickler
+import Generics.XmlPickler
 import Text.XML.HXT.Arrow.Pickle
 
 import Type.Post ()
@@ -24,9 +21,6 @@ data Comment = Comment
   , createdTime :: UTCTime
   , content     :: Text
   } deriving (Eq, Generic, Ord, Show, Typeable)
-
-deriveAll ''Comment "PFComment"
-type instance PF Comment = PFComment
 
 instance XmlPickler Comment where xpickle = gxpickle
 instance JSONSchema Comment where schema = gSchema

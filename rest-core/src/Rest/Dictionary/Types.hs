@@ -157,7 +157,7 @@ deriving instance Ord  (Input i)
 -- combination of input type to output type.
 
 data Output o where
-  FileO      ::                                         Output (ByteString, String)
+  FileO      ::                                         Output (ByteString, String, Bool)
   RawXmlO    ::                                         Output ByteString
   JsonO      :: (Typeable o, ToJSON o, JSONSchema o) => Output o
   XmlO       :: (Typeable o, XmlPickler o)           => Output o

@@ -1,5 +1,24 @@
 # Changelog
 
+#### 0.36.0.2
+
+* Allow `aeson 0.9.*`
+
+#### 0.36.0.1
+
+* Allow `errors 2.0.*`
+
+## 0.36
+
+* File output now needs a third component, specifying if the file is
+  served as 'attachment' or not. If so, this will make most browsers
+  download the file instead of displaying it. This is a breaking
+  change. You can add a third element `False` to the return value to
+  get the old behaviour.
+
+* Re-exported XML serializable types from `rest-types` no longer have
+  `regular` `PF` instances since they are now using GHC Generics.
+
 #### 0.35.1
 
 * Remove unneeded constraint from `domainReason`.

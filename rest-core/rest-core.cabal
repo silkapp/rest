@@ -1,5 +1,5 @@
 name:                rest-core
-version:             0.35.1
+version:             0.36.0.2
 description:         Rest API library.
 synopsis:            Rest API library.
 maintainer:          code@silk.co
@@ -40,12 +40,12 @@ library
     Rest.ShowUrl
   build-depends:
       base >= 4.5 && < 4.9
-    , aeson >= 0.7 && < 0.9
+    , aeson >= 0.7 && < 0.10
     , aeson-utils >= 0.2 && < 0.4
     , bytestring >= 0.9 && < 0.11
     , case-insensitive >= 1.2 && < 1.3
     , either >= 3.4 && < 4.4
-    , errors == 1.4.*
+    , errors >= 1.4 && < 2.1
     , fclabels == 2.0.*
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
@@ -55,7 +55,7 @@ library
     , multipart >= 0.1.1 && < 0.2
     , random >= 1.0 && < 1.2
     , rest-stringmap == 0.2.*
-    , rest-types == 1.13.*
+    , rest-types == 1.14.*
     , safe >= 0.2 && < 0.4
     , split >= 0.1 && < 0.3
     , text >= 0.11 && < 1.3

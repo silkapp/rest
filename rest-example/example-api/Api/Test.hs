@@ -4,8 +4,6 @@
   , LambdaCase
   , OverloadedStrings
   , ScopedTypeVariables
-  , TemplateHaskell
-  , TypeFamilies
   #-}
 module Api.Test where
 
@@ -17,8 +15,7 @@ import Data.JSON.Schema
 import Data.Text (Text)
 import GHC.Generics
 import Generics.Generic.Aeson
-import Generics.Regular
-import Generics.Regular.XmlPickler
+import Generics.XmlPickler
 import Text.XML.HXT.Arrow.Pickle
 
 import Rest
@@ -32,8 +29,6 @@ import qualified Api.Test.Err2 as E2
 type WithText = ReaderT Text BlogApi
 
 data Err = Err deriving (Generic, Show, Typeable)
-deriveAll ''Err "PFErr"
-type instance PF Err = PFErr
 instance ToJSON     Err where toJSON    = gtoJson
 instance FromJSON   Err where parseJSON = gparseJson
 instance JSONSchema Err where schema    = gSchema
@@ -43,8 +38,6 @@ instance ToResponseCode Err where
   toResponseCode _ = 400
 
 data Ok = Ok deriving (Generic, Show, Typeable)
-deriveAll ''Ok "PFOk"
-type instance PF Ok = PFOk
 instance XmlPickler Ok where xpickle = gxpickle
 instance ToJSON     Ok where toJSON    = gtoJson
 instance FromJSON   Ok where parseJSON = gparseJson
@@ -114,7 +107,7 @@ octetStreamOut :: Handler WithText
 octetStreamOut = mkInputHandler (fileI . fileO . xmlJsonE) $
   \case
     "error" -> throwError $ domainReason Err
-    _       -> return ("ok", "ok")
+    _       -> return ("ok", "ok", False)
 
 onlyInput :: Handler WithText
 onlyInput = mkInputHandler jsonI $ \() -> throwError NotFound
