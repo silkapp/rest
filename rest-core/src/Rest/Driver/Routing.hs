@@ -29,7 +29,6 @@ import Control.Monad.Error.Class
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.State (MonadState, StateT, evalStateT)
-import Control.Monad.Trans.Either
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
 import Data.List.Split
@@ -65,7 +64,7 @@ apiError :: (MonadError (Reason e) m) => Reason e -> m a
 apiError = throwError
 
 newtype Router a =
-  Router { unRouter :: ReaderT Method (StateT UriParts (EitherT Reason_ Identity)) a }
+  Router { unRouter :: ReaderT Method (StateT UriParts (ExceptT Reason_ Identity)) a }
   deriving ( Functor
            , Applicative
            , Monad
@@ -76,7 +75,7 @@ newtype Router a =
 
 runRouter :: Method -> UriParts -> Router (RunnableHandler m) -> Either Reason_ (RunnableHandler m)
 runRouter method uri = runIdentity
-                     . runEitherT
+                     . runExceptT
                      . flip evalStateT uri
                      . flip runReaderT method
                      . unRouter
