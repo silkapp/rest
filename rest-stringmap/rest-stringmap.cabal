@@ -1,5 +1,5 @@
 name:                rest-stringmap
-version:             0.2.0.5
+version:             0.2.0.6
 license:             BSD3
 license-file:        LICENSE
 synopsis:            Maps with stringy keys that can be transcoded to JSON and XML.
@@ -34,5 +34,5 @@ library
     , json-schema >= 0.6 && < 0.8
     , tostring >= 0.2.1 && < 0.3
     , unordered-containers == 0.2.*
-  if impl(ghc < 7.6)
+  if impl(ghc < 7.8)
     build-depends: tagged >= 0.2 && < 0.9
