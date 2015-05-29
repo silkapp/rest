@@ -1,5 +1,10 @@
 # Changelog
 
+#### 0.36.0.4
+
+* Drop (internal) dependency on either, this removes 20(!) transitive
+  dependecies.
+
 #### 0.36.0.3
 
 * Allow `either 4.4.*`
