@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.36.0.3
+
+* Allow `either 4.4.*`
+
 #### 0.36.0.2
 
 * Allow `aeson 0.9.*`
