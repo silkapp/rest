@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.6
+
+* Fix compilation on GHC-7.6
+
 #### 0.2.0.5
 
 * Allow `aeson 0.9.*`
