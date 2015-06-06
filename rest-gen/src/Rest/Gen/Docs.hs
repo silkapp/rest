@@ -71,8 +71,9 @@ mkAllResources ctx tree =
             $ setManyAttrib
                    [ ("listing"  , map (renderHtml . (\v -> resourceLinkAnchor v (resourceDisp v))) . sort . allSubResourceIds $ tree) ]
             $ setManyAttrib
-                   [ ("resources", renderHtml $ subResourcesInfo ctx tree )
-                   , ("version",   show $ contextVersion ctx  )
+                   [ ("resources" , renderHtml $ subResourcesInfo ctx tree )
+                   , ("version"   , show $ contextVersion ctx  )
+                   , ("static"    , rootUrl ctx  )
                    ]
                    tmpl
 
@@ -93,6 +94,7 @@ mkSingleResource ctx tree =
                    , ("urls"        , renderHtml $ resourceTable tree)
                    , ("description" , resDescription tree)
                    , ("version"     , show $ contextVersion ctx)
+                   , ("static"      , rootUrl ctx  )
                    ]
                    tmpl
 
