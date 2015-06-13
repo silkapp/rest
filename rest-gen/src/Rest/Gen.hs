@@ -20,6 +20,7 @@ import Rest.Gen.JavaScript (mkJsApi)
 import Rest.Gen.Ruby (mkRbApi)
 import Rest.Gen.Types
 import Rest.Gen.Utils
+import Rest.Gen.JSCompiler
 
 generate :: Config -> String -> Api m -> [H.ModuleName] -> [H.ImportDecl] -> [(H.ModuleName, H.ModuleName)] -> IO ()
 generate config name api sources imports rewrites =
@@ -31,7 +32,7 @@ generate config name api sources imports rewrites =
             let context = DocsContext root ver (fromMaybe "./templates" (getSourceLocation config))
             writeDocs context r loc
             exitSuccess
-       Just MakeJS          -> mkJsApi (overModuleName (++ "Api") moduleName) (get apiPrivate config) ver r >>= toTarget config
+       Just MakeJS          -> mkJsApi (overModuleName (++ "Api") moduleName) (get apiPrivate config) ver r >>= withCompiler (get compiler config)>>= toTarget config
        Just MakeRb          -> mkRbApi (overModuleName (++ "Api") moduleName) (get apiPrivate config) ver r >>= toTarget config
        Just MakeHS          ->
          do loc <- getTargetDir config "./client"
