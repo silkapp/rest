@@ -71,6 +71,8 @@ library
     , uniplate >= 1.6.12 && < 1.7
     , unordered-containers == 0.2.*
     , vector == 0.10.*
+    , HTTP == 4000.*
+    , network-uri == 2.6.*
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.2 && < 0.9
 
