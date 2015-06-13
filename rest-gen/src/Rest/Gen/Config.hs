@@ -56,6 +56,7 @@ parseLocation :: String -> Location
 parseLocation "-" = Stream
 parseLocation s   = Location s
 
+parseCompiler:: String -> Maybe Compiler
 parseCompiler "closure-simple" = Just ClosureSimple
 parseCompiler "closure-advanced" = Just ClosureAdvanced
 parseCompiler "whitespace" = Just ClosureWhitespace
