@@ -46,6 +46,7 @@ library
     Rest.Gen.Base.Link
     Rest.Gen.Base.XML
     Rest.Gen.Utils
+    Rest.Gen.JSCompiler
   build-depends:
       base >= 4.5 && < 4.9
     , Cabal >= 1.16 && < 1.23
