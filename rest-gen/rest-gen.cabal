@@ -73,7 +73,9 @@ library
     , unordered-containers == 0.2.*
     , vector == 0.10.*
     , HTTP == 4000.*
-    , network-uri == 2.6.0.1
+    , network-uri >= 2.6
+    , network >= 2.6
+      --Network isn't actually needed, but build will fail w/o it
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.2 && < 0.9
 
