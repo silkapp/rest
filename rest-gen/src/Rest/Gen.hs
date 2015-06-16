@@ -1,4 +1,13 @@
-module Rest.Gen (generate) where
+module Rest.Gen
+  ( generate
+  , runGenerate
+  , generateDocs
+  , generateHaskell
+  , generateJavaScript
+  , generateRuby
+  , GenerateError (..)
+  , Result (..)
+  ) where
 
 import Data.Char
 import Data.Label
@@ -17,23 +26,53 @@ import Rest.Gen.Utils
 import qualified Rest.Gen.Docs    as DCtx (DocsContext (..))
 import qualified Rest.Gen.Haskell as HCtx (HaskellContext (..))
 
+data GenerateError
+  = CouldNotFindApiVersion
+  | NoOp
+  deriving (Eq, Show)
+
+data Result
+  = Error GenerateError
+  | StdOut String
+  | FileOut FilePath
+  deriving (Eq, Show)
+
 generate :: Config -> String -> Api m -> [ModuleName] -> [ImportDecl] -> [(ModuleName, ModuleName)] -> IO ()
-generate config name api sources imports rewrites =
-  withVersion (get apiVersion config) api (putStrLn "Could not find api version" >> exitFailure) $ \ver (Some1 r) ->
-     case get action config of
-       Just (MakeDocs root) -> makeDocs config ver r root >> exitSuccess
-       Just MakeJS          -> makeJS config ver r moduleName
-       Just MakeRb          -> makeRb config ver r moduleName
-       Just MakeHS          -> makeHS config ver r moduleName packageName sources imports rewrites >> exitSuccess
-       Nothing              -> return ()
+generate config name api sources imports rewrites = do
+  res <- runGenerate config name api sources imports rewrites
+  case res of
+    Error _err -> exitFailure
+    _          -> exitSuccess
+
+runGenerate :: Config -> String -> Api m -> [ModuleName] -> [ImportDecl] -> [(ModuleName, ModuleName)] -> IO Result
+runGenerate config name api sources imports rewrites =
+  withVersion (get apiVersion config) api (return $ Error CouldNotFindApiVersion) m
   where
+    m :: Version -> Some1 (Router m) -> IO Result
+    m ver (Some1 r) = case get action config of
+      Just (MakeDocs root) -> generateDocs       config ver r root
+      Just MakeJS          -> generateJavaScript config ver r moduleName
+      Just MakeRb          -> generateRuby       config ver r moduleName
+      Just MakeHS          -> generateHaskell    config ver r moduleName packageName sources imports rewrites
+      Nothing              -> return $ Error NoOp
     packageName = map toLower name
     moduleName  = ModuleName $ upFirst packageName
 
-makeDocs :: Config -> Version -> Router m s -> String -> IO ()
-makeDocs config ver r rootUrl = do
+generateJavaScript :: Config -> Version -> Router m s -> ModuleName -> IO Result
+generateJavaScript config ver r moduleName = do
+  file <- mkJsApi (overModuleName (++ "Api") moduleName) (get apiPrivate config) ver r
+  toTarget config file
+
+generateRuby ::  Config -> Version -> Router m s -> ModuleName -> IO Result
+generateRuby config ver r moduleName = do
+  file <- mkRbApi (overModuleName (++ "Api") moduleName) (get apiPrivate config) ver r
+  toTarget config file
+
+generateDocs :: Config -> Version -> Router m s -> String -> IO Result
+generateDocs config ver r rootUrl = do
   targetDir <- getTargetDir config "./docs"
   writeDocs (context targetDir) r
+  return $ FileOut targetDir
     where
       context targetDir = DocsContext
         { DCtx.rootUrl        = rootUrl
@@ -43,16 +82,11 @@ makeDocs config ver r rootUrl = do
         , DCtx.sourceDir      = getSourceLocation config
         }
 
-makeJS :: Config -> Version -> Router m s -> ModuleName -> IO ()
-makeJS config ver r moduleName = mkJsApi moduleName (get apiPrivate config) ver r >>= toTarget config
-
-makeRb ::  Config -> Version -> Router m s -> ModuleName -> IO ()
-makeRb config ver r moduleName = mkRbApi moduleName (get apiPrivate config) ver r >>= toTarget config
-
-makeHS :: Config -> Version -> Router m s -> ModuleName -> String -> [ModuleName] -> [ImportDecl] -> [(ModuleName, ModuleName)] -> IO ()
-makeHS config ver r moduleName packageName sources imports rewrites = do
+generateHaskell :: Config -> Version -> Router m s -> ModuleName -> String -> [ModuleName] -> [ImportDecl] -> [(ModuleName, ModuleName)] -> IO Result
+generateHaskell config ver r moduleName packageName sources imports rewrites = do
   targetPath <- getTargetDir config "./client"
   mkHsApi (context targetPath (getSourceLocation config)) r
+  return $ FileOut targetPath
   where
     context tp sourceDir = HaskellContext
       { HCtx.apiVersion     = ver
@@ -73,15 +107,14 @@ getTargetDir config str =
     Default    -> putStrLn ("Generating to " ++ str)                                      >> return str
     Location d -> putStrLn ("Generating to " ++ d)                                        >> return d
 
-toTarget :: Config -> String -> IO ()
+toTarget :: Config -> String -> IO Result
 toTarget config code = do
-   outf code
-   exitSuccess
+  outf code
   where
-    outf = case get target config of
-      Stream     -> putStrLn
-      Default    -> putStrLn
-      Location l -> writeFile l
+    outf cd = case get target config of
+      Stream     -> putStrLn cd    >> return (StdOut cd)
+      Default    -> putStrLn cd    >> return (StdOut cd)
+      Location l -> writeFile l cd >> return (FileOut l)
 
 getSourceLocation :: Config -> Maybe String
 getSourceLocation config =

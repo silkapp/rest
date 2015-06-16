@@ -1,7 +1,3 @@
-{-# LANGUAGE
-    ScopedTypeVariables
-  , ViewPatterns
-  #-}
 module Rest.Gen.JavaScript (mkJsApi) where
 
 import Prelude hiding ((.))
@@ -21,7 +17,7 @@ import Rest.Gen.Types
 import Rest.Gen.Utils
 
 mkJsApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
-mkJsApi (overModuleName (++ "Api") -> ns) priv ver r =
+mkJsApi ns priv ver r =
   do prelude <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/base.js")
      let cod = showCode $ mkStack
                 [ unModuleName ns ++ ".prototype.version" .=. string (show ver)

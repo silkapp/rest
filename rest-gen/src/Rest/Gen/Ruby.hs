@@ -1,7 +1,3 @@
-{-# LANGUAGE
-    ScopedTypeVariables
-  , ViewPatterns
-  #-}
 module Rest.Gen.Ruby (mkRbApi) where
 
 import Prelude hiding ((.))
@@ -22,7 +18,7 @@ import Rest.Gen.Types
 import Rest.Gen.Utils
 
 mkRbApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
-mkRbApi (overModuleName (++ "Api") -> ns) priv ver r =
+mkRbApi ns priv ver r =
   do rawPrelude <- readContent "Ruby/base.rb"
      let prelude = replace "SilkApi" (unModuleName ns) rawPrelude
      let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
