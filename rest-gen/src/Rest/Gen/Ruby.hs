@@ -145,10 +145,11 @@ accessorName :: ResourceId -> String
 accessorName = concatMap upFirst . ("Access":) . concatMap cleanName
 
 mkType :: DataType -> (String, String, Code -> Code)
-mkType dt =
-  case dt of
-    String -> ("data", "text/plain", id)
-    XML    -> ("xml" , "text/xml", (<+> ".to_s"))
-    JSON   -> ("json", "application/json", call "mkJson")
-    File   -> ("file", "application/octet-stream", id)
-    Other  -> ("data", "text/plain", id)
+mkType dt = (dataTypeString dt, dataTypeToAcceptHeader dt, fn)
+  where
+    fn = case dt of
+      String -> id
+      XML    -> (<+> ".to_s")
+      JSON   -> call "mkJson"
+      File   -> id
+      Other  -> id
