@@ -55,13 +55,15 @@ data HaskellContext =
     , imports        :: [H.ImportDecl]
     , rewrites       :: [(H.ModuleName, H.ModuleName)]
     , namespace      :: [String]
+    , sourceDir      :: Maybe FilePath
     }
 
 mkHsApi :: HaskellContext -> Router m s -> IO ()
-mkHsApi ctx r =
-  do let tree = sortTree . (if includePrivate ctx then id else noPrivate) . apiSubtrees $ r
-     mkCabalFile ctx tree
-     mapM_ (writeRes ctx) $ allSubTrees tree
+mkHsApi ctx r = do
+  setupTargetDir (sourceDir ctx) (targetPath ctx)
+  let tree = sortTree . (if includePrivate ctx then id else noPrivate) . apiSubtrees $ r
+  mkCabalFile ctx tree
+  mapM_ (writeRes ctx) $ allSubTrees tree
 
 mkCabalFile :: HaskellContext -> ApiResource -> IO ()
 mkCabalFile ctx tree =

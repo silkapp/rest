@@ -7,9 +7,18 @@ module Rest.Gen.Utils
   , upFirst
   , downFirst
   , mapHead
+  , setupTargetDir
   ) where
 
+import Prelude hiding (foldr)
+
 import Data.Char
+import Data.Foldable
+import Data.List.Split
+import System.Directory
+import System.FilePath
+import System.Process
+import Text.StringTemplate
 
 import Paths_rest_gen (getDataFileName)
 
@@ -41,3 +50,8 @@ downFirst = mapHead toLower
 mapHead :: (a -> a) -> [a] -> [a]
 mapHead _ [] = []
 mapHead f (x : xs) = f x : xs
+
+setupTargetDir :: Maybe FilePath -> FilePath -> IO ()
+setupTargetDir msource targetDir = do
+  createDirectoryIfMissing True targetDir
+  forM_ msource $ \source -> system $ "cp -rf " ++ source ++ " " ++ targetDir

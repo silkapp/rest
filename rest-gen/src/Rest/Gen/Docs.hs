@@ -47,14 +47,16 @@ data DocsContext = DocsContext
   { rootUrl        :: String
   , contextVersion :: Version
   , templates      :: String
+  , targetDir      :: FilePath
+  , sourceDir      :: Maybe FilePath
   } deriving (Eq, Show)
 
-writeDocs :: DocsContext -> Router m s -> String -> IO ()
-writeDocs context router loc =
-  do createDirectoryIfMissing True loc
-     let tree = apiSubtrees router
-     mkAllResources context tree >>= writeFile (loc </> "index.html")
-     mapM_ (writeSingleResource context loc) $ allSubResources tree
+writeDocs :: DocsContext -> Router m s -> IO ()
+writeDocs context router = do
+  setupTargetDir (sourceDir context) (targetDir context)
+  let tree = apiSubtrees router
+  mkAllResources context tree >>= writeFile (targetDir context </> "index.html")
+  mapM_ (writeSingleResource context (targetDir context)) $ allSubResources tree
 
 writeSingleResource :: DocsContext -> String -> ApiResource -> IO ()
 writeSingleResource ctx loc r =

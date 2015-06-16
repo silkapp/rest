@@ -1,4 +1,7 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE
+    ScopedTypeVariables
+  , ViewPatterns
+  #-}
 module Rest.Gen.Ruby (mkRbApi) where
 
 import Prelude hiding ((.))
@@ -8,9 +11,8 @@ import Data.Char
 import Data.List
 import Data.List.Split (splitOn)
 import Data.Maybe
-import qualified Data.Label.Total             as L
-import qualified Data.List.NonEmpty           as NList
-import qualified Language.Haskell.Exts.Syntax as H
+import qualified Data.Label.Total   as L
+import qualified Data.List.NonEmpty as NList
 
 import Code.Build
 import Code.Build.Ruby
@@ -19,8 +21,8 @@ import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
 
-mkRbApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
-mkRbApi ns priv ver r =
+mkRbApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
+mkRbApi (overModuleName (++ "Api") -> ns) priv ver r =
   do rawPrelude <- readContent "Ruby/base.rb"
      let prelude = replace "SilkApi" (unModuleName ns) rawPrelude
      let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
