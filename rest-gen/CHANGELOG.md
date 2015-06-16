@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.17.0.6
+
+* Fix linking of documentation resources (thanks Jan-Philip Loos)
+
 #### 0.17.0.5
 
 * Allow `aeson 0.9.*`
