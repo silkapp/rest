@@ -149,6 +149,6 @@ mkType dt =
   case dt of
     String -> ("data", "text/plain", id)
     XML    -> ("xml" , "text/xml", (<+> ".to_s"))
-    JSON   -> ("json", "text/json", call "mkJson")
+    JSON   -> ("json", "application/json", call "mkJson")
     File   -> ("file", "application/octet-stream", id)
     Other  -> ("data", "text/plain", id)

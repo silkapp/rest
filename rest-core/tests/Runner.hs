@@ -11,7 +11,7 @@ import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertEqual, assertFailure)
 
-import qualified Data.HashMap.Strict   as H
+import qualified Data.HashMap.Strict as H
 
 import Rest.Api hiding (route)
 import Rest.Dictionary
@@ -206,5 +206,5 @@ allMethods = [GET, PUT, POST, DELETE]
 
 testAcceptHeaders :: Assertion
 testAcceptHeaders =
-  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "text/json" } accept
+  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "application/json" } accept
      assertEqual "Accept json format." [JsonFormat] fmt

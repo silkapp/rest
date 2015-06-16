@@ -190,7 +190,7 @@ dataTypeToAcceptHeader :: DataType -> String
 dataTypeToAcceptHeader = \case
   String -> "text/plain"
   XML    -> "text/xml"
-  JSON   -> "text/json"
+  JSON   -> "application/json"
   File   -> "application/octet-stream"
   Other  -> "text/plain"
 

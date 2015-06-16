@@ -141,6 +141,6 @@ mkType dt =
   case dt of
     String -> ("text", "text/plain", id)
     XML    -> ("xml" , "text/xml", id)
-    JSON   -> ("json", "text/json", call "JSON.stringify")
+    JSON   -> ("json", "application/json", call "JSON.stringify")
     File   -> ("file", "application/octet-stream", id)
     Other  -> ("text", "text/plain", id)

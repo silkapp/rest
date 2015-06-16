@@ -373,7 +373,7 @@ inputInfo dsc =
     String -> InputInfo [] (haskellStringType) "text/plain" "fromString"
     -- TODO fromJusts
     XML    -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/xml" "toXML"
-    JSON   -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/json" "toJSON"
+    JSON   -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "application/json" "toJSON"
     File   -> InputInfo [] haskellByteStringType "application/octet-stream" "id"
     Other  -> InputInfo [] haskellByteStringType "text/plain" "id"
 
