@@ -9,6 +9,7 @@ import Data.JSON.Schema
 import Data.Text (Text)
 import Data.Typeable
 import GHC.Generics
+import Generics.Generic.Aeson
 import Generics.XmlPickler
 import Text.XML.HXT.Arrow.Pickle
 
@@ -19,7 +20,7 @@ data UserComment = UserComment
   , comment :: Text
   } deriving (Eq, Generic, Ord, Show, Typeable)
 
-instance XmlPickler UserComment where xpickle = gxpickle
-instance JSONSchema UserComment where schema = gSchema
-instance FromJSON   UserComment
-instance ToJSON     UserComment
+instance XmlPickler UserComment where xpickle   = gxpickle
+instance JSONSchema UserComment where schema    = gSchema
+instance FromJSON   UserComment where parseJSON = gparseJson
+instance ToJSON     UserComment where toJSON    = gtoJson
