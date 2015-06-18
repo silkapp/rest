@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.36.0.5
+
+* Fix documentation for `fileO`.
+
 #### 0.36.0.4
 
 * Drop (internal) dependency on either, this removes 20(!) transitive
