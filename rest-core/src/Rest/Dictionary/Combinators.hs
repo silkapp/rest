@@ -145,7 +145,11 @@ someO = id
 stringO :: Dict h p i Nothing e -> Dict h p i (Just String) e
 stringO = L.set outputs (Dicts [StringO])
 
--- | Allow file output using a combination of the raw data and a mime type.
+-- | Allow file output using a combination of the raw data, the file
+-- name, and an attachment flag (causing the file to be downloaded by
+-- browsers instead of shown). The mime type will be determined from
+-- the file extension by your web server library, or
+-- "application/octet-stream" with an unknown extension.
 
 fileO :: Dict h p i Nothing e -> Dict h p i (Just (ByteString, String, Bool)) e
 fileO = L.set outputs (Dicts [FileO])
