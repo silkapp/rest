@@ -31,9 +31,8 @@ import Data.List hiding (head, span)
 import Data.String
 import System.Directory
 import System.FilePath
-import Text.Blaze.Html
-import Text.Blaze.Html5 hiding (map, meta, style)
-import Text.Blaze.Html5.Attributes hiding (method, span, title)
+import Text.Blaze.Html5 hiding (contents, map, meta, style)
+import Text.Blaze.Html5.Attributes hiding (dir, method, span, title)
 import Text.Blaze.Html.Renderer.String
 import Text.StringTemplate
 import qualified Data.Label.Total as L
@@ -51,18 +50,22 @@ data DocsContext = DocsContext
   , sourceDir      :: Maybe FilePath
   } deriving (Eq, Show)
 
-writeDocs :: DocsContext -> Router m s -> IO ()
-writeDocs context router = do
-  setupTargetDir (sourceDir context) (targetDir context)
+writeDocs :: DocsContext -> (String -> IO String) -> Router m s -> IO ()
+writeDocs ctx postProc router = do
+  setupTargetDir (sourceDir ctx) (targetDir ctx)
   let tree = apiSubtrees router
-  mkAllResources context tree >>= writeFile (targetDir context </> "index.html")
-  mapM_ (writeSingleResource context (targetDir context)) $ allSubResources tree
+  mkAllResources ctx tree >>= postProc >>= writeIndex (targetDir ctx)
+  forM_ (allSubResources tree) $ writeSingleResource ctx postProc
 
-writeSingleResource :: DocsContext -> String -> ApiResource -> IO ()
-writeSingleResource ctx loc r =
-  do let dr = loc </> intercalate "/" (resId r)
-     createDirectoryIfMissing True dr
-     mkSingleResource ctx r >>= writeFile (dr </> "index.html")
+writeSingleResource :: DocsContext -> (String -> IO String) -> ApiResource -> IO ()
+writeSingleResource ctx postProc r = do
+  let dir = targetDir ctx </> intercalate "/" (resId r)
+  mkSingleResource ctx r >>= postProc >>= writeIndex dir
+
+writeIndex :: FilePath -> String -> IO ()
+writeIndex dir contents = do
+  createDirectoryIfMissing True dir
+  writeFile (dir </> "index.html") contents
 
 mkAllResources :: DocsContext -> ApiResource -> IO String
 mkAllResources ctx tree =

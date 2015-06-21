@@ -58,12 +58,12 @@ data HaskellContext =
     , sourceDir      :: Maybe FilePath
     }
 
-mkHsApi :: HaskellContext -> Router m s -> IO ()
-mkHsApi ctx r = do
+mkHsApi :: HaskellContext -> (String -> IO String) -> Router m s -> IO ()
+mkHsApi ctx postProc r = do
   setupTargetDir (sourceDir ctx) (targetPath ctx)
   let tree = sortTree . (if includePrivate ctx then id else noPrivate) . apiSubtrees $ r
   mkCabalFile ctx tree
-  mapM_ (writeRes ctx) $ allSubTrees tree
+  mapM_ (writeRes ctx postProc) $ allSubTrees tree
 
 mkCabalFile :: HaskellContext -> ApiResource -> IO ()
 mkCabalFile ctx tree =
@@ -112,10 +112,11 @@ cabalLibrary mods = Cabal.Library mods [] [] [] True Cabal.emptyBuildInfo { Caba
 cabalLibrary mods = Cabal.Library mods True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
 #endif
 
-writeRes :: HaskellContext -> ApiResource -> IO ()
-writeRes ctx node =
-  do createDirectoryIfMissing True (targetPath ctx </> "src" </> modPath (namespace ctx ++ resParents node))
-     writeFile (targetPath ctx </> "src" </> modPath (namespace ctx ++ resId node) ++ ".hs") (mkRes ctx node)
+writeRes :: HaskellContext -> (String -> IO String) -> ApiResource -> IO ()
+writeRes ctx postProc node = do
+  createDirectoryIfMissing True (targetPath ctx </> "src" </> modPath (namespace ctx ++ resParents node))
+  contents <- postProc $ mkRes ctx node
+  writeFile (targetPath ctx </> "src" </> modPath (namespace ctx ++ resId node) ++ ".hs") contents
 
 mkRes :: HaskellContext -> ApiResource -> String
 mkRes ctx node = H.prettyPrint $ buildHaskellModule ctx node pragmas Nothing
