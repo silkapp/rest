@@ -1,5 +1,5 @@
 name:                rest-gen
-version:             0.17.0.6
+version:             0.17.1
 description:         Documentation and client generation from rest definition.
 synopsis:            Documentation and client generation from rest definition.
 maintainer:          code@silk.co
@@ -31,6 +31,7 @@ library
     Rest.Gen
     Rest.Gen.Base
     Rest.Gen.Base.ActionInfo
+    Rest.Gen.Base.ActionInfo.Ident
     Rest.Gen.Base.ApiTree
     Rest.Gen.Config
     Rest.Gen.Docs
@@ -40,7 +41,6 @@ library
     Rest.Gen.Types
   other-modules:
     Paths_rest_gen
-    Rest.Gen.Base.ActionInfo.Ident
     Rest.Gen.Base.JSON
     Rest.Gen.Base.JSON.Pretty
     Rest.Gen.Base.Link

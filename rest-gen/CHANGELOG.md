@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.17.1
+
+* Expose `Rest.Gen.Base.ActionInfo.Ident`
+
 #### 0.17.0.6
 
 * Fix linking of documentation resources (thanks Jan-Philip Loos)
