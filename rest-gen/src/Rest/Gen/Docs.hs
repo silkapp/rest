@@ -46,20 +46,18 @@ data DocsContext = DocsContext
   { rootUrl        :: String
   , contextVersion :: Version
   , templates      :: String
-  , targetDir      :: FilePath
-  , sourceDir      :: Maybe FilePath
   } deriving (Eq, Show)
 
-writeDocs :: DocsContext -> (String -> IO String) -> Router m s -> IO ()
-writeDocs ctx postProc router = do
-  setupTargetDir (sourceDir ctx) (targetDir ctx)
+writeDocs :: Maybe FilePath -> FilePath -> DocsContext -> (String -> IO String) -> Router m s -> IO ()
+writeDocs sourceDir targetDir ctx postProc router = do
+  setupTargetDir sourceDir targetDir
   let tree = apiSubtrees router
-  mkAllResources ctx tree >>= postProc >>= writeIndex (targetDir ctx)
-  forM_ (allSubResources tree) $ writeSingleResource ctx postProc
+  mkAllResources ctx tree >>= postProc >>= writeIndex targetDir
+  forM_ (allSubResources tree) $ writeSingleResource targetDir ctx postProc
 
-writeSingleResource :: DocsContext -> (String -> IO String) -> ApiResource -> IO ()
-writeSingleResource ctx postProc r = do
-  let dir = targetDir ctx </> intercalate "/" (resId r)
+writeSingleResource :: FilePath -> DocsContext -> (String -> IO String) -> ApiResource -> IO ()
+writeSingleResource targetDir ctx postProc r = do
+  let dir = targetDir </> intercalate "/" (resId r)
   mkSingleResource ctx r >>= postProc >>= writeIndex dir
 
 writeIndex :: FilePath -> String -> IO ()

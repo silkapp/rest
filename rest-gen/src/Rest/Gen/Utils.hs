@@ -14,11 +14,8 @@ import Prelude hiding (foldr)
 
 import Data.Char
 import Data.Foldable
-import Data.List.Split
 import System.Directory
-import System.FilePath
 import System.Process
-import Text.StringTemplate
 
 import Paths_rest_gen (getDataFileName)
 

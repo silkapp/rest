@@ -82,15 +82,13 @@ generateRuby config ver r postProc moduleName = do
 generateDocs :: Config -> Version -> Router m s -> (String -> IO String) -> String -> IO Result
 generateDocs config ver r postProc rootUrl = do
   targetDir <- getTargetDir config "./docs"
-  writeDocs (context targetDir) postProc r
+  writeDocs (getSourceLocation config) targetDir context postProc r
   return $ FileOut targetDir
     where
-      context targetDir = DocsContext
+      context = DocsContext
         { DCtx.rootUrl        = rootUrl
         , DCtx.contextVersion = ver
         , DCtx.templates      = "./templates" `fromMaybe` getSourceLocation config
-        , DCtx.targetDir      = targetDir
-        , DCtx.sourceDir      = getSourceLocation config
         }
 
 generateHaskell :: Config -> Version -> Router m s -> (String -> IO String) -> ModuleName -> String -> [ModuleName] -> [ImportDecl] -> [(ModuleName, ModuleName)] -> IO Result

@@ -2,6 +2,7 @@
     OverloadedStrings
   , ScopedTypeVariables
   #-}
+module Main (main) where
 
 import Control.Applicative
 import Control.Monad
@@ -44,6 +45,7 @@ main = do
               , testCase "Multi-PUT." testMultiPut
               , testCase "Multi-POST" testMultiPost
               , testCase "Accept headers." testAcceptHeaders
+              , testCase "text/json accept header" testTextJsonHeader
               ]
 
 testListing :: Assertion
@@ -206,5 +208,10 @@ allMethods = [GET, PUT, POST, DELETE]
 
 testAcceptHeaders :: Assertion
 testAcceptHeaders =
+  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "application/json" } accept
+     assertEqual "Accept json format." [JsonFormat] fmt
+
+testTextJsonHeader :: Assertion
+testTextJsonHeader =
   do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "application/json" } accept
      assertEqual "Accept json format." [JsonFormat] fmt
