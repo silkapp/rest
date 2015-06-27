@@ -1,6 +1,5 @@
 module Rest.Gen.Utils
   ( readContent
-  , copyContent
   , groupByFirst
   , fst3
   , snd3
@@ -11,18 +10,11 @@ module Rest.Gen.Utils
   ) where
 
 import Data.Char
-import Data.List.Split
 
-import Paths_rest_gen
-
-import System.FilePath
-import Text.StringTemplate
+import Paths_rest_gen (getDataFileName)
 
 readContent :: String -> IO String
 readContent f = getDataFileName f >>= readFile
-
-copyContent :: ToSElem a => [(String, a)] -> String -> String -> IO ()
-copyContent ats f t = readContent f >>= return . render . setManyAttrib ats . newSTMP >>= writeFile (t </> last (splitOn "/" f))
 
 groupByFirst :: Eq a => [(a,b)] -> [(a,[b])]
 groupByFirst = foldr add []
