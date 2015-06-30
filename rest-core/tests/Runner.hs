@@ -44,8 +44,8 @@ main = do
               , testCase "Root router is skipped." testRootRouter
               , testCase "Multi-PUT." testMultiPut
               , testCase "Multi-POST" testMultiPost
-              , testCase "Accept headers." testAcceptHeaders
-              , testCase "text/json accept header" testTextJsonHeader
+              , testCase "application/json accept header" testAppJsonAcceptHeader
+              , testCase "text/json accept header" testTextJsonAcceptHeader
               ]
 
 testListing :: Assertion
@@ -206,12 +206,12 @@ checkRouteSuccess method uri router =
 allMethods :: [Method]
 allMethods = [GET, PUT, POST, DELETE]
 
-testAcceptHeaders :: Assertion
-testAcceptHeaders =
+testAppJsonAcceptHeader :: Assertion
+testAppJsonAcceptHeader =
   do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "application/json" } accept
-     assertEqual "Accept json format." [JsonFormat] fmt
+     assertEqual "Accept application/json format." [JsonFormat] fmt
 
-testTextJsonHeader :: Assertion
-testTextJsonHeader =
-  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "application/json" } accept
-     assertEqual "Accept json format." [JsonFormat] fmt
+testTextJsonAcceptHeader :: Assertion
+testTextJsonAcceptHeader =
+  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "text/json" } accept
+     assertEqual "Accept text/json format." [JsonFormat] fmt
