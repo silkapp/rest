@@ -4,7 +4,6 @@
   , LambdaCase
   , PatternGuards
   , TemplateHaskell
-  , ViewPatterns
   #-}
 module Rest.Gen.Haskell
   ( HaskellContext (..)
@@ -56,13 +55,15 @@ data HaskellContext =
     , imports        :: [H.ImportDecl]
     , rewrites       :: [(H.ModuleName, H.ModuleName)]
     , namespace      :: [String]
+    , sourceDir      :: Maybe FilePath
     }
 
-mkHsApi :: HaskellContext -> Router m s -> IO ()
-mkHsApi ctx r =
-  do let tree = sortTree . (if includePrivate ctx then id else noPrivate) . apiSubtrees $ r
-     mkCabalFile ctx tree
-     mapM_ (writeRes ctx) $ allSubTrees tree
+mkHsApi :: HaskellContext -> (String -> IO String) -> Router m s -> IO ()
+mkHsApi ctx postProc r = do
+  setupTargetDir (sourceDir ctx) (targetPath ctx)
+  let tree = sortTree . (if includePrivate ctx then id else noPrivate) . apiSubtrees $ r
+  mkCabalFile ctx tree
+  mapM_ (writeRes ctx postProc) $ allSubTrees tree
 
 mkCabalFile :: HaskellContext -> ApiResource -> IO ()
 mkCabalFile ctx tree =
@@ -111,10 +112,11 @@ cabalLibrary mods = Cabal.Library mods [] [] [] True Cabal.emptyBuildInfo { Caba
 cabalLibrary mods = Cabal.Library mods True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
 #endif
 
-writeRes :: HaskellContext -> ApiResource -> IO ()
-writeRes ctx node =
-  do createDirectoryIfMissing True (targetPath ctx </> "src" </> modPath (namespace ctx ++ resParents node))
-     writeFile (targetPath ctx </> "src" </> modPath (namespace ctx ++ resId node) ++ ".hs") (mkRes ctx node)
+writeRes :: HaskellContext -> (String -> IO String) -> ApiResource -> IO ()
+writeRes ctx postProc node = do
+  createDirectoryIfMissing True (targetPath ctx </> "src" </> modPath (namespace ctx ++ resParents node))
+  contents <- postProc $ mkRes ctx node
+  writeFile (targetPath ctx </> "src" </> modPath (namespace ctx ++ resId node) ++ ".hs") contents
 
 mkRes :: HaskellContext -> ApiResource -> String
 mkRes ctx node = H.prettyPrint $ buildHaskellModule ctx node pragmas Nothing
@@ -287,10 +289,11 @@ idData node =
     ls ->
       let ctor (pth,mi) =
             H.QualConDecl noLoc [] [] (H.ConDecl (H.Ident (dataName pth)) $ maybe [] f mi)
+              where
 #if MIN_VERSION_haskell_src_exts(1,16,0)
-              where f ty = [Ident.haskellType ty]
+                f ty = [Ident.haskellType ty]
 #else
-              where f ty = [H.UnBangedTy $ Ident.haskellType ty]
+                f ty = [H.UnBangedTy $ Ident.haskellType ty]
 #endif
           fun (pth, mi) = [
                            H.FunBind [H.Match noLoc funName fparams Nothing rhs noBinds]]
@@ -370,12 +373,13 @@ data InputInfo = InputInfo
 inputInfo :: DataDesc -> InputInfo
 inputInfo dsc =
   case L.get dataType dsc of
-    String -> InputInfo [] (haskellStringType) "text/plain" "fromString"
-    -- TODO fromJusts
-    XML    -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/xml" "toXML"
-    JSON   -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/json" "toJSON"
-    File   -> InputInfo [] haskellByteStringType "application/octet-stream" "id"
-    Other  -> InputInfo [] haskellByteStringType "text/plain" "id"
+    String -> InputInfo []                         haskellStringType       dataTypeHeader "fromString"
+    XML    -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) dataTypeHeader "toXML"
+    JSON   -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) dataTypeHeader "toJSON"
+    File   -> InputInfo []                         haskellByteStringType   dataTypeHeader "id"
+    Other  -> InputInfo []                         haskellByteStringType   dataTypeHeader "id"
+  where
+    dataTypeHeader = dataTypeToAcceptHeader $ L.get dataType dsc
 
 data ResponseInfo = ResponseInfo
   { responseModules     :: [H.ModuleName]
@@ -388,11 +392,11 @@ outputInfo r =
   case outputType r of
     Nothing -> ResponseInfo [] haskellUnitType "(const ())"
     Just t -> case L.get dataType t of
-      String -> ResponseInfo [] haskellStringType "toString"
+      String -> ResponseInfo []                       haskellStringType     "toString"
       XML    -> ResponseInfo (L.get haskellModules t) (L.get haskellType t) "fromXML"
       JSON   -> ResponseInfo (L.get haskellModules t) (L.get haskellType t) "fromJSON"
-      File   -> ResponseInfo [] haskellByteStringType "id"
-      Other  -> ResponseInfo [] haskellByteStringType "id"
+      File   -> ResponseInfo []                       haskellByteStringType "id"
+      Other  -> ResponseInfo []                       haskellByteStringType "id"
 
 errorInfo :: ResponseType -> ResponseInfo
 errorInfo r =

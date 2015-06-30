@@ -12,7 +12,12 @@ module Rest.Gen.Base.ActionInfo
   , ActionInfo (..)
   , ActionType (..)
   , ActionTarget (..)
+
   , DataType (..)
+  , dataTypesToAcceptHeader
+  , dataTypeToAcceptHeader
+  , dataTypeString
+
   , ResourceId
   , accessLink
   , accessors
@@ -34,7 +39,6 @@ module Rest.Gen.Base.ActionInfo
 
   , ResponseType (..)
   , responseAcceptType
-  , dataTypesToAcceptHeader
   , chooseResponseType
 
   , isAccessor
@@ -98,7 +102,34 @@ data ActionType = Retrieve | Create | Delete | DeleteMany | List | Update | Upda
 
 data ActionTarget = Self | Any deriving (Show, Eq)
 
-data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
+data DataType = String | XML | JSON | File | Other
+  deriving (Show, Eq)
+
+dataTypeString :: DataType -> String
+dataTypeString = \case
+    String -> "text"
+    XML    -> "xml"
+    JSON   -> "json"
+    File   -> "file"
+    Other  -> "text"
+
+-- | First argument is the default accept header to use if there is no
+-- output or errors, must be XML or JSON.
+dataTypesToAcceptHeader :: DataType -> [DataType] -> String
+dataTypesToAcceptHeader def = \case
+  [] -> dataTypeToAcceptHeader def
+  xs -> intercalate "," . map dataTypeToAcceptHeader . (xs ++) $
+          if null (intersect xs [XML,JSON])
+            then [def]
+            else []
+
+dataTypeToAcceptHeader :: DataType -> String
+dataTypeToAcceptHeader = \case
+  String -> "text/plain"
+  XML    -> "text/xml"
+  JSON   -> "application/json"
+  File   -> "application/octet-stream"
+  Other  -> "text/plain"
 
 -- | Core information about the type of the input/output
 data DataDesc = DataDesc
@@ -175,24 +206,6 @@ responseAcceptType (ResponseType e o) = typs
       where
         f :: Maybe DataDesc -> [DataType]
         f = maybeToList . fmap (L.get dataType)
-
--- | First argument is the default accept header to use if there is no
--- output or errors, must be XML or JSON.
-dataTypesToAcceptHeader :: DataType -> [DataType] -> String
-dataTypesToAcceptHeader def = \case
-  [] -> dataTypeToAcceptHeader def
-  xs -> intercalate "," . map dataTypeToAcceptHeader . (xs ++) $
-          if null (intersect xs [XML,JSON])
-            then [def]
-            else []
-
-dataTypeToAcceptHeader :: DataType -> String
-dataTypeToAcceptHeader = \case
-  String -> "text/plain"
-  XML    -> "text/xml"
-  JSON   -> "text/json"
-  File   -> "application/octet-stream"
-  Other  -> "text/plain"
 
 chooseResponseType :: ActionInfo -> ResponseType
 chooseResponseType ai = case (NList.nonEmpty $ outputs ai, NList.nonEmpty $ errors ai) of

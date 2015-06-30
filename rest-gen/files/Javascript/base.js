@@ -157,7 +157,8 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
 
   function parse (response)
   {
-    if (acceptHeader.split(";").indexOf('text/json') >= 0)
+    var acceptHeaders = acceptHeader.split(";");
+    if (acceptHeaders.indexOf('text/json') >= 0 || acceptHeaders.indexOf('application/json') >= 0)
     {
       var r = response;
       try

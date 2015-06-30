@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module Rest.Gen.Ruby (mkRbApi) where
 
 import Prelude hiding ((.))
@@ -8,9 +7,8 @@ import Data.Char
 import Data.List
 import Data.List.Split (splitOn)
 import Data.Maybe
-import qualified Data.Label.Total             as L
-import qualified Data.List.NonEmpty           as NList
-import qualified Language.Haskell.Exts.Syntax as H
+import qualified Data.Label.Total   as L
+import qualified Data.List.NonEmpty as NList
 
 import Code.Build
 import Code.Build.Ruby
@@ -19,7 +17,7 @@ import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
 
-mkRbApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
+mkRbApi :: ModuleName -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =
   do rawPrelude <- readContent "Ruby/base.rb"
      let prelude = replace "SilkApi" (unModuleName ns) rawPrelude
@@ -145,10 +143,11 @@ accessorName :: ResourceId -> String
 accessorName = concatMap upFirst . ("Access":) . concatMap cleanName
 
 mkType :: DataType -> (String, String, Code -> Code)
-mkType dt =
-  case dt of
-    String -> ("data", "text/plain", id)
-    XML    -> ("xml" , "text/xml", (<+> ".to_s"))
-    JSON   -> ("json", "text/json", call "mkJson")
-    File   -> ("file", "application/octet-stream", id)
-    Other  -> ("data", "text/plain", id)
+mkType dt = (dataTypeString dt, dataTypeToAcceptHeader dt, fn)
+  where
+    fn = case dt of
+      String -> id
+      XML    -> (<+> ".to_s")
+      JSON   -> call "mkJson"
+      File   -> id
+      Other  -> id

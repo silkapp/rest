@@ -31,9 +31,8 @@ import Data.List hiding (head, span)
 import Data.String
 import System.Directory
 import System.FilePath
-import Text.Blaze.Html
-import Text.Blaze.Html5 hiding (map, meta, style)
-import Text.Blaze.Html5.Attributes hiding (method, span, title)
+import Text.Blaze.Html5 hiding (contents, map, meta, style)
+import Text.Blaze.Html5.Attributes hiding (dir, method, span, title)
 import Text.Blaze.Html.Renderer.String
 import Text.StringTemplate
 import qualified Data.Label.Total as L
@@ -49,18 +48,22 @@ data DocsContext = DocsContext
   , templates      :: String
   } deriving (Eq, Show)
 
-writeDocs :: DocsContext -> Router m s -> String -> IO ()
-writeDocs context router loc =
-  do createDirectoryIfMissing True loc
-     let tree = apiSubtrees router
-     mkAllResources context tree >>= writeFile (loc </> "index.html")
-     mapM_ (writeSingleResource context loc) $ allSubResources tree
+writeDocs :: Maybe FilePath -> FilePath -> DocsContext -> (String -> IO String) -> Router m s -> IO ()
+writeDocs sourceDir targetDir ctx postProc router = do
+  setupTargetDir sourceDir targetDir
+  let tree = apiSubtrees router
+  mkAllResources ctx tree >>= postProc >>= writeIndex targetDir
+  forM_ (allSubResources tree) $ writeSingleResource targetDir ctx postProc
 
-writeSingleResource :: DocsContext -> String -> ApiResource -> IO ()
-writeSingleResource ctx loc r =
-  do let dr = loc </> intercalate "/" (resId r)
-     createDirectoryIfMissing True dr
-     mkSingleResource ctx r >>= writeFile (dr </> "index.html")
+writeSingleResource :: FilePath -> DocsContext -> (String -> IO String) -> ApiResource -> IO ()
+writeSingleResource targetDir ctx postProc r = do
+  let dir = targetDir </> intercalate "/" (resId r)
+  mkSingleResource ctx r >>= postProc >>= writeIndex dir
+
+writeIndex :: FilePath -> String -> IO ()
+writeIndex dir contents = do
+  createDirectoryIfMissing True dir
+  writeFile (dir </> "index.html") contents
 
 mkAllResources :: DocsContext -> ApiResource -> IO String
 mkAllResources ctx tree =

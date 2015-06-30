@@ -2,6 +2,7 @@
     OverloadedStrings
   , ScopedTypeVariables
   #-}
+module Main (main) where
 
 import Control.Applicative
 import Control.Monad
@@ -11,7 +12,7 @@ import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertEqual, assertFailure)
 
-import qualified Data.HashMap.Strict   as H
+import qualified Data.HashMap.Strict as H
 
 import Rest.Api hiding (route)
 import Rest.Dictionary
@@ -43,7 +44,8 @@ main = do
               , testCase "Root router is skipped." testRootRouter
               , testCase "Multi-PUT." testMultiPut
               , testCase "Multi-POST" testMultiPost
-              , testCase "Accept headers." testAcceptHeaders
+              , testCase "application/json accept header" testAppJsonAcceptHeader
+              , testCase "text/json accept header" testTextJsonAcceptHeader
               ]
 
 testListing :: Assertion
@@ -204,7 +206,12 @@ checkRouteSuccess method uri router =
 allMethods :: [Method]
 allMethods = [GET, PUT, POST, DELETE]
 
-testAcceptHeaders :: Assertion
-testAcceptHeaders =
+testAppJsonAcceptHeader :: Assertion
+testAppJsonAcceptHeader =
+  do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "application/json" } accept
+     assertEqual "Accept application/json format." [JsonFormat] fmt
+
+testTextJsonAcceptHeader :: Assertion
+testTextJsonAcceptHeader =
   do fmt <- runRestM_ RestM.emptyInput { RestM.headers = H.singleton "Accept" "text/json" } accept
-     assertEqual "Accept json format." [JsonFormat] fmt
+     assertEqual "Accept text/json format." [JsonFormat] fmt

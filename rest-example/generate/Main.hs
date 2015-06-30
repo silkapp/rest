@@ -19,3 +19,4 @@ main = do
     -- these are re-exported from an internal module they can be
     -- rewritten to something more stable.
     [(ModuleName "Data.Text.Internal", ModuleName "Data.Text")]
+    (const return)

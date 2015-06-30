@@ -277,7 +277,6 @@ contentType c = setHeader "Content-Type" $
     XmlFormat  -> "application/xml; charset=UTF-8"
     _          -> "text/plain; charset=UTF-8"
 
-
 validator :: forall v m e. Rest m => Outputs v -> ExceptT (Reason e) m ()
 validator = tryOutputs try
   where
