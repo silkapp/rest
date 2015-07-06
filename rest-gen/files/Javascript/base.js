@@ -132,7 +132,7 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
     {
       if (message && message.statusCode >= 200 && message.statusCode < 300)
       {
-        var parsedResponse = parse(body);
+        var parsedResponse = parse(body, message.headers);
         onSuccess && onSuccess(parsedResponse, message);
         resolve(parsedResponse)
       }
@@ -145,7 +145,7 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
           error.responseBody = body;
         }
 
-        error.response = parse(body);
+        error.response = parse(body, message.headers);
 
         if (onError)
           onError(error);
@@ -155,9 +155,9 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
     }
   });
 
-  function parse (response)
+  function parse (response, headers)
   {
-    if (acceptHeader.split(";").indexOf('text/json') >= 0)
+    if (headers["content-type"] && headers["content-type"].split(";").indexOf("application/json") >= 0)
     {
       var r = response;
       try
