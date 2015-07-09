@@ -12,7 +12,7 @@ module Rest.Gen.Config
   , target
   , apiVersion
   , apiPrivate
-
+  , compiler
   , defaultConfig
   , parseLocation
   , options
@@ -26,6 +26,7 @@ import Control.Category
 import Data.Label
 import System.Console.GetOpt
 import System.Environment (getArgs)
+import Rest.Gen.JSCompiler
 
 data Action   = MakeDocs String | MakeJS | MakeRb | MakeHS
 data Location = Default | Stream | Location String
@@ -36,6 +37,7 @@ data Config = Config
   , _target     :: Location
   , _apiVersion :: String
   , _apiPrivate :: Bool
+  , _compiler :: Maybe Compiler
   }
 
 mkLabels [''Config]
@@ -47,11 +49,18 @@ defaultConfig = Config
   , _target     = Default
   , _apiVersion = "latest"
   , _apiPrivate = True
+  , _compiler   = Nothing
   }
 
 parseLocation :: String -> Location
 parseLocation "-" = Stream
 parseLocation s   = Location s
+
+parseCompiler:: String -> Maybe Compiler
+parseCompiler "closure-simple" = Just ClosureSimple
+parseCompiler "closure-advanced" = Just ClosureAdvanced
+parseCompiler "whitespace" = Just ClosureWhitespace
+parseCompiler _ = Nothing
 
 options :: (a :-> Config) -> [OptDescr (a -> a)]
 options parent =
@@ -63,6 +72,7 @@ options parent =
   , Option ['t'] ["target"]        (ReqArg (set (target     . parent) . parseLocation) "LOCATION") "The target location for generation."
   , Option ['v'] ["version"]       (ReqArg (set (apiVersion . parent)) "VERSION") "The version of the API under generation. Default latest."
   , Option ['p'] ["hide-private"]  (NoArg  (set (apiPrivate . parent) False)) "Generate API for the public, hiding private resources. Not default."
+  , Option ['c'] ["compiler"]      (ReqArg (set (compiler   . parent) . parseCompiler) "COMPILER") "Choose a compiler for javascript.  \nDefaults to None. \nOptions are closure-simple, closure-advanced, whitespace and command. \nHas no effect if not generating javascript api"
   ]
 
 configFromArgs :: String -> IO Config

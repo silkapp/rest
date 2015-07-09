@@ -46,6 +46,7 @@ library
     Rest.Gen.Base.Link
     Rest.Gen.Base.XML
     Rest.Gen.Utils
+    Rest.Gen.JSCompiler
   build-depends:
       base >= 4.5 && < 4.9
     , Cabal >= 1.16 && < 1.23
@@ -71,6 +72,9 @@ library
     , uniplate >= 1.6.12 && < 1.7
     , unordered-containers == 0.2.*
     , vector == 0.10.*
+    , HTTP <= 4000.2.16
+    , network == 2.5.*
+      --Network isn't actually needed, but build will fail w/o it
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.2 && < 0.9
 
