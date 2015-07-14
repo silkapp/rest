@@ -3,6 +3,7 @@
 ### 0.17.1.1
 
 * JavaScript/NodeJS: Use the received content-type instead of the accept header to decide whether to parse json.
+* Allow `vector 0.11.*`
 
 ### 0.17.1
 
