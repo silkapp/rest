@@ -141,11 +141,11 @@ function nodeRequest (method, url, params, onSuccess, onError, contentType, acce
         if (!error)
         {
           error = new Error("HTTP request error");
-          error.statusCode = message.statusCode;
+          error.statusCode = message && message.statusCode;
           error.responseBody = body;
         }
 
-        error.response = parse(body, message.headers);
+        error.response = parse(body, message ? message.headers : {});
 
         if (onError)
           onError(error);
