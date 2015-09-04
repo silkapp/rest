@@ -81,7 +81,7 @@ test-suite rest-gen-tests
   ghc-options:       -Wall
   build-depends:
       base >= 4.5 && < 4.9
-    , HUnit == 1.2.*
+    , HUnit >= 1.2 && < 1.4
     , fclabels >= 1.0.4 && < 2.1
     , haskell-src-exts >= 1.15.0 && < 1.17
     , rest-core >= 0.35 && < 0.37

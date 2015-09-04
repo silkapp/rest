@@ -3,6 +3,7 @@
 #### 0.36.0.5
 
 * Fix documentation for `fileO`.
+* Allow `HUnit 1.3.*`.
 
 #### 0.36.0.4
 

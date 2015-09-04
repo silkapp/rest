@@ -3,6 +3,7 @@
 ### 0.17.1.2
 
 * Javascript: fix rare crash in error path.
+* Allow `HUnit 1.3.*`
 
 ### 0.17.1.1
 
