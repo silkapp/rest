@@ -176,26 +176,26 @@ checkSingleRoute uri resource handler_ =
      checkRoute GET    (uri <> "/select") (root -/ Rest.route resource { selects = [("select", handler_)] })
      checkRoute POST   (uri <> "/action") (root -/ Rest.route resource { actions = [("action", handler_)] })
 
-checkRoute :: Method -> Uri -> Rest.Router m s -> Assertion
+checkRoute :: (Applicative m, Monad m) => Method -> Uri -> Rest.Router m s -> Assertion
 checkRoute method uri router = checkRouteWithIgnoredMethods [method] router method uri
 
-checkRoutes :: [(Method, Uri)] -> Rest.Router m s -> Assertion
+checkRoutes :: (Applicative m, Monad m) => [(Method, Uri)] -> Rest.Router m s -> Assertion
 checkRoutes reqs router =
   do forM_ reqs $ uncurry $ checkRouteWithIgnoredMethods (map fst reqs) router
 
-checkRouteWithIgnoredMethods :: [Method] -> Rest.Router m s -> Method -> Uri -> Assertion
+checkRouteWithIgnoredMethods :: (Applicative m, Monad m) => [Method] -> Rest.Router m s -> Method -> Uri -> Assertion
 checkRouteWithIgnoredMethods ignoredMethods router method uri =
   do checkRouteSuccess method uri router
      forM_ (filter (not . (`elem` ignoredMethods)) allMethods) $ \badMethod -> checkRouteFailure badMethod uri router
      checkRouteFailure method (uri <> "/trailing") router
 
-checkRouteFailure :: Method -> Uri -> Rest.Router m s -> Assertion
+checkRouteFailure :: (Applicative m, Monad m) => Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteFailure method uri router =
   case route (Just method) (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
     Left _  -> return ()
     Right _ -> assertFailure ("Should be no route to " ++ show method ++ " " ++ uri ++ ".")
 
-checkRouteSuccess :: Method -> Uri -> Rest.Router m s -> Assertion
+checkRouteSuccess :: (Applicative m, Monad m) => Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteSuccess method uri router =
   case route (Just method) (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
     Left e  -> assertFailure ("No route to " ++ show method ++ " " ++ uri ++ ": " ++ show e)

@@ -25,7 +25,7 @@ import qualified Rest.Run          as Rest
 apiToHandler :: (Functor m, MonadPlus m, MonadIO m) => Api (ServerPartT m) -> ServerPartT m Response
 apiToHandler = apiToHandler' id
 
-apiToHandler' :: (Functor n, MonadPlus n, MonadIO n) => Run m (ServerPartT n) -> Api m -> ServerPartT n Response
+apiToHandler' :: (Applicative m, Functor n, Monad m, MonadPlus n, MonadIO n) => Run m (ServerPartT n) -> Api m -> ServerPartT n Response
 apiToHandler' run api = toResponse <$> Rest.apiToHandler' run api
 
 instance (Functor m, MonadPlus m, MonadIO m) => Rest (ServerPartT m) where

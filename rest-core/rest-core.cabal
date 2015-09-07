@@ -30,6 +30,7 @@ library
     Rest.Driver.Perform
     Rest.Driver.RestM
     Rest.Driver.Routing
+    Rest.Driver.Routing.Internal
     Rest.Driver.Types
     Rest.Error
     Rest.Handler
