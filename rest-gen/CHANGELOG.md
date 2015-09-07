@@ -4,6 +4,7 @@
 
 * Javascript: fix rare crash in error path.
 * Allow `HUnit 1.3.*`
+* Allow `process 1.3.*`.
 
 ### 0.17.1.1
 
