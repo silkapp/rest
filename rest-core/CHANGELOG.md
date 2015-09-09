@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.36.0.6
+
+* Security: don't allow newlines in filenames.
+
 #### 0.36.0.5
 
 * Fix documentation for `fileO`.
