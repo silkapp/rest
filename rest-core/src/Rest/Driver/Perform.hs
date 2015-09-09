@@ -24,7 +24,7 @@ import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Writer
 import Data.Aeson.Utils
-import Data.Char (isSpace, toLower)
+import Data.Char (isSpace, toLower, ord)
 import Data.List
 import Data.List.Split
 import Data.Maybe
@@ -325,14 +325,18 @@ outputWriter outputs v = tryOutputs try outputs
              setHeader "Content-Type" mime
              setHeader "Cache-Control" "max-age=604800"
              setHeader "Content-Disposition" (  (if isAttachment then "attachment; " else "")
-                                             ++ "filename=\"" ++ escapeQuotes filename ++ "\""
+                                             ++ "filename=\"" ++ headerEscape filename ++ "\""
                                              )
              ok content
         tryD []                t            = unsupportedFormat t
         tryD (_          : xs) t            = tryD xs t
     ok r = setResponseCode 200 >> return r
-    escapeQuotes :: String -> String
-    escapeQuotes = intercalate "\\\"" . splitOn "\""
+    -- Escape double quotes with a backslash, since we quote the
+    -- values with double quotes, and filter out characters below
+    -- space. The latter prevents e.g. newlines ending up in the file
+    -- name, which can cause 'response splitting' security issues.
+    headerEscape :: String -> String
+    headerEscape = filter ((>=32) . ord) . intercalate "\\\"" . splitOn "\""
 
 unsupportedFormat :: (Monad m, Show a) => a -> ExceptT (Last DataError) m a1
 unsupportedFormat = throwError . Last . Just . UnsupportedFormat . show
