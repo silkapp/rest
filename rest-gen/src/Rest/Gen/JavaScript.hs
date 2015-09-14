@@ -20,12 +20,13 @@ import Rest.Gen.Utils
 
 mkJsApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =
-  do prelude <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/base.js")
+  do prelude <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/prelude.js")
+     epilogue <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/epilogue.js")
      let cod = showCode $ mkStack
                 [ unModuleName ns ++ ".prototype.version" .=. string (show ver)
                 , mkJsCode (unModuleName ns) priv r
                 ]
-     return $ mkJsModule (prelude ++ cod)
+     return $ mkJsModule (prelude ++ cod ++ epilogue)
   where attrs = [("apinamespace", unModuleName ns), ("dollar", "$")]
 
 mkJsModule :: String -> String
