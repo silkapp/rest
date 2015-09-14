@@ -14,7 +14,8 @@ data-files:
   Docs/*.st
   Docs/*.js
   Docs/*.css
-  Javascript/base.js
+  Javascript/prelude.js
+  Javascript/epilogue.js
   Ruby/base.rb
 extra-source-files:
   CHANGELOG.md
