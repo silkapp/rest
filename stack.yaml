@@ -1,0 +1,20 @@
+flags:
+  rest-example:
+    snap: false
+    happstack: false
+    wai: false
+    gen: true
+packages:
+- code-builder/
+- rest-client/
+- rest-core/
+- rest-example/
+- rest-example/client/
+- rest-gen/
+- rest-happstack/
+- rest-snap/
+- rest-stringmap/
+- rest-types/
+- rest-wai/
+extra-deps: []
+resolver: lts-2.22
