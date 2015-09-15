@@ -1,12 +1,21 @@
 # Changelog
 
-### 0.17.1.2
+#### 0.17.1.3
+
+* Javascript: generate new API instance every time. Some properties
+  were written to the prototype of the API object, and in Node,
+  importing it again could cause mixups of this data. Now every
+  instantiation of the API is a new object. This should have no impact
+  on user code, unless you're checking the API type with `instanceof`,
+  in which case it will now always return false.
+
+#### 0.17.1.2
 
 * Javascript: fix rare crash in error path.
 * Allow `HUnit 1.3.*`
 * Allow `process 1.3.*`.
 
-### 0.17.1.1
+#### 0.17.1.1
 
 * JavaScript/NodeJS: Use the received content-type instead of the accept header to decide whether to parse json.
 * Allow `vector 0.11.*`
