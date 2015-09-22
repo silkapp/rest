@@ -3,6 +3,7 @@
 #### 0.2.10.8
 
 * Allow `rest-core 0.36.*`
+* Allow `rest-gen 0.18.*`
 
 #### 0.2.10.7
 

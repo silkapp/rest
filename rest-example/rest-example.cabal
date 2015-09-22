@@ -141,6 +141,6 @@ executable rest-example-gen
     build-depends:
         base >= 4.6 && < 4.9
       , rest-example
-      , rest-gen >= 0.14 && < 0.18
+      , rest-gen >= 0.14 && < 0.19
   else
     buildable: False
