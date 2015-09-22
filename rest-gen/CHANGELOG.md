@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.18.0.0
+
+* Javascript: postfix reserved words with an underscore. This is a
+  breaking change for javascript clients, since the generated API code
+  will change, so callers might have to be updated. All functions that
+  match one of the reserved words from [this
+  list](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords)
+  will have to be updated with a trailing underscore.
+
 #### 0.17.1.3
 
 * Javascript: generate new API instance every time. Some properties
