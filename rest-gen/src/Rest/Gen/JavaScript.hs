@@ -128,14 +128,44 @@ mkJsName :: ApiAction -> String
 mkJsName item =
   case mkFuncParts item of
     []       -> ""
-    (x : xs) -> x ++ concatMap upFirst xs
+    (x : xs) ->
+      let res = x ++ concatMap upFirst xs
+      in if res `elem` reservedWords
+         then res ++ "_"
+         else res
 
 jsDir :: [String] -> String
 jsDir = concatMap upFirst
 
 jsId :: [String] -> String
 jsId []       = ""
-jsId (x : xs) = x ++ concatMap upFirst xs
+jsId (x : xs) =
+  let res = x ++ concatMap upFirst xs
+  in if res `elem` reservedWords
+     then res ++ "_"
+     else res
+
+-- | Javascript reserved words in the broadest sense.
+-- Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
+
+reservedWords :: [String]
+reservedWords = es6Reserved ++ futureReserved ++ futureReservedStrict ++ oldFutureReserved
+             ++ reservedLiterals
+  where
+    es6Reserved =
+      [ "break", "case", "class", "catch", "const", "continue", "debugger", "default", "delete"
+      , "do", "else", "export", "extends", "finally", "for", "function", "if", "import", "in"
+      , "instanceof", "let", "new", "return", "super", "switch", "this", "throw", "try", "typeof"
+      , "var", "void", "while", "with", "yield"
+      ]
+    futureReserved = ["enum", "await"]
+    futureReservedStrict =
+      [ "implements", "package", "protected", "static", "interface", "private", "public" ]
+    oldFutureReserved =
+      [ "abstract", "boolean", "byte", "char", "double", "final", "float", "goto", "int", "long"
+      , "native", "short", "synchronized", "transient", "volatile"
+      ]
+    reservedLiterals = ["null", "false", "true"]
 
 mkType :: DataType -> (String, String, Code -> Code)
 mkType dt =
