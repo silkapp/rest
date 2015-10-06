@@ -62,7 +62,6 @@ function $apinamespace$ (url, secureUrl, modifyRequest)
 
   function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts, modifyRequest)
   {
-    var q = window.Q || function (a) { return a };
     var jq = jqFun();
 
     var headers = jq.extend(true, {}, $apinamespace$.defaultHeaders);
@@ -85,7 +84,7 @@ function $apinamespace$ (url, secureUrl, modifyRequest)
     $apinamespace$.addObject(callData, $apinamespace$.defaultAjaxOptions);
     $apinamespace$.addObject(callData, callOpts);
 
-    return q(jq.ajax(callData));
+    return jq.ajax(callData);
   }
 
   function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, modifyRequest)
