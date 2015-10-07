@@ -2,6 +2,7 @@
 
 #### 0.1.0.8
 
+* (revision) Allow `http-types 0.9.*`
 * Allow `rest-core 0.36.*`
 
 #### 0.1.0.7

@@ -31,7 +31,7 @@ Library
     , data-default == 0.5.*
     , exceptions == 0.8.*
     , http-conduit == 2.1.*
-    , http-types >= 0.7 && < 0.9
+    , http-types >= 0.7 && < 0.10
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
     , monad-control (>= 0.3.3.1 && < 0.4) || (>= 1.0.0.3 && < 1.1)
