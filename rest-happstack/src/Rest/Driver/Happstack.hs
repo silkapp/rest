@@ -22,10 +22,10 @@ import Rest.Driver.Types (Run)
 import qualified Rest.Driver.Types as Rest
 import qualified Rest.Run          as Rest
 
-apiToHandler :: (Functor m, MonadPlus m, MonadIO m) => Api (ServerPartT m) -> ServerPartT m Response
+apiToHandler :: (Functor m, MonadPlus m, MonadIO m, Rest m) => Api m -> m Response
 apiToHandler = apiToHandler' id
 
-apiToHandler' :: (Applicative m, Functor n, Monad m, MonadPlus n, MonadIO n) => Run m (ServerPartT n) -> Api m -> ServerPartT n Response
+apiToHandler' :: (Applicative m, Functor n, Monad m, MonadPlus n, MonadIO n, Rest n) => Run m n -> Api m -> n Response
 apiToHandler' run api = toResponse <$> Rest.apiToHandler' run api
 
 instance (Functor m, MonadPlus m, MonadIO m) => Rest (ServerPartT m) where
