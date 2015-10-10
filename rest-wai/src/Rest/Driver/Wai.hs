@@ -25,7 +25,7 @@ import Rest.Driver.Types (Run)
 import qualified Rest.Driver.Types as Rest
 import qualified Rest.Run          as Rest
 
-apiToApplication :: Run m IO -> Api m -> Application
+apiToApplication :: (Applicative m, Monad m) => Run m IO -> Api m -> Application
 apiToApplication run api req =
 #if MIN_VERSION_wai(3,0,0)
   \cont ->

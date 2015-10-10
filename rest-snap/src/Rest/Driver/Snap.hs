@@ -9,6 +9,7 @@ import Safe
 import Snap.Core
 import Snap.Util.FileServe (defaultMimeTypes)
 
+import Control.Applicative
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.UTF8  as UTF8
 import qualified Data.CaseInsensitive  as CI
@@ -26,7 +27,7 @@ import qualified Rest.Run          as Rest
 apiToHandler :: Api Snap -> Snap ()
 apiToHandler = apiToHandler' id
 
-apiToHandler' :: Run m Snap -> Api m -> Snap ()
+apiToHandler' :: (Applicative m, Monad m) => Run m Snap -> Api m -> Snap ()
 apiToHandler' run api = Rest.apiToHandler' run api >>= writeLBS
 
 instance Rest Snap where
