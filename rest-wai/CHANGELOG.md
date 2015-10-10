@@ -1,8 +1,13 @@
 # Changelog
 
+## 0.2
+
+* Breaking: `Applicative` and `Monad` constraint on `m` in
+  `apiToHandler'`. See `rest-core-0.37` for more details.
+* Allow `http-types 0.9.*`
+
 #### 0.1.0.8
 
-* (revision) Allow `http-types 0.9.*`
 * Allow `rest-core 0.36.*`
 
 #### 0.1.0.7

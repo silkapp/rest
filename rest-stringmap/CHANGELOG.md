@@ -3,6 +3,7 @@
 #### 0.2.0.6
 
 * Fix compilation on GHC-7.6
+* (revision) Allow `aeson 0.10.*`
 
 #### 0.2.0.5
 

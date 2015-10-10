@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3
+
+* Breaking: `Applicative` and `Monad` constraint on `m` in
+  `apiToHandler'`. See `rest-core-0.37` for more details.
+
 #### 0.2.10.8
 
 * Allow `rest-core 0.36.*`

@@ -2,7 +2,7 @@
 
 #### 1.14.0.1
 
-* Allow `aeson 0.9.*`
+* Allow `aeson 0.9.*` and (revision) `0.10.*`
 
 ## 1.14
 

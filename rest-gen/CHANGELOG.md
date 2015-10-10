@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.19.0.0
+
+* Don't call global `Q` if available. This was an experimental
+  feature, and didn't work well in practice, since it would fail if
+  there was something else called `Q` on the window. We're not aware
+  of anyone depending on `Q`, but if you do, you need to wrap the
+  results of all API calls in a call to Q.
+
 ## 0.18.0.0
 
 * Javascript: postfix reserved words with an underscore. This is a
@@ -8,6 +16,7 @@
   match one of the reserved words from [this
   list](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords)
   will have to be updated with a trailing underscore.
+* (revision) Allow `aeson-0.10.*`.
 
 #### 0.17.1.3
 

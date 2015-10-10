@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.37
+
+* Allow specifying custom multi-action. Previously there was always a
+  top-level POST that could perform multiple actions in the API at
+  once. Now you can customize this handler (e.g. to add logging or
+  optimisations) , or turn it off completely by returning `NotFound`.
+
+  Because this is an experimental feature, it's exposed through
+  `Rest.Driver.Routing.Internal` and is subject to future breaking
+  changes without a major bump.
+
+  There is one breaking change due to this: the signature of `route`
+  now requires a `Monad` and `Applicative` constraint on `m`. This
+  propagates to `Rest.Run.apiToHandler(')` and related functions in
+  the rest-happstack, rest-snap and rest-wai packages.
+
 #### 0.36.0.6
 
 * Security: don't allow newlines in filenames.
