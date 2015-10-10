@@ -21,3 +21,4 @@ notifications:
     recipients: travis@silk.co
     on_success: never
     on_failure: change
+sudo: false
