@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.3.1
+
+* Generalize type of `apiToHandler` to allow transformer stacks on top
+  of `ServerPartT`. Thanks to ariep.
+
 ## 0.3
 
 * Breaking: `Applicative` and `Monad` constraint on `m` in

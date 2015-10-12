@@ -1,5 +1,5 @@
 name:                rest-happstack
-version:             0.3
+version:             0.3.1
 description:         Rest driver for Happstack.
 synopsis:            Rest driver for Happstack.
 maintainer:          code@silk.co
