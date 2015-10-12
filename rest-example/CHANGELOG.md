@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.3
+
+* Update lots of dependencies.
+
 #### 0.2.0.2
 
 * Allow `rest-core 0.36.*`
