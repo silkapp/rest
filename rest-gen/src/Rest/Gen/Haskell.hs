@@ -153,8 +153,13 @@ buildHaskellModule ctx node pragmas warningText =
 rewriteModuleNames :: [(H.ModuleName, H.ModuleName)] -> H.Module -> H.Module
 rewriteModuleNames rews = U.transformBi $ \m -> lookupJustDef m m rews
 
+#if MIN_VERSION_haskell_src_exts(1,17,0)
+noBinds :: Maybe H.Binds
+noBinds = Nothing
+#else
 noBinds :: H.Binds
 noBinds = H.BDecls []
+#endif
 
 use :: H.Name -> H.Exp
 use = H.Var . H.UnQual
