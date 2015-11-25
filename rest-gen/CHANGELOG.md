@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.19.0.1
+
+* Allow `haskell-src-exts 1.17.*`.
+
 ## 0.19.0.0
 
 * Don't call global `Q` if available. This was an experimental
