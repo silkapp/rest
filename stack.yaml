@@ -1,8 +1,8 @@
 flags:
   rest-example:
-    snap: false
-    happstack: false
-    wai: false
+    snap: true
+    happstack: true
+    wai: true
     gen: true
 packages:
 - code-builder/
