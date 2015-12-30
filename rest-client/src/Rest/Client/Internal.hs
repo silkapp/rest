@@ -36,7 +36,6 @@ import Control.Monad.Cont
 import Data.Aeson.Utils (FromJSON, ToJSON, eitherDecodeV, encode)
 import Data.Default (def)
 import Data.List
-import Data.Maybe
 import Data.Monoid
 import Data.String
 import Data.String.ToString
