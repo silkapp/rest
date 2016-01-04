@@ -1,23 +1,23 @@
 language: haskell
 install:
   - "cabal update"
-  - "cabal install happy --jobs"
-  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --dry-run -v3 --max-backjumps=-1 --reorder-goals --enable-tests --constraint='network==2.5.*'"
+  - "cabal install happy --constraint='transformers<0.5' --jobs"
+  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-example/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --dry-run -v3 --max-backjumps=-1 --reorder-goals --enable-tests"
 script:
-  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --max-backjumps=-1 --reorder-goals --enable-tests --constraint='network==2.5.*' --jobs=1"
-  - "(cd rest-core && cabal configure && cabal test)"
-  - "(cd rest-gen  && cabal configure && cabal test)"
-  - "cabal install rest-example/ -fhappstack --only-dependencies --constraint='network==2.5.*'"
+  - "cabal install code-builder/ rest-stringmap/ rest-client/ rest-core/ rest-gen/ rest-happstack/ rest-snap/ rest-types/ rest-wai/ --max-backjumps=-1 --reorder-goals --enable-tests --jobs=1"
+  - "(cd rest-core && cabal test)"
+  - "(cd rest-gen  && cabal test)"
+  - "cabal install rest-example/ -fhappstack --only-dependencies"
   - "cabal install rest-example/ -fhappstack --jobs=1"
-  - "cabal install rest-example/ -fsnap --only-dependencies --constraint='network==2.5.*'"
+  - "cabal install rest-example/ -fsnap --only-dependencies"
   - "cabal install rest-example/ -fsnap --jobs=1"
-  - "cabal install rest-example/ -fwai --only-dependencies --constraint='network==2.5.*'"
+  - "cabal install rest-example/ -fwai --only-dependencies"
   - "cabal install rest-example/ -fwai --jobs=1"
   - "rest-example-gen --haskell --target rest-example/client"
   - "rest-example-gen --javascript --target rest-example/client.js"
   - "rest-example-gen --ruby --target rest-example/client.rb"
   - "ruby rest-example/client.rb"
-  - "cabal install rest-example/client --jobs=1 --constraint='network==2.5.*'"
+  - "cabal install rest-example/client --jobs=1"
 notifications:
   email:
     recipients: travis@silk.co
