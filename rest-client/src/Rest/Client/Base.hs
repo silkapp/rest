@@ -1,6 +1,7 @@
 {-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
     CPP
+  , DeriveFunctor
   , FlexibleContexts
   , FlexibleInstances
   , GeneralizedNewtypeDeriving
@@ -160,7 +161,7 @@ data ApiResponse e a  =
     , httpVersion     :: (Int, Int)
     , responseHeaders :: [(CI ByteString , ByteString)]
     , responseBody    :: Either (Reason e) a
-    } deriving Show
+    } deriving (Functor, Show)
 
 responseToMaybe :: ApiResponse e a -> Maybe a
 responseToMaybe = either (const Nothing) Just . responseBody
