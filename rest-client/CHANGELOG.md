@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.5.1.0
+
+* Add `Functor (ApiResponse e)` instance
+
 #### 0.5.0.4
 
 * Log some extra information when decoding JSON fails.
