@@ -1,6 +1,7 @@
 {-# LANGUAGE
     GADTs
   , KindSignatures
+  , NoImplicitPrelude
   #-}
 -- | This module allows you to combine 'Resource's into an 'Api'. This
 -- can then be served using 'rest-happstack' or 'rest-snap', or used
@@ -32,7 +33,8 @@ module Rest.Api
   , withVersion
   ) where
 
-import Control.Applicative (Applicative)
+import Prelude.Compat
+
 import Data.Char
 import Data.Function (on)
 import Data.List (sortBy)

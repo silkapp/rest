@@ -184,16 +184,16 @@ type Outputs o = Dicts Output o
 type Errors  e = Dicts Error  e
 
 data Dicts f a where
-  None  :: Dicts f Nothing
-  Dicts :: [f a] -> Dicts f (Just a)
+  None  :: Dicts f 'Nothing
+  Dicts :: [f a] -> Dicts f ('Just a)
 
 -- Needs UndecidableInstances
 deriving instance Show (f (FromMaybe Void a)) => Show (Dicts f a)
 
 #if GLASGOW_HASKELL < 708
 type family FromMaybe d (m :: Maybe *) :: *
-type instance FromMaybe b Nothing  = b
-type instance FromMaybe b (Just a) = a
+type instance FromMaybe b 'Nothing  = b
+type instance FromMaybe b ('Just a) = a
 #else
 type family FromMaybe d (m :: Maybe *) :: * where
   FromMaybe b Nothing  = b
@@ -226,7 +226,7 @@ getDicts_ :: o ~ FromMaybe () a => Dicts f a -> [f o]
 getDicts_ None = []
 getDicts_ (Dicts ds) = ds
 
-modDicts :: (FromMaybe o i ~ o) => ([f o] -> [f o]) -> Dicts f i -> Dicts f (Just o)
+modDicts :: (FromMaybe o i ~ o) => ([f o] -> [f o]) -> Dicts f i -> Dicts f ('Just o)
 modDicts f None       = Dicts (f [])
 modDicts f (Dicts ds) = Dicts (f ds)
 
@@ -247,7 +247,7 @@ fclabels [d|
 
 -- | The empty dictionary, recognizing no types.
 
-empty :: Dict () () Nothing Nothing Nothing
+empty :: Dict () () 'Nothing 'Nothing 'Nothing
 empty = Dict NoHeader NoParam None None None
 
 -- | Custom existential packing an error together with a Reason.
@@ -257,4 +257,4 @@ data SomeError where
 
 -- | Type synonym for dictionary modification.
 
-type Modifier h p i o e = Dict () () Nothing Nothing Nothing -> Dict h p i o e
+type Modifier h p i o e = Dict () () 'Nothing 'Nothing 'Nothing -> Dict h p i o e

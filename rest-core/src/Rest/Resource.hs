@@ -1,13 +1,14 @@
 {-# LANGUAGE
-    TemplateHaskell
-  , MultiParamTypeClasses
+    FlexibleContexts
   , FlexibleInstances
-  , FlexibleContexts
-  , TypeSynonymInstances
-  , RankNTypes
-  , KindSignatures
   , GADTs
+  , KindSignatures
+  , MultiParamTypeClasses
   , NamedFieldPuns
+  , NoImplicitPrelude
+  , RankNTypes
+  , TemplateHaskell
+  , TypeSynonymInstances
   #-}
 -- | A 'Resource' type for representing a REST resource, as well as
 -- smart constructors for empty resources which can then be filled in
@@ -21,7 +22,8 @@ module Rest.Resource
   , module Rest.Types.Void
   ) where
 
-import Control.Applicative (Applicative)
+import Prelude.Compat
+
 import Control.Monad.Reader
 
 import Rest.Handler

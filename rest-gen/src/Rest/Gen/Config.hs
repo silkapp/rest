@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    TemplateHaskell
+    NoImplicitPrelude
+  , TemplateHaskell
   , TypeOperators
   #-}
 module Rest.Gen.Config
@@ -19,9 +20,8 @@ module Rest.Gen.Config
   , configFromArgs
   ) where
 
-import Prelude hiding (id, (.))
+import Prelude.Compat hiding (id, (.))
 
-import Control.Applicative
 import Control.Category
 import Data.Label
 import System.Console.GetOpt

@@ -1,4 +1,7 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE
+    NoImplicitPrelude
+  , RankNTypes
+  #-}
 module Rest.Run
   ( apiToHandler
   , apiToHandler'
@@ -6,11 +9,12 @@ module Rest.Run
   , Config (..)
   ) where
 
-import Control.Applicative
+import Prelude.Compat
+
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 
 import Rest.Api (Api)
-import Rest.Dictionary ( Dicts (..) )
+import Rest.Dictionary (Dicts (..))
 import Rest.Driver.Perform
 import Rest.Driver.Types
 import qualified Rest.Driver.Routing.Internal as I

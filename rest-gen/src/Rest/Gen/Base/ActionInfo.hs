@@ -3,6 +3,7 @@
   , GADTs
   , KindSignatures
   , LambdaCase
+  , NoImplicitPrelude
   , NoMonomorphismRestriction
   , ScopedTypeVariables
   , TemplateHaskell
@@ -47,21 +48,19 @@ module Rest.Gen.Base.ActionInfo
   , singleActionInfo
   ) where
 
-import Prelude hiding (id, (.))
+import Prelude.Compat hiding (id, (.))
 
-import Control.Applicative
 import Control.Category
 import Control.Monad
-import Data.Foldable (foldMap)
+import Data.Foldable (find)
 import Data.Label.Derive
-import Data.List
+import Data.List (intercalate, intersect, nub, sortBy)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
 import Data.Ord
 import Data.Proxy
 import Data.Typeable
 import Safe
-import qualified Data.Foldable                as F
 import qualified Data.JSON.Schema             as J
 import qualified Data.Label.Total             as L
 import qualified Data.List.NonEmpty           as NList
@@ -160,7 +159,7 @@ defaultDescription typ typeDesc htype =
     }
 
 chooseType :: NonEmpty DataDescription -> DataDescription
-chooseType ls = fromMaybe (NList.head ls) $ F.find ((JSON ==) . L.get (dataType . desc)) ls
+chooseType ls = fromMaybe (NList.head ls) $ find ((JSON ==) . L.get (dataType . desc)) ls
 
 data ResponseType = ResponseType
   { errorType  :: Maybe DataDesc

@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveFoldable
@@ -21,12 +22,11 @@ module Rest.Types.Error
   , ToResponseCode (..)
   ) where
 
-import Control.Applicative (Applicative (..))
+import Prelude.Compat
+
 import Control.Monad (ap)
 import Data.Aeson hiding (Success)
-import Data.Foldable (Foldable)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
-import Data.Traversable (Traversable)
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson

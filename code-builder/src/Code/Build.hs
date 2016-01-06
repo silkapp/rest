@@ -1,9 +1,12 @@
 {-# LANGUAGE
-    FlexibleInstances
-  , OverlappingInstances
+    CPP
+  , FlexibleInstances
   , TypeSynonymInstances
   , UndecidableInstances
   #-}
+#if !MIN_VERSION_base(4,8,0)
+{-# LANGUAGE OverlappingInstances #-}
+#endif
 module Code.Build where
 
 import Data.List
@@ -21,22 +24,22 @@ class Codeable a where
 instance Codeable Code where
   code = id
 
-instance Codeable String where
+instance {-# OVERLAPPING #-} Codeable String where
   code = Code . (:[])
 
 instance Codeable a => Codeable (Maybe a) where
   code = maybe noCode code
 
-instance Show a => Codeable a where
+instance {-# OVERLAPPABLE #-} Show a => Codeable a where
   code = Code . (:[]) . show
 
 class CodeList a where
   codeList :: a -> [Code]
 
-instance Codeable a => CodeList a where
+instance {-# OVERLAPPABLE #-} Codeable a => CodeList a where
   codeList = (:[]) . code
 
-instance Codeable a => CodeList [a] where
+instance {-# OVERLAPPING #-} Codeable a => CodeList [a] where
   codeList = map code
 
 -- * Functions on code

@@ -1,6 +1,7 @@
 {-# LANGUAGE
     FlexibleContexts
   , GADTs
+  , NoImplicitPrelude
   #-}
 -- | Error types that can be returned by handlers, as well as some
 -- utilities for manipulating these errors.
@@ -14,7 +15,8 @@ module Rest.Error
   , (>|<)
   ) where
 
-import Control.Applicative
+import Prelude.Compat
+
 import Control.Monad.Except
 
 import Rest.Types.Error

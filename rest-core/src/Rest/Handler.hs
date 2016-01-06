@@ -3,6 +3,7 @@
   , DeriveDataTypeable
   , GADTs
   , KindSignatures
+  , NoImplicitPrelude
   , TupleSections
   , TypeFamilies
   #-}
@@ -34,7 +35,8 @@ module Rest.Handler
   , secureHandler
   ) where
 
-import Control.Applicative hiding (empty)
+import Prelude.Compat
+
 import Control.Arrow
 import Control.Monad.Except ()
 import Control.Monad.Identity
@@ -109,7 +111,7 @@ secureHandler h = h { secure = True }
 
 mkListing
   :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
-  => Modifier h p Nothing o' e'
+  => Modifier h p 'Nothing o' e'
   -> (Range -> ExceptT (Reason e) m [o])
   -> ListHandler m
 mkListing d a = mkGenHandler (mkPar range . d) (a . param)
@@ -136,7 +138,7 @@ range = Param ["offset", "count"] $ \xs ->
 
 mkOrderedListing
   :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
-  => Modifier h p Nothing o' e'
+  => Modifier h p 'Nothing o' e'
   -> ((Range, Maybe String, Maybe String) -> ExceptT (Reason e) m [o])
   -> ListHandler m
 mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
@@ -175,7 +177,7 @@ mkInputHandler d a = mkHandler d (a . input)
 -- | Create a handler for a single resource. Doesn't take any input.
 
 mkConstHandler :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
-               => Modifier () () Nothing o' e' -> ExceptT (Reason e) m o -> Handler m
+               => Modifier () () 'Nothing o' e' -> ExceptT (Reason e) m o -> Handler m
 mkConstHandler d a = mkHandler d (const a)
 
 -- | Create a handler for a single resource. Take body information and

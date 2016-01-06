@@ -1,7 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE
+    NoImplicitPrelude
+  , OverloadedStrings
+  #-}
 module Rest.Types.Method (Method (..)) where
 
-import Control.Applicative
+import Prelude.Compat
+
 import Data.Aeson (ToJSON (..), FromJSON (..))
 import Data.Aeson.Types (typeMismatch)
 import Data.Char (toLower)
