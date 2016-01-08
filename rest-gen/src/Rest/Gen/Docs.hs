@@ -1,13 +1,4 @@
-{-# LANGUAGE
-    EmptyDataDecls
-  , GADTs
-  , MultiParamTypeClasses
-  , OverlappingInstances
-  , ScopedTypeVariables
-  , TemplateHaskell
-  , TupleSections
-  , TypeFamilies
-  #-}
+{-# LANGUAGE TupleSections #-}
 module Rest.Gen.Docs
   ( DocsContext (..)
   , cdiv

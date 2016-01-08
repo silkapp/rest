@@ -1,10 +1,7 @@
 {-# LANGUAGE
-    DataKinds
-  , GADTs
-  , KindSignatures
+    GADTs
   , LambdaCase
   , NoImplicitPrelude
-  , NoMonomorphismRestriction
   , ScopedTypeVariables
   , TemplateHaskell
   #-}
