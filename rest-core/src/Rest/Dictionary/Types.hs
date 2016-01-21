@@ -3,6 +3,7 @@
   , DataKinds
   , FlexibleContexts
   , GADTs
+  , GeneralizedNewtypeDeriving
   , KindSignatures
   , ScopedTypeVariables
   , StandaloneDeriving
@@ -37,6 +38,8 @@ module Rest.Dictionary.Types
   , Input (..)
   , Output (..)
   , Error (..)
+  , Xml (..)
+  , Json (..)
 
   -- * Plural dictionaries.
 
@@ -148,7 +151,7 @@ data Input i where
   XmlTextI       ::                                           Input Text
   RawJsonI       ::                                           Input ByteString
   RawXmlI        ::                                           Input ByteString
-  RawJsonAndXmlI ::                                           Input (Either ByteString ByteString)
+  RawJsonAndXmlI ::                                           Input (Either Json Xml)
 
 deriving instance Show (Input i)
 deriving instance Eq   (Input i)
@@ -164,13 +167,23 @@ data Output o where
   RawXmlO        ::                                         Output ByteString
   JsonO          :: (Typeable o, ToJSON o, JSONSchema o) => Output o
   XmlO           :: (Typeable o, XmlPickler o)           => Output o
-  RawJsonAndXmlO ::                                         Output (ByteString, ByteString)
+  RawJsonAndXmlO ::                                         Output (Json, Xml)
   StringO        ::                                         Output String
   MultipartO     ::                                         Output [BodyPart]
 
 deriving instance Show (Output o)
 deriving instance Eq   (Output o)
 deriving instance Ord  (Output o)
+
+-- | Newtypes around ByteStrings used in `RawJsonAndXmlI` and
+-- `RawJsonAndXmlO` to add some protection from using the wrong
+-- values.
+
+newtype Xml = Xml { unXml :: ByteString }
+  deriving (Eq, Show)
+
+newtype Json = Json { unJson :: ByteString }
+  deriving (Eq, Show)
 
 -- | The explicit dictionary `Error` describes how to translate some Haskell
 -- error value to a response body.

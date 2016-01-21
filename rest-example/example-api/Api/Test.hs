@@ -107,8 +107,8 @@ rawJsonIO = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
 rawJsonAndXmlIO :: Handler WithText
 rawJsonAndXmlIO = mkIdHandler (rawJsonAndXmlI . rawJsonAndXmlO) $ \s _ ->
   case s of
-    Left _ -> return ("\"jsonInput\"", "<jsonInput/>")
-    Right _ -> return ("\"xmlInput\"" , "<xmlInput/>" )
+    Left (Json _) -> return (Json "\"jsonInput\"", Xml "<jsonInput/>")
+    Right (Xml _) -> return (Json "\"xmlInput\"" , Xml "<xmlInput/>" )
 
 noError :: Handler WithText
 noError = mkConstHandler jsonO $ return Ok

@@ -143,9 +143,11 @@ rawJsonI = L.set inputs (Dicts [RawJsonI])
 jsonI :: (Typeable i, FromJSON i, JSONSchema i, FromMaybe i i' ~ i) => Dict h p i' o e -> Dict h p ('Just i) o e
 jsonI = L.modify inputs (modDicts (JsonI:))
 
--- | The input can be used as a JSON `ByteString`.
+-- | The input can be used as a JSON or XML `ByteString`.
+--
+-- An API client can send either format so the handler needs to handle both.
 
-rawJsonAndXmlI :: Dict h p 'Nothing o e -> Dict h p ('Just (Either ByteString ByteString)) o e
+rawJsonAndXmlI :: Dict h p 'Nothing o e -> Dict h p ('Just (Either Json Xml)) o e
 rawJsonAndXmlI = L.set inputs (Dicts [RawJsonAndXmlI])
 
 -- | Open up output type for extension with custom dictionaries.
@@ -189,8 +191,10 @@ jsonO :: (Typeable o, ToJSON o, JSONSchema o, FromMaybe o o' ~ o) => Dict h p i 
 jsonO = L.modify outputs (modDicts (JsonO:))
 
 -- | Allow output as raw JSON and XML represented as `ByteString`s.
+-- Both values are needed since the accept header determines which one
+-- to send.
 
-rawJsonAndXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just (ByteString, ByteString)) e
+rawJsonAndXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just (Json, Xml)) e
 rawJsonAndXmlO = L.set outputs (Dicts [RawJsonAndXmlO])
 
 -- | Allow output as multipart. Writes out the ByteStrings separated

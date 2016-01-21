@@ -56,15 +56,37 @@ intersectedFormats2 input
               (fromString input)
       in doRequest fromXML fromXML request
  
-errorImport ::
-              ApiStateC m => String -> m (ApiResponse Api.Test.Err2.Err String)
-errorImport input
+rawXmlIO ::
+           ApiStateC m => String -> m (ApiResponse Api.Test.Err2.Err String)
+rawXmlIO input
   = let rHeaders
-          = [(hAccept, "text/xml"), (hContentType, "text/plain")]
+          = [(hAccept, "text/xml"), (hContentType, "text/xml")]
         request
-          = makeReq "POST" "v1.0.0" [["test"], ["errorImport"]] [] rHeaders
-              (fromString input)
+          = makeReq "POST" "v1.0.0" [["test"], ["rawXmlIO"]] [] rHeaders
+              (toXML input)
       in doRequest fromXML fromXML request
+ 
+rawJsonIO ::
+            ApiStateC m => String -> m (ApiResponse Api.Test.Err2.Err String)
+rawJsonIO input
+  = let rHeaders
+          = [(hAccept, "text/json"), (hContentType, "text/json")]
+        request
+          = makeReq "POST" "v1.0.0" [["test"], ["rawJsonIO"]] [] rHeaders
+              (toJSON input)
+      in doRequest fromJSON fromJSON request
+ 
+rawJsonAndXmlIO ::
+                  ApiStateC m =>
+                  String -> m (ApiResponse Rest.Types.Void.Void String)
+rawJsonAndXmlIO input
+  = let rHeaders
+          = [(hAccept, "text/json"), (hContentType, "text/json")]
+        request
+          = makeReq "POST" "v1.0.0" [["test"], ["rawJsonAndXmlIO"]] []
+              rHeaders
+              (toJSON input)
+      in doRequest fromJSON fromJSON request
  
 noError ::
           ApiStateC m => m (ApiResponse Rest.Types.Void.Void Api.Test.Ok)

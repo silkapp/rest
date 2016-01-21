@@ -9,6 +9,7 @@ module Rest
   , module Rest.Schema
     -- | Defining 'Handler's for endpoints in the resource.
   , module Rest.Handler
+  , module Rest.Dictionary.Types
     -- | Combinators for defining input and ouput dictionaries of
     -- handlers.
   , module Rest.Dictionary.Combinators
@@ -16,6 +17,7 @@ module Rest
   , module Rest.Error
   ) where
 
+import Rest.Dictionary.Types (Json (..), Xml (..))
 import Rest.Dictionary.Combinators
 import Rest.Error
 import Rest.Handler ( Env (..), Handler, ListHandler, secureHandler

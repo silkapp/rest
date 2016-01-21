@@ -41,7 +41,7 @@ import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
 import Rest.Dictionary (Dict, Dicts (..), Error (..), Errors, Format (..), FromMaybe, Header (..),
-                        Input (..), Inputs, Output (..), Outputs, Param (..))
+                        Input (..), Inputs, Json (..), Output (..), Outputs, Param (..), Xml (..))
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
@@ -221,8 +221,8 @@ parser f        (Dicts ds) v = parserD f ds
     parserD FileFormat    (FileI          : _ ) = return v
     parserD XmlFormat     (RawXmlI        : _ ) = return v
     parserD JsonFormat    (RawJsonI       : _ ) = return v
-    parserD JsonFormat    (RawJsonAndXmlI : _ ) = return (Left v)
-    parserD XmlFormat     (RawJsonAndXmlI : _ ) = return (Right v)
+    parserD JsonFormat    (RawJsonAndXmlI : _ ) = return (Left $ Json v)
+    parserD XmlFormat     (RawJsonAndXmlI : _ ) = return (Right $ Xml v)
     parserD t             []                    = throwError (UnsupportedFormat (show t))
     parserD t             (_              : xs) = parserD t xs
 
@@ -324,8 +324,8 @@ outputWriter outputs v = tryOutputs try outputs
         tryD (RawXmlO        : _ ) XmlFormat    = contentType XmlFormat    >> ok v
         tryD (JsonO          : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
         tryD (RawJsonO       : _ ) JsonFormat   = contentType JsonFormat   >> ok v
-        tryD (RawJsonAndXmlO : _ ) JsonFormat   = contentType JsonFormat   >> ok (fst v)
-        tryD (RawJsonAndXmlO : _ ) XmlFormat    = contentType XmlFormat    >> ok (snd v)
+        tryD (RawJsonAndXmlO : _ ) JsonFormat   = contentType JsonFormat   >> ok (unJson $ fst v)
+        tryD (RawJsonAndXmlO : _ ) XmlFormat    = contentType XmlFormat    >> ok (unXml $ snd v)
         tryD (StringO        : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
         tryD (MultipartO     : _ ) _            = outputMultipart v
         tryD (FileO          : _ ) FileFormat   =
