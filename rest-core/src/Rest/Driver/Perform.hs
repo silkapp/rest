@@ -209,20 +209,22 @@ parser f        None       _ = throwError (UnsupportedFormat (show f))
 parser f        (Dicts ds) v = parserD f ds
   where
     parserD :: Monad m => Format -> [D.Input j] -> ExceptT DataError m j
-    parserD XmlFormat     (XmlI     : _ ) = case eitherFromXML (UTF8.toString v) of
-                                              Left err -> throwError (ParseError err)
-                                              Right  r -> return r
-    parserD XmlFormat     (XmlTextI : _ ) = return (decodeUtf8 v)
-    parserD StringFormat  (ReadI    : _ ) = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
-    parserD JsonFormat    (JsonI    : _ ) = case eitherDecodeV v of
-                                              Right a -> return a
-                                              Left  e -> throwError (ParseError e)
-    parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
-    parserD FileFormat    (FileI    : _ ) = return v
-    parserD XmlFormat     (RawXmlI  : _ ) = return v
-    parserD JsonFormat    (RawJsonI : _ ) = return v
-    parserD t             []              = throwError (UnsupportedFormat (show t))
-    parserD t             (_        : xs) = parserD t xs
+    parserD XmlFormat     (XmlI           : _ ) = case eitherFromXML (UTF8.toString v) of
+                                                    Left err -> throwError (ParseError err)
+                                                    Right  r -> return r
+    parserD XmlFormat     (XmlTextI       : _ ) = return (decodeUtf8 v)
+    parserD StringFormat  (ReadI          : _ ) = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
+    parserD JsonFormat    (JsonI          : _ ) = case eitherDecodeV v of
+                                                    Right a -> return a
+                                                    Left  e -> throwError (ParseError e)
+    parserD StringFormat  (StringI        : _ ) = return (UTF8.toString v)
+    parserD FileFormat    (FileI          : _ ) = return v
+    parserD XmlFormat     (RawXmlI        : _ ) = return v
+    parserD JsonFormat    (RawJsonI       : _ ) = return v
+    parserD JsonFormat    (RawJsonAndXmlI : _ ) = return (Left v)
+    parserD XmlFormat     (RawJsonAndXmlI : _ ) = return (Right v)
+    parserD t             []                    = throwError (UnsupportedFormat (show t))
+    parserD t             (_              : xs) = parserD t xs
 
 -------------------------------------------------------------------------------
 -- Failure responses.
@@ -293,15 +295,17 @@ validator = tryOutputs try
     try (Dicts ds) f = tryD ds f
       where
         tryD :: forall v'. [Output v'] -> Format -> ExceptT (Last DataError) m ()
-        tryD (XmlO       : _ ) XmlFormat    = return ()
-        tryD (RawXmlO    : _ ) XmlFormat    = return ()
-        tryD (JsonO      : _ ) JsonFormat   = return ()
-        tryD (RawJsonO   : _ ) JsonFormat   = return ()
-        tryD (StringO    : _ ) StringFormat = return ()
-        tryD (FileO      : _ ) FileFormat   = return ()
-        tryD (MultipartO : _ ) _            = return () -- Multipart is always ok, subparts can fail.
-        tryD []                t            = unsupportedFormat t
-        tryD (_          : xs) t            = tryD xs t
+        tryD (XmlO           : _ ) XmlFormat    = return ()
+        tryD (RawXmlO        : _ ) XmlFormat    = return ()
+        tryD (JsonO          : _ ) JsonFormat   = return ()
+        tryD (RawJsonO       : _ ) JsonFormat   = return ()
+        tryD (RawJsonAndXmlO : _ ) JsonFormat   = return ()
+        tryD (RawJsonAndXmlO : _ ) XmlFormat    = return ()
+        tryD (StringO        : _ ) StringFormat = return ()
+        tryD (FileO          : _ ) FileFormat   = return ()
+        tryD (MultipartO     : _ ) _            = return () -- Multipart is always ok, subparts can fail.
+        tryD []                    t            = unsupportedFormat t
+        tryD (_              : xs) t            = tryD xs t
 
 outputWriter :: forall v m e. Rest m => Outputs v -> FromMaybe () v -> ExceptT (Reason e) m UTF8.ByteString
 outputWriter outputs v = tryOutputs try outputs
@@ -316,13 +320,15 @@ outputWriter outputs v = tryOutputs try outputs
     try (Dicts ds) f = tryD ds f
       where
         tryD :: forall v'. FromMaybe () v ~ v' => [Output v'] -> Format -> ExceptT (Last DataError) m UTF8.ByteString
-        tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
-        tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
-        tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
-        tryD (RawJsonO   : _ ) JsonFormat   = contentType JsonFormat    >> ok v
-        tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
-        tryD (MultipartO : _ ) _            = outputMultipart v
-        tryD (FileO      : _ ) FileFormat   =
+        tryD (XmlO           : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
+        tryD (RawXmlO        : _ ) XmlFormat    = contentType XmlFormat    >> ok v
+        tryD (JsonO          : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
+        tryD (RawJsonO       : _ ) JsonFormat   = contentType JsonFormat   >> ok v
+        tryD (RawJsonAndXmlO : _ ) JsonFormat   = contentType JsonFormat   >> ok (fst v)
+        tryD (RawJsonAndXmlO : _ ) XmlFormat    = contentType XmlFormat    >> ok (snd v)
+        tryD (StringO        : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
+        tryD (MultipartO     : _ ) _            = outputMultipart v
+        tryD (FileO          : _ ) FileFormat   =
           do let (content, filename, isAttachment) = v
                  ext = (reverse . takeWhile (/='.') . reverse) filename
              mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower ext)

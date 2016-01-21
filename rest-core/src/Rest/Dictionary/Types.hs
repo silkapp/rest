@@ -140,14 +140,15 @@ instance Show (Param p) where
 -- needs of the backend resource.
 
 data Input i where
-  JsonI    :: (Typeable i, FromJSON i, JSONSchema i) => Input i
-  ReadI    :: (Info i, Read i, Show i)               => Input i
-  StringI  ::                                           Input String
-  FileI    ::                                           Input ByteString
-  XmlI     :: (Typeable i, XmlPickler i)             => Input i
-  XmlTextI ::                                           Input Text
-  RawJsonI ::                                           Input ByteString
-  RawXmlI  ::                                           Input ByteString
+  JsonI          :: (Typeable i, FromJSON i, JSONSchema i) => Input i
+  ReadI          :: (Info i, Read i, Show i)               => Input i
+  StringI        ::                                           Input String
+  FileI          ::                                           Input ByteString
+  XmlI           :: (Typeable i, XmlPickler i)             => Input i
+  XmlTextI       ::                                           Input Text
+  RawJsonI       ::                                           Input ByteString
+  RawXmlI        ::                                           Input ByteString
+  RawJsonAndXmlI ::                                           Input (Either ByteString ByteString)
 
 deriving instance Show (Input i)
 deriving instance Eq   (Input i)
@@ -158,13 +159,14 @@ deriving instance Ord  (Input i)
 -- combination of input type to output type.
 
 data Output o where
-  FileO      ::                                         Output (ByteString, String, Bool)
-  RawJsonO   ::                                         Output ByteString
-  RawXmlO    ::                                         Output ByteString
-  JsonO      :: (Typeable o, ToJSON o, JSONSchema o) => Output o
-  XmlO       :: (Typeable o, XmlPickler o)           => Output o
-  StringO    ::                                         Output String
-  MultipartO ::                                         Output [BodyPart]
+  FileO          ::                                         Output (ByteString, String, Bool)
+  RawJsonO       ::                                         Output ByteString
+  RawXmlO        ::                                         Output ByteString
+  JsonO          :: (Typeable o, ToJSON o, JSONSchema o) => Output o
+  XmlO           :: (Typeable o, XmlPickler o)           => Output o
+  RawJsonAndXmlO ::                                         Output (ByteString, ByteString)
+  StringO        ::                                         Output String
+  MultipartO     ::                                         Output [BodyPart]
 
 deriving instance Show (Output o)
 deriving instance Eq   (Output o)

@@ -18,6 +18,7 @@ module Rest.Dictionary.Combinators
   , rawXmlI
   , jsonI
   , rawJsonI
+  , rawJsonAndXmlI
 
   -- ** Output dictionaries
 
@@ -27,6 +28,7 @@ module Rest.Dictionary.Combinators
   , rawXmlO
   , jsonO
   , rawJsonO
+  , rawJsonAndXmlO
   , multipartO
 
   -- ** Error dictionaries
@@ -141,6 +143,11 @@ rawJsonI = L.set inputs (Dicts [RawJsonI])
 jsonI :: (Typeable i, FromJSON i, JSONSchema i, FromMaybe i i' ~ i) => Dict h p i' o e -> Dict h p ('Just i) o e
 jsonI = L.modify inputs (modDicts (JsonI:))
 
+-- | The input can be used as a JSON `ByteString`.
+
+rawJsonAndXmlI :: Dict h p 'Nothing o e -> Dict h p ('Just (Either ByteString ByteString)) o e
+rawJsonAndXmlI = L.set inputs (Dicts [RawJsonAndXmlI])
+
 -- | Open up output type for extension with custom dictionaries.
 
 {-# DEPRECATED someO "This can be safely removed, it is now just the identity." #-}
@@ -180,6 +187,11 @@ rawJsonO = L.set outputs (Dicts [RawJsonO])
 
 jsonO :: (Typeable o, ToJSON o, JSONSchema o, FromMaybe o o' ~ o) => Dict h p i o' e -> Dict h p i ('Just o) e
 jsonO = L.modify outputs (modDicts (JsonO:))
+
+-- | Allow output as raw JSON and XML represented as `ByteString`s.
+
+rawJsonAndXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just (ByteString, ByteString)) e
+rawJsonAndXmlO = L.set outputs (Dicts [RawJsonAndXmlO])
 
 -- | Allow output as multipart. Writes out the ByteStrings separated
 -- by boundaries, with content type 'multipart/mixed'.

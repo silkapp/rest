@@ -97,6 +97,12 @@ errorImportJ = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
     "\"error\"" -> throwError $ domainReason E2.Err
     _           -> return "\"ok\""
 
+errorImportXJ :: Handler WithText
+errorImportXJ = mkIdHandler (rawJsonAndXmlI . rawJsonAndXmlO) $ \s _ ->
+  case s of
+    Left _  -> return ("\"jsonInput\"", "<jsonInput/>")
+    Right _ -> return ("\"xmlInput\"" , "<xmlInput/>" )
+
 noError :: Handler WithText
 noError = mkConstHandler jsonO $ return Ok
 

@@ -426,20 +426,21 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (Dict.getDicts_ .
   where
     handlerInput :: Proxy i -> Input i -> DataDescription
     handlerInput d c = case c of
-      ReadI    -> L.set (haskellModules . desc) (modString d)
-                $ defaultDescription Other (describe d) (toHaskellType d)
-      StringI  -> defaultDescription String "String" haskellStringType
-      XmlI     -> L.set (haskellModules . desc) (modString d)
-                . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
-                . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
-                $ defaultDescription XML "XML" (toHaskellType d)
-      XmlTextI -> defaultDescription XML "XML" haskellStringType
-      RawXmlI  -> defaultDescription XML "XML" haskellStringType
-      JsonI    -> L.set (haskellModules . desc) (modString d)
-                . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
-                $ defaultDescription JSON "JSON" (toHaskellType d)
-      RawJsonI -> defaultDescription JSON "JSON" haskellStringType
-      FileI    -> defaultDescription File "File" haskellByteStringType
+      ReadI          -> L.set (haskellModules . desc) (modString d)
+                      $ defaultDescription Other (describe d) (toHaskellType d)
+      StringI        -> defaultDescription String "String" haskellStringType
+      XmlI           -> L.set (haskellModules . desc) (modString d)
+                      . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
+                      . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
+                      $ defaultDescription XML "XML" (toHaskellType d)
+      XmlTextI       -> defaultDescription XML "XML" haskellStringType
+      RawXmlI        -> defaultDescription XML "XML" haskellStringType
+      JsonI          -> L.set (haskellModules . desc) (modString d)
+                      . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
+                      $ defaultDescription JSON "JSON" (toHaskellType d)
+      RawJsonI       -> defaultDescription JSON "JSON" haskellStringType
+      RawJsonAndXmlI -> defaultDescription JSON "JSON" haskellStringType
+      FileI          -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract output description from handlers
 handlerOutputs :: Handler m -> [DataDescription]
@@ -457,6 +458,7 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (Dict.getDicts_
                 . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
                 $ defaultDescription JSON "JSON" (toHaskellType d)
       RawJsonO -> defaultDescription JSON "JSON" haskellStringType
+      RawJsonAndXmlO -> defaultDescription JSON "JSON" haskellStringType -- TODO Is it ok to assume JSON here?
       FileO    -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract input description from handlers
