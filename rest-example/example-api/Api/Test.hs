@@ -86,10 +86,16 @@ intersectedFormats2 = mkInputHandler (xmlE . xmlO . jsonO . stringI) $
     _       -> return Ok
 
 errorImport :: Handler WithText
-errorImport = mkIdHandler (stringI . rawXmlO . xmlE) $ \s (_::Text) ->
+errorImport = mkIdHandler (stringI . rawXmlO . xmlE) $ \s _ ->
   case s of
     "error" -> throwError $ domainReason E2.Err
     _       -> return "<ok/>"
+
+errorImportJ :: Handler WithText
+errorImportJ = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
+  case s of
+    "\"error\"" -> throwError $ domainReason E2.Err
+    _           -> return "\"ok\""
 
 noError :: Handler WithText
 noError = mkConstHandler jsonO $ return Ok

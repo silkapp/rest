@@ -17,6 +17,7 @@ module Rest.Dictionary.Combinators
   , xmlI
   , rawXmlI
   , jsonI
+  , rawJsonI
 
   -- ** Output dictionaries
 
@@ -25,6 +26,7 @@ module Rest.Dictionary.Combinators
   , xmlO
   , rawXmlO
   , jsonO
+  , rawJsonO
   , multipartO
 
   -- ** Error dictionaries
@@ -129,6 +131,11 @@ xmlI = L.modify inputs (modDicts (XmlI:))
 rawXmlI :: Dict h p 'Nothing o e -> Dict h p ('Just ByteString) o e
 rawXmlI = L.set inputs (Dicts [RawXmlI])
 
+-- | The input can be used as a JSON `ByteString`.
+
+rawJsonI :: Dict h p 'Nothing o e -> Dict h p ('Just ByteString) o e
+rawJsonI = L.set inputs (Dicts [RawJsonI])
+
 -- | The input can be read into some instance of `Json`.
 
 jsonI :: (Typeable i, FromJSON i, JSONSchema i, FromMaybe i i' ~ i) => Dict h p i' o e -> Dict h p ('Just i) o e
@@ -163,6 +170,11 @@ xmlO = L.modify outputs (modDicts (XmlO:))
 
 rawXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just ByteString) e
 rawXmlO = L.set outputs (Dicts [RawXmlO])
+
+-- | Allow output as raw JSON represented as a `ByteString`.
+
+rawJsonO :: Dict h p i 'Nothing e -> Dict h p i ('Just ByteString) e
+rawJsonO = L.set outputs (Dicts [RawJsonO])
 
 -- | Allow output as JSON using the `Json` type class.
 

@@ -438,6 +438,7 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (Dict.getDicts_ .
       JsonI    -> L.set (haskellModules . desc) (modString d)
                 . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
                 $ defaultDescription JSON "JSON" (toHaskellType d)
+      RawJsonI -> defaultDescription JSON "JSON" haskellStringType
       FileI    -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract output description from handlers
@@ -446,16 +447,17 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (Dict.getDicts_
   where
     handlerOutput :: Proxy a -> Output a -> DataDescription
     handlerOutput d c = case c of
-      StringO -> defaultDescription String "String" haskellStringType
-      XmlO    -> L.set (haskellModules . desc) (modString d)
-               . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
-               . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
-               $ defaultDescription XML "XML" (toHaskellType d)
-      RawXmlO -> defaultDescription XML "XML" haskellStringType
-      JsonO   -> L.set (haskellModules . desc) (modString d)
-               . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
-               $ defaultDescription JSON "JSON" (toHaskellType d)
-      FileO   -> defaultDescription File "File" haskellByteStringType
+      StringO  -> defaultDescription String "String" haskellStringType
+      XmlO     -> L.set (haskellModules . desc) (modString d)
+                . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
+                . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
+                $ defaultDescription XML "XML" (toHaskellType d)
+      RawXmlO  -> defaultDescription XML "XML" haskellStringType
+      JsonO    -> L.set (haskellModules . desc) (modString d)
+                . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
+                $ defaultDescription JSON "JSON" (toHaskellType d)
+      RawJsonO -> defaultDescription JSON "JSON" haskellStringType
+      FileO    -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]

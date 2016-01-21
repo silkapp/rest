@@ -24,7 +24,7 @@ import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Writer
 import Data.Aeson.Utils
-import Data.Char (isSpace, toLower, ord)
+import Data.Char (isSpace, ord, toLower)
 import Data.List
 import Data.List.Split
 import Data.Maybe
@@ -40,7 +40,8 @@ import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
-import Rest.Dictionary (Dict, Dicts (..), Error (..), Errors, Format (..), FromMaybe, Header (..), Input (..), Inputs, Output (..), Outputs, Param (..))
+import Rest.Dictionary (Dict, Dicts (..), Error (..), Errors, Format (..), FromMaybe, Header (..),
+                        Input (..), Inputs, Output (..), Outputs, Param (..))
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
@@ -219,6 +220,7 @@ parser f        (Dicts ds) v = parserD f ds
     parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
     parserD FileFormat    (FileI    : _ ) = return v
     parserD XmlFormat     (RawXmlI  : _ ) = return v
+    parserD JsonFormat    (RawJsonI : _ ) = return v
     parserD t             []              = throwError (UnsupportedFormat (show t))
     parserD t             (_        : xs) = parserD t xs
 
@@ -294,6 +296,7 @@ validator = tryOutputs try
         tryD (XmlO       : _ ) XmlFormat    = return ()
         tryD (RawXmlO    : _ ) XmlFormat    = return ()
         tryD (JsonO      : _ ) JsonFormat   = return ()
+        tryD (RawJsonO   : _ ) JsonFormat   = return ()
         tryD (StringO    : _ ) StringFormat = return ()
         tryD (FileO      : _ ) FileFormat   = return ()
         tryD (MultipartO : _ ) _            = return () -- Multipart is always ok, subparts can fail.
@@ -316,6 +319,7 @@ outputWriter outputs v = tryOutputs try outputs
         tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
         tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
         tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
+        tryD (RawJsonO   : _ ) JsonFormat   = contentType JsonFormat    >> ok v
         tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
         tryD (MultipartO : _ ) _            = outputMultipart v
         tryD (FileO      : _ ) FileFormat   =

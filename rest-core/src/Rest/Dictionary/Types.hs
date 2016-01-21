@@ -146,6 +146,7 @@ data Input i where
   FileI    ::                                           Input ByteString
   XmlI     :: (Typeable i, XmlPickler i)             => Input i
   XmlTextI ::                                           Input Text
+  RawJsonI ::                                           Input ByteString
   RawXmlI  ::                                           Input ByteString
 
 deriving instance Show (Input i)
@@ -158,6 +159,7 @@ deriving instance Ord  (Input i)
 
 data Output o where
   FileO      ::                                         Output (ByteString, String, Bool)
+  RawJsonO   ::                                         Output ByteString
   RawXmlO    ::                                         Output ByteString
   JsonO      :: (Typeable o, ToJSON o, JSONSchema o) => Output o
   XmlO       :: (Typeable o, XmlPickler o)           => Output o
