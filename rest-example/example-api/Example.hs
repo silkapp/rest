@@ -1,7 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE
+    NoImplicitPrelude
+  , OverloadedStrings
+  #-}
 module Example (exampleBlog) where
 
-import Control.Applicative
+import Prelude.Compat
+
 import Control.Concurrent.STM (newTVarIO)
 import Data.HashMap.Strict (HashMap)
 import Data.Set (Set)

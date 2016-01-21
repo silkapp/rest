@@ -1,7 +1,11 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE
+    GeneralizedNewtypeDeriving
+  , NoImplicitPrelude
+  #-}
 module ApiTypes where
 
-import Control.Applicative (Applicative)
+import Prelude.Compat
+
 import Control.Concurrent.STM (TVar)
 import Control.Monad.Reader (MonadReader, ReaderT (..))
 import Control.Monad.Trans (MonadIO)
