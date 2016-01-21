@@ -439,6 +439,8 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (Dict.getDicts_ .
                       . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
                       $ defaultDescription JSON "JSON" (toHaskellType d)
       RawJsonI       -> defaultDescription JSON "JSON" haskellStringType
+      -- Picking JSON or XML is arbitrary here since both are possible
+      -- so we stick with the convention of preferring JSON.
       RawJsonAndXmlI -> defaultDescription JSON "JSON" haskellStringType
       FileI          -> defaultDescription File "File" haskellByteStringType
 
@@ -448,18 +450,20 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (Dict.getDicts_
   where
     handlerOutput :: Proxy a -> Output a -> DataDescription
     handlerOutput d c = case c of
-      StringO  -> defaultDescription String "String" haskellStringType
-      XmlO     -> L.set (haskellModules . desc) (modString d)
-                . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
-                . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
-                $ defaultDescription XML "XML" (toHaskellType d)
-      RawXmlO  -> defaultDescription XML "XML" haskellStringType
-      JsonO    -> L.set (haskellModules . desc) (modString d)
-                . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
-                $ defaultDescription JSON "JSON" (toHaskellType d)
-      RawJsonO -> defaultDescription JSON "JSON" haskellStringType
-      RawJsonAndXmlO -> defaultDescription JSON "JSON" haskellStringType -- TODO Is it ok to assume JSON here?
-      FileO    -> defaultDescription File "File" haskellByteStringType
+      StringO        -> defaultDescription String "String" haskellStringType
+      XmlO           -> L.set (haskellModules . desc) (modString d)
+                      . L.set (dataSchema     . meta) (pure . X.showSchema  . X.getXmlSchema $ d)
+                      . L.set (dataExample    . meta) (pure . X.showExample . X.getXmlSchema $ d)
+                      $ defaultDescription XML "XML" (toHaskellType d)
+      RawXmlO        -> defaultDescription XML "XML" haskellStringType
+      JsonO          -> L.set (haskellModules . desc) (modString d)
+                      . L.set (dataExample    . meta) (J.showExamples . J.schema $ d)
+                      $ defaultDescription JSON "JSON" (toHaskellType d)
+      RawJsonO       -> defaultDescription JSON "JSON" haskellStringType
+      -- Picking JSON or XML is arbitrary here since both are possible
+      -- so we stick with the convention of preferring JSON.
+      RawJsonAndXmlO -> defaultDescription JSON "JSON" haskellStringType
+      FileO          -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]
