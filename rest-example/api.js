@@ -12,185 +12,178 @@ var obfuscatedRequire = function (moduleName)
   return module["r" + "equire"](moduleName);
 }
 
-var RestexampleApi =
-  function (url, secureUrl, modifyRequest)
-  {
-    var self = this;
-    var postfix          = '/v' + this.version + '/';
-    var contextUrl       = url + postfix;
-    var secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
-
-    this.cookieJar = isNodeJs ? obfuscatedRequire('request').jar() : undefined;
-
-    if(!modifyRequest) modifyRequest = function (req) { return req; };
-
-    var finalModifyRequest = function (req)
+function RestexampleApi (url, secureUrl, modifyRequest)
+{
+  var RestexampleApi =
+    function (url, secureUrl, modifyRequest)
     {
-      if (isNodeJs) req.jar = self.cookieJar;
-      return modifyRequest(req);
+      var self = this;
+      var postfix          = '/v' + this.version + '/';
+      var contextUrl       = url + postfix;
+      var secureContextUrl = (secureUrl || url.replace(/^http:/, "https:")) + postfix;
+
+      this.cookieJar = isNodeJs ? obfuscatedRequire('request').jar() : undefined;
+
+      if(!modifyRequest) modifyRequest = function (req) { return req; };
+
+      var finalModifyRequest = function (req)
+      {
+        if (isNodeJs) req.jar = self.cookieJar;
+        return modifyRequest(req);
+      }
+
+      RestexampleApi.setContext(this, contextUrl, secureContextUrl, finalModifyRequest);
+    };
+
+  var jqFun;
+  if (isNodeJs)
+  {
+    RestexampleApi.ajaxCall = nodeRequest;
+  }
+  else
+  {
+    if (isCommonJs) {
+      jqFun = function () { return require("jquery"); };
+    } else if (typeof define === "function" && define.amd) {
+      jqFun = function () { return window.$; };
+    } else {
+      jqFun = function () { return window.$; };
     }
 
-    RestexampleApi.setContext(this, contextUrl, secureContextUrl, finalModifyRequest);
+    RestexampleApi.ajaxCall = jQueryRequest;
+  }
+
+  RestexampleApi.addObject = function (obj1, obj2)
+  {
+    for (var fld in obj2)
+      obj1[fld] = obj2[fld];
   };
 
-var jqFun;
-if (isNodeJs)
-{
-  // Export as Node module.
-  module.exports = RestexampleApi;
+  RestexampleApi.defaultAjaxOptions = {};
+  RestexampleApi.defaultHeaders = {};
 
-  RestexampleApi.ajaxCall = nodeRequest;
-}
-else
-{
-  if (isCommonJs) {
-    // Export as CommonJs
-    module.exports = RestexampleApi;
-    jqFun = function () { return require("jquery"); };
-  } else if (typeof define === "function" && define.amd) {
-    // Export as AMD.
-    define("RestexampleApi", [], function () { return RestexampleApi; });
-    jqFun = function () { return window.$; };
-  } else {
-    // Export as global.
-    window.RestexampleApi = RestexampleApi;
-    jqFun = function () { return window.$; };
+  function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts, modifyRequest)
+  {
+    var jq = jqFun();
+
+    var headers = jq.extend(true, {}, RestexampleApi.defaultHeaders);
+    RestexampleApi.addObject(headers, { Accept : acceptHeader });
+
+    var callData =
+      { type        : method
+      , url         : url + (params ? '?' + jq.param(params) : '')
+      , cache       : false
+      , success     : success || function () {}
+      , error       : error || function () {}
+      , contentType : contentType
+      , headers     : headers
+      , xhrFields   : { withCredentials: true }
+      , data        : data || []
+      };
+
+    callData = modifyRequest(callData);
+
+    RestexampleApi.addObject(callData, RestexampleApi.defaultAjaxOptions);
+    RestexampleApi.addObject(callData, callOpts);
+
+    return jq.ajax(callData);
   }
 
-  RestexampleApi.ajaxCall = jQueryRequest;
-}
-
-RestexampleApi.addObject = function (obj1, obj2)
-{
-  for (var fld in obj2)
-    obj1[fld] = obj2[fld];
-};
-
-RestexampleApi.defaultAjaxOptions = {};
-RestexampleApi.defaultHeaders = {};
-
-function jQueryRequest (method, url, params, success, error, contentType, acceptHeader, data, callOpts, modifyRequest)
-{
-  var q = window.Q || function (a) { return a };
-  var jq = jqFun();
-
-  var headers = jq.extend(true, {}, RestexampleApi.defaultHeaders);
-  RestexampleApi.addObject(headers, { Accept : acceptHeader });
-
-  var callData =
-    { type        : method
-    , url         : url + (params ? '?' + jq.param(params) : '')
-    , cache       : false
-    , success     : success || function () {}
-    , error       : error || function () {}
-    , contentType : contentType
-    , headers     : headers
-    , xhrFields   : { withCredentials: true }
-    , data        : data || []
-    };
-
-  callData = modifyRequest(callData);
-
-  RestexampleApi.addObject(callData, RestexampleApi.defaultAjaxOptions);
-  RestexampleApi.addObject(callData, callOpts);
-
-  return q(jq.ajax(callData));
-}
-
-function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, modifyRequest)
-{
-  var allParams = {};
-  RestexampleApi.addObject(allParams, params);
-
-  if (method === "GET" || method === "HEAD")
-    // Avoid cached API responses.
-    allParams._ = Date.now();
-
-  var headers = { "Content-type" : contentType
-                , "Accept"       : acceptHeader
-                };
-
-  RestexampleApi.addObject(headers, RestexampleApi.defaultHeaders);
-
-  var callData =
-    { url     : url
-    , qs      : allParams
-    , method  : method
-    , headers : headers
-    };
-
-  if (data) callData.body = data;
-
-  callData = modifyRequest(callData);
-
-  RestexampleApi.addObject(callData, RestexampleApi.defaultAjaxOptions);
-  RestexampleApi.addObject(callData, callOpts);
-
-  return require("q").Promise(function (resolve, reject)
+  function nodeRequest (method, url, params, onSuccess, onError, contentType, acceptHeader, data, callOpts, modifyRequest)
   {
-    obfuscatedRequire("request")(callData, callback);
+    var allParams = {};
+    RestexampleApi.addObject(allParams, params);
 
-    function callback (error, message, body)
+    if (method === "GET" || method === "HEAD")
+      // Avoid cached API responses.
+      allParams._ = Date.now();
+
+    var headers = { "Content-type" : contentType
+                  , "Accept"       : acceptHeader
+                  };
+
+    RestexampleApi.addObject(headers, RestexampleApi.defaultHeaders);
+
+    var callData =
+      { url     : url
+      , qs      : allParams
+      , method  : method
+      , headers : headers
+      };
+
+    if (data) callData.body = data;
+
+    callData = modifyRequest(callData);
+
+    RestexampleApi.addObject(callData, RestexampleApi.defaultAjaxOptions);
+    RestexampleApi.addObject(callData, callOpts);
+
+    return require("q").Promise(function (resolve, reject)
     {
-      if (message && message.statusCode >= 200 && message.statusCode < 300)
+      obfuscatedRequire("request")(callData, callback);
+
+      function callback (error, message, body)
       {
-        var parsedResponse = parse(body);
-        onSuccess && onSuccess(parsedResponse, message);
-        resolve(parsedResponse)
-      }
-      else
-      {
-        if (!error)
+        if (message && message.statusCode >= 200 && message.statusCode < 300)
         {
-          error = new Error("HTTP request error");
-          error.statusCode = message.statusCode;
-          error.responseBody = body;
+          var parsedResponse = parse(body, message.headers);
+          onSuccess && onSuccess(parsedResponse, message);
+          resolve(parsedResponse)
         }
+        else
+        {
+          if (!error)
+          {
+            error = new Error("HTTP request error");
+            error.statusCode = message && message.statusCode;
+            error.responseBody = body;
+          }
 
-        error.response = parse(body);
+          error.response = parse(body, message ? message.headers : {});
 
-        if (onError)
-          onError(error);
+          if (onError)
+            onError(error);
 
-        reject(error);
+          reject(error);
+        }
       }
-    }
-  });
+    });
 
-  function parse (response)
-  {
-    if (acceptHeader.split(";").indexOf('text/json') >= 0)
+    function parse (response, headers)
     {
-      var r = response;
-      try
+      if (headers["content-type"] && headers["content-type"].split(";").indexOf("application/json") >= 0)
       {
-        r = JSON.parse(response);
-      }
-      catch (e)
-      {
+        var r = response;
+        try
+        {
+          r = JSON.parse(response);
+        }
+        catch (e)
+        {
+          return r;
+        }
         return r;
       }
-      return r;
+      else return response;
     }
-    else return response;
   }
-}
 
-RestexampleApi.setContext =
-  function (obj, url, secureUrl, modifyRequest)
-  {
-    obj.contextUrl = url;
-    obj.secureContextUrl = secureUrl;
-    obj.modifyRequest = modifyRequest;
-    for (var fld in obj)
+  RestexampleApi.setContext =
+    function (obj, url, secureUrl, modifyRequest)
     {
-      if (obj[fld] != undefined && obj[fld].apiObjectType != undefined && obj[fld].apiObjectType == 'resourceDir')
+      obj.contextUrl = url;
+      obj.secureContextUrl = secureUrl;
+      obj.modifyRequest = modifyRequest;
+      for (var fld in obj)
       {
-        var postfix = fld.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase() + '/';
-        RestexampleApi.setContext(obj[fld], url + postfix, secureUrl + postfix, modifyRequest);
+        if (obj[fld] != undefined && obj[fld].apiObjectType != undefined && obj[fld].apiObjectType == 'resourceDir')
+        {
+          var postfix = fld.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase() + '/';
+          RestexampleApi.setContext(obj[fld], url + postfix, secureUrl + postfix, modifyRequest);
+        }
       }
-    }
-  };RestexampleApi.prototype.version = "1.0.0";
+    };
+RestexampleApi.prototype.version = "1.0.0";
 RestexampleApi.prototype.Post =
   function Post (url, secureUrl, modifyRequest)
   {
@@ -309,10 +302,20 @@ RestexampleApi.prototype.Test.prototype.intersectedFormats2 =
   {
     return RestexampleApi.ajaxCall("POST", this.contextUrl + 'intersectedFormats2/', params, success, error, "text/plain", "text/xml", text, callOpts, this.modifyRequest);
   };
-RestexampleApi.prototype.Test.prototype.errorImport =
-  function (text, success, error, params, callOpts)
+RestexampleApi.prototype.Test.prototype.rawXmlIO =
+  function (xml, success, error, params, callOpts)
   {
-    return RestexampleApi.ajaxCall("POST", this.contextUrl + 'errorImport/', params, success, error, "text/plain", "text/xml", text, callOpts, this.modifyRequest);
+    return RestexampleApi.ajaxCall("POST", this.contextUrl + 'rawXmlIO/', params, success, error, "text/xml", "text/xml", xml, callOpts, this.modifyRequest);
+  };
+RestexampleApi.prototype.Test.prototype.rawJsonIO =
+  function (json, success, error, params, callOpts)
+  {
+    return RestexampleApi.ajaxCall("POST", this.contextUrl + 'rawJsonIO/', params, success, error, "text/json", "text/json", JSON.stringify(json), callOpts, this.modifyRequest);
+  };
+RestexampleApi.prototype.Test.prototype.rawJsonAndXmlIO =
+  function (json, success, error, params, callOpts)
+  {
+    return RestexampleApi.ajaxCall("POST", this.contextUrl + 'rawJsonAndXmlIO/', params, success, error, "text/json", "text/json", JSON.stringify(json), callOpts, this.modifyRequest);
   };
 RestexampleApi.prototype.Test.prototype.noError =
   function (success, error, params, callOpts)
@@ -387,7 +390,7 @@ RestexampleApi.prototype.Test.prototype.Import.byIt =
       };
     return accessor;
   };
-RestexampleApi.prototype.Test.prototype.Import.prototype.do =
+RestexampleApi.prototype.Test.prototype.Import.prototype.do_ =
   function (success, error, params, callOpts)
   {
     return RestexampleApi.ajaxCall("POST", this.contextUrl + 'do/', params, success, error, "text/plain", "text/json", undefined, callOpts, this.modifyRequest);
@@ -414,6 +417,27 @@ RestexampleApi.prototype.User.create =
   function (json, success, error, params, callOpts)
   {
     return RestexampleApi.ajaxCall("POST", this.contextUrl + '', params, success, error, "text/json", "text/json", JSON.stringify(json), callOpts, this.modifyRequest);
-  };
+  };  return new RestexampleApi (url, secureUrl, modifyRequest);
+}
+
+var jqFun;
+if (isNodeJs)
+{
+  // Export as Node module.
+  module.exports = RestexampleApi;
+}
+else
+{
+  if (isCommonJs) {
+    // Export as CommonJs
+    module.exports = RestexampleApi;
+  } else if (typeof define === "function" && define.amd) {
+    // Export as AMD.
+    define("RestexampleApi", [], function () { return RestexampleApi; });
+  } else {
+    // Export as global.
+    window.RestexampleApi = RestexampleApi;
+  }
+}
 
 })(this);
