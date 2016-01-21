@@ -7,7 +7,7 @@
   , TemplateHaskell
   , TypeFamilies
   #-}
-module Api.Test.ReservedName where
+module Api.Test.ReservedName (resource) where
 
 import Control.Monad.Reader
 import Data.Text (Text)

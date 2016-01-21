@@ -2,7 +2,7 @@
     DeriveDataTypeable
   , DeriveGeneric
   #-}
-module Api.Test.Err2 where
+module Api.Test.Err2 (Err (..)) where
 
 import Data.Aeson
 import Data.Data

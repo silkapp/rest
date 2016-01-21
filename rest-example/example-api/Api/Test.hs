@@ -5,7 +5,12 @@
   , OverloadedStrings
   , ScopedTypeVariables
   #-}
-module Api.Test where
+module Api.Test
+  ( resource
+  , WithText
+  , Err (..)
+  , Ok (..)
+  ) where
 
 import Control.Monad.Error.Class
 import Control.Monad.Reader
@@ -102,7 +107,7 @@ rawJsonIO = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
 rawJsonAndXmlIO :: Handler WithText
 rawJsonAndXmlIO = mkIdHandler (rawJsonAndXmlI . rawJsonAndXmlO) $ \s _ ->
   case s of
-    Left _  -> return ("\"jsonInput\"", "<jsonInput/>")
+    Left _ -> return ("\"jsonInput\"", "<jsonInput/>")
     Right _ -> return ("\"xmlInput\"" , "<xmlInput/>" )
 
 noError :: Handler WithText
