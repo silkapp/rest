@@ -51,7 +51,9 @@ resource = mkResourceReader
                 , ("differentFormats"   , differentFormats   )
                 , ("intersectedFormats" , intersectedFormats )
                 , ("intersectedFormats2", intersectedFormats2)
-                , ("errorImport"        , errorImport        )
+                , ("rawXmlIO"           , rawXmlIO           )
+                , ("rawJsonIO"          , rawJsonIO          )
+                , ("rawJsonAndXmlIO"    , rawJsonAndXmlIO    )
                 , ("noError"            , noError            )
                 , ("justStringO"        , justStringO        )
                 , ("preferJson"         , preferJson         )
@@ -85,20 +87,20 @@ intersectedFormats2 = mkInputHandler (xmlE . xmlO . jsonO . stringI) $
     "error" -> throwError $ domainReason Err
     _       -> return Ok
 
-errorImport :: Handler WithText
-errorImport = mkIdHandler (stringI . rawXmlO . xmlE) $ \s _ ->
+rawXmlIO :: Handler WithText
+rawXmlIO = mkIdHandler (rawXmlI . rawXmlO . xmlE) $ \s _ ->
   case s of
-    "error" -> throwError $ domainReason E2.Err
-    _       -> return "<ok/>"
+    "<error/>" -> throwError $ domainReason E2.Err
+    _          -> return "<ok/>"
 
-errorImportJ :: Handler WithText
-errorImportJ = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
+rawJsonIO :: Handler WithText
+rawJsonIO = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
   case s of
     "\"error\"" -> throwError $ domainReason E2.Err
     _           -> return "\"ok\""
 
-errorImportXJ :: Handler WithText
-errorImportXJ = mkIdHandler (rawJsonAndXmlI . rawJsonAndXmlO) $ \s _ ->
+rawJsonAndXmlIO :: Handler WithText
+rawJsonAndXmlIO = mkIdHandler (rawJsonAndXmlI . rawJsonAndXmlO) $ \s _ ->
   case s of
     Left _  -> return ("\"jsonInput\"", "<jsonInput/>")
     Right _ -> return ("\"xmlInput\"" , "<xmlInput/>" )
