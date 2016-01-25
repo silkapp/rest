@@ -39,8 +39,8 @@ Library
     , resourcet >= 1.1.4 && < 1.2
     , rest-types >= 1.13 && < 1.15
     , tostring == 0.2.*
-    , transformers >= 0.3 && < 0.5
+    , transformers >= 0.3 && < 0.6
     , transformers-base >= 0.4.4 && < 0.5
-    , transformers-compat >= 0.3 && < 0.5
+    , transformers-compat >= 0.3 && < 0.6
     , uri-encode == 1.5.*
     , utf8-string >= 0.3 && < 1.1
