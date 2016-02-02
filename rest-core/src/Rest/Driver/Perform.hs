@@ -157,7 +157,7 @@ writeResponse (RunnableHandler run (GenHandler dict act _)) = do
 fetchInputs :: Rest m => Dict h p j o e -> ExceptT (Reason (FromMaybe Void e)) m (Env h p (FromMaybe () j))
 fetchInputs dict =
   do bs <- getBody
-     ct <- parseContentType
+     ct <- parseContentType <$> getContentType
 
      h <- HeaderError `mapE` headers    (L.get D.headers dict)
      p <- ParamError  `mapE` parameters (L.get D.params dict)
@@ -176,22 +176,24 @@ fetchInputs dict =
                   Nothing             -> throwError (UnsupportedFormat "unknown")
      return (Env h p j)
 
-parseContentType :: Rest m => m (Maybe Format)
-parseContentType =
-  do ct <- fromMaybe "" <$> getHeader "Content-Type"
-     let segs  = concat (take 1 . splitOn ";" <$> splitOn "," ct)
-         types = flip concatMap segs $ \ty ->
-                   case splitOn "/" ty of
-                     ["application", "xml"]          -> [XmlFormat]
-                     ["application", "json"]         -> [JsonFormat]
-                     ["text",        "xml"]          -> [XmlFormat]
-                     ["text",        "json"]         -> [JsonFormat]
-                     ["text",        "plain"]        -> [StringFormat]
-                     ["application", "octet-stream"] -> [FileFormat]
-                     ["application", _             ] -> [FileFormat]
-                     ["image",       _             ] -> [FileFormat]
-                     _                               -> []
-     return (headMay types)
+getContentType :: Rest m => m (Maybe String)
+getContentType = getHeader "Content-Type"
+
+parseContentType :: Maybe String -> Maybe Format
+parseContentType mct =
+  let segs  = concat (take 1 . splitOn ";" <$> splitOn "," (fromMaybe "" mct))
+      types = flip concatMap segs $ \ty ->
+                case splitOn "/" ty of
+                  ["application", "xml"]          -> [XmlFormat]
+                  ["application", "json"]         -> [JsonFormat]
+                  ["text",        "xml"]          -> [XmlFormat]
+                  ["text",        "json"]         -> [JsonFormat]
+                  ["text",        "plain"]        -> [StringFormat]
+                  ["application", "octet-stream"] -> [FileFormat]
+                  ["application", _             ] -> [FileFormat]
+                  ["image",       _             ] -> [FileFormat]
+                  _                               -> []
+  in headMay types
 
 headers :: Rest m => Header h -> ExceptT DataError m h
 headers NoHeader      = return ()
@@ -367,27 +369,34 @@ outputMultipart vs =
 acceptM :: Rest m => m [Format]
 acceptM =
   do acceptHeader <- getHeader "Accept"
-     ct <- parseContentType
-     ty <- fromMaybe "" <$> getParameter "type"
+     ct <- getHeader "Content-Type"
+     ty <- getParameter "type"
      return $ accept acceptHeader ct ty
 
-accept :: Maybe String -> Maybe Format -> String -> [Format]
-accept acceptHeader ct ty =
-  let fromQuery =
-        case ty of
-          "json" -> [JsonFormat]
-          "xml"  -> [XmlFormat]
-          _      -> []
-      fromAccept = maybe allFormats splitter acceptHeader
+accept :: Maybe String -> Maybe String -> Maybe String -> [Format]
+accept acceptHeader mct mty =
+  let ct :: Maybe Format
+      ct = parseContentType mct
+      fromQuery :: [Format]
+      fromQuery =
+        case mty of
+          Just "json" -> [JsonFormat]
+          Just "xml"  -> [XmlFormat]
+          _           -> []
+      fromAccept :: [Format]
+      fromAccept = maybe (allFormats ct) (splitter ct) acceptHeader
   in (fromQuery ++ fromAccept)
   where
-    allFormats = (maybe id (:) ct) [minBound .. maxBound]
-    splitter hdr = nub (match =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
+    allFormats :: Maybe Format -> [Format]
+    allFormats ct = (maybe id (:) ct) [minBound .. maxBound]
+    splitter :: Maybe Format -> String -> [Format]
+    splitter ct hdr = nub (match ct =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
 
-    match ty' =
+    match :: Maybe Format -> String -> [Format]
+    match ct ty' =
       case map trim <$> (splitOn "+" . trim <$> splitOn "/" ty') of
-        [ ["*"]           , ["*"] ] -> allFormats
-        [ ["*"]                   ] -> allFormats
+        [ ["*"]           , ["*"] ] -> allFormats ct
+        [ ["*"]                   ] -> allFormats ct
         [ ["text"]        , xs    ] -> xs >>= txt
         [ ["application"] , xs    ] -> xs >>= app
         [ ["image"]       , xs    ] -> xs >>= img

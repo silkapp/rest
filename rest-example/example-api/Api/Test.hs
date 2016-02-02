@@ -18,14 +18,16 @@ import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.Data
 import Data.JSON.Schema
+import Data.Maybe
 import Data.Text (Text)
 import GHC.Generics
 import Generics.Generic.Aeson
 import Generics.XmlPickler
+import Safe
 import Text.XML.HXT.Arrow.Pickle
 
 import Rest
-import Rest.Dictionary (Format (..), Header (..))
+import Rest.Dictionary
 import qualified Rest.Driver.Perform as Driver (accept)
 import qualified Rest.Resource       as R
 
@@ -61,7 +63,8 @@ resource = mkResourceReader
                 , ("intersectedFormats2", intersectedFormats2)
                 , ("rawXmlIO"           , rawXmlIO           )
                 , ("rawJsonIO"          , rawJsonIO          )
-                , ("rawJsonAndXmlIO"    , rawJsonAndXmlIO    )
+                , ("rawJsonAndXmlI"     , rawJsonAndXmlI_    )
+                , ("rawJsonAndXmlO"     , rawJsonAndXmlO_    )
                 , ("noError"            , noError            )
                 , ("justStringO"        , justStringO        )
                 , ("preferJson"         , preferJson         )
@@ -107,31 +110,31 @@ rawJsonIO = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
     "\"error\"" -> throwError $ domainReason E2.Err
     _           -> return "\"ok\""
 
-rawJsonAndXmlIO :: Handler WithText
-rawJsonAndXmlIO = mkHandler (mkHeader accept . rawJsonAndXmlI . rawJsonAndXmlO) handler
+rawJsonAndXmlI_ :: Handler WithText
+rawJsonAndXmlI_ = mkInputHandler (stringO . rawJsonAndXmlI) handler
   where
-    handler :: Env (Maybe Format) () (Either Json Xml) -> ExceptT Reason_ WithText ByteString
-    handler = \case
-       Env (Just JsonFormat) _ (Left (Json _)) -> return "\"jsonInput\""
-       Env (Just JsonFormat) _ (Right (Xml _)) -> return "\"xmlInput\""
-       Env (Just XmlFormat ) _ (Left (Json _)) -> return "<jsonInput/>"
-       Env (Just XmlFormat ) _ (Right (Xml _)) -> return "<xmlInput/>"
-       Env _ _ _ -> throwError $ OutputError $ UnsupportedFormat "Only json and xml accept headers are allowed"
-  -- Accept header parsing that doesn't take Content-Type or the `type' query parameter into account.
-  accept :: Header (Maybe Format)
-  accept = Header ["Accept"] $ \xs ->
-    let formats = concatMap parseAccept xs
-        jsonp   = JsonFormat `elem` formats
-        xmlp    = XmlFormat  `elem` formats
-    in return $
-         if jsonp
-           then Just JsonFormat
-           else if xmlp
-             then Just XmlFormat
-             else Nothing
-    where
-      parseAccept :: Maybe String -> [Format]
-      parseAccept acceptHeader = Driver.accept acceptHeader Nothing ""
+    handler :: Either Json Xml -> ExceptT Reason_ WithText String
+    handler = return . \case
+      Left (Json _) -> "json input"
+      Right (Xml _) -> "xml input"
+
+rawJsonAndXmlO_ :: Handler WithText
+rawJsonAndXmlO_ = mkHandler (addHeader contentType . mkHeader accept . mkPar typeParam . rawJsonAndXmlO) handler
+  where
+    handler :: Env (Maybe String, Maybe String) (Maybe String) () -> ExceptT Reason_ WithText ByteString
+    handler (Env (mContentType, mAccept) mType ()) = do
+      let accs = Driver.accept mAccept mContentType mType
+      if JsonFormat `elem` accs
+        then return "\"json\""
+        else if XmlFormat `elem` accs
+          then return "<xml/>"
+          else throwError . OutputError $ UnsupportedFormat "Only json and xml accept headers are allowed"
+    contentType :: Header (Maybe String)
+    contentType  = Header ["Content-Type"] (return . headMay . catMaybes)
+    typeParam   :: Param (Maybe String)
+    typeParam    = Param ["type"] (return . headMay . catMaybes)
+    accept       :: Header (Maybe String)
+    accept        = Header ["Accept"] (return . headMay . catMaybes)
 
 noError :: Handler WithText
 noError = mkConstHandler jsonO $ return Ok
