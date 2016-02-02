@@ -194,7 +194,7 @@ jsonO = L.modify outputs (modDicts (JsonO:))
 -- Both values are needed since the accept header determines which one
 -- to send.
 
-rawJsonAndXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just (Json, Xml)) e
+rawJsonAndXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just ByteString) e
 rawJsonAndXmlO = L.set outputs (Dicts [RawJsonAndXmlO])
 
 -- | Allow output as multipart. Writes out the ByteStrings separated

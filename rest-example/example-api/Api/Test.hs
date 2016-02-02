@@ -12,11 +12,15 @@ module Api.Test
   , Ok (..)
   ) where
 
-import Control.Monad.Error.Class
+import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson
+import Data.ByteString.Lazy (ByteString)
+import Data.Char (isSpace)
 import Data.Data
 import Data.JSON.Schema
+import Data.List (nub)
+import Data.List.Split
 import Data.Text (Text)
 import GHC.Generics
 import Generics.Generic.Aeson
@@ -24,6 +28,7 @@ import Generics.XmlPickler
 import Text.XML.HXT.Arrow.Pickle
 
 import Rest
+import Rest.Dictionary (Format (..), Header (..))
 import qualified Rest.Resource as R
 
 import ApiTypes
@@ -105,10 +110,66 @@ rawJsonIO = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
     _           -> return "\"ok\""
 
 rawJsonAndXmlIO :: Handler WithText
-rawJsonAndXmlIO = mkIdHandler (rawJsonAndXmlI . rawJsonAndXmlO) $ \s _ ->
-  case s of
-    Left (Json _) -> return (Json "\"jsonInput\"", Xml "<jsonInput/>")
-    Right (Xml _) -> return (Json "\"xmlInput\"" , Xml "<xmlInput/>" )
+rawJsonAndXmlIO = mkHandler (mkHeader accept . rawJsonAndXmlI . rawJsonAndXmlO) handler
+  where
+    handler :: Env (Maybe Format) () (Either Json Xml) -> ExceptT Reason_ WithText ByteString
+    handler = \case
+       Env (Just JsonFormat) _ (Left (Json _)) -> return "\"jsonInput\""
+       Env (Just JsonFormat) _ (Right (Xml _)) -> return "\"xmlInput\""
+       Env (Just XmlFormat ) _ (Left (Json _)) -> return "<jsonInput/>"
+       Env (Just XmlFormat ) _ (Right (Xml _)) -> return "<xmlInput/>"
+       Env _ _ _ -> throwError $ OutputError $ UnsupportedFormat "Only json and xml accept headers are allowed"
+
+accept :: Header (Maybe Format)
+accept = Header ["Accept"] $ \xs ->
+  let formats = concatMap parseAccept xs
+      jsonp   = JsonFormat `elem` formats
+      xmlp    = XmlFormat  `elem` formats
+  in return $
+       if jsonp
+         then Just JsonFormat
+         else if xmlp
+           then Just XmlFormat
+           else Nothing
+  where
+    -- Adapted accept header parsing from rest-core, this doesn't take Content-Type into account.
+    parseAccept :: Maybe String -> [Format]
+    parseAccept acceptHeader =
+      maybe allFormats splitter acceptHeader
+      where
+        allFormats :: [Format]
+        allFormats = [minBound .. maxBound]
+        splitter :: String -> [Format]
+        splitter hdr = nub (match =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
+
+        match :: [Char] -> [Format]
+        match ty =
+          case map trim <$> (splitOn "+" . trim <$> splitOn "/" ty) of
+            [ ["*"]           , ["*"] ] -> allFormats
+            [ ["*"]                   ] -> allFormats
+            [ ["text"]        , xs    ] -> xs >>= txt
+            [ ["application"] , xs    ] -> xs >>= app
+            [ ["image"]       , xs    ] -> xs >>= img
+            _                           -> []
+
+        trim :: String -> String
+        trim = f . f
+          where f = reverse . dropWhile isSpace
+
+        txt :: String -> [Format]
+        txt "*"            = [XmlFormat, JsonFormat, StringFormat]
+        txt "json"         = [JsonFormat]
+        txt "xml"          = [XmlFormat]
+        txt "plain"        = [StringFormat]
+        txt _              = []
+        app :: String -> [Format]
+        app "*"            = [XmlFormat, JsonFormat, FileFormat]
+        app "xml"          = [XmlFormat]
+        app "json"         = [JsonFormat]
+        app "octet-stream" = [FileFormat]
+        app _              = []
+        img :: String -> [Format]
+        img _              = [FileFormat]
 
 noError :: Handler WithText
 noError = mkConstHandler jsonO $ return Ok

@@ -167,8 +167,8 @@ data Output o where
   RawXmlO        ::                                         Output ByteString
   JsonO          :: (Typeable o, ToJSON o, JSONSchema o) => Output o
   XmlO           :: (Typeable o, XmlPickler o)           => Output o
-  RawJsonAndXmlO ::                                         Output (Json, Xml)
   StringO        ::                                         Output String
+  RawJsonAndXmlO ::                                         Output ByteString
   MultipartO     ::                                         Output [BodyPart]
 
 deriving instance Show (Output o)

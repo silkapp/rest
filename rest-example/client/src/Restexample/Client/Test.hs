@@ -78,7 +78,7 @@ rawJsonIO input
  
 rawJsonAndXmlIO ::
                   ApiStateC m =>
-                  String -> m (ApiResponse Rest.Types.Void.Void String)
+                  ByteString -> m (ApiResponse Rest.Types.Void.Void ByteString)
 rawJsonAndXmlIO input
   = let rHeaders
           = [(hAccept, "text/json"), (hContentType, "text/json")]
