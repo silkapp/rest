@@ -1,17 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC-fno-warn-unused-imports#-}
+{-# OPTIONS_GHC -fno-warn-unused-imports#-}
 module Restexample.Client.Test.FooBar where
 import Rest.Client.Internal
 import qualified Restexample.Client.Test as Test
 import qualified Rest.Types.Error
 import qualified Rest.Types.Void
 import qualified Rest.StringMap.HashMap.Strict
- 
+
 type Identifier = [(Char)]
- 
+
 readId :: Identifier -> [String]
 readId x = ["id", showUrl x]
- 
+
 removeManyId ::
                ApiStateC m =>
                Rest.StringMap.HashMap.Strict.StringHashMap ([(Char)]) (()) ->
@@ -28,7 +28,7 @@ removeManyId input
               rHeaders
               (toJSON input)
       in doRequest fromJSON fromJSON request
- 
+
 remove ::
          ApiStateC m =>
          Identifier -> m (ApiResponse Rest.Types.Void.Void ())
