@@ -312,10 +312,15 @@ RestexampleApi.prototype.Test.prototype.rawJsonIO =
   {
     return RestexampleApi.ajaxCall("POST", this.contextUrl + 'rawJsonIO/', params, success, error, "text/json", "text/json", JSON.stringify(json), callOpts, this.modifyRequest);
   };
-RestexampleApi.prototype.Test.prototype.rawJsonAndXmlIO =
+RestexampleApi.prototype.Test.prototype.rawJsonAndXmlI =
   function (json, success, error, params, callOpts)
   {
-    return RestexampleApi.ajaxCall("POST", this.contextUrl + 'rawJsonAndXmlIO/', params, success, error, "text/json", "text/json", JSON.stringify(json), callOpts, this.modifyRequest);
+    return RestexampleApi.ajaxCall("POST", this.contextUrl + 'rawJsonAndXmlI/', params, success, error, "text/json", "text/plain,text/json", JSON.stringify(json), callOpts, this.modifyRequest);
+  };
+RestexampleApi.prototype.Test.prototype.rawJsonAndXmlO =
+  function (success, error, params, callOpts)
+  {
+    return RestexampleApi.ajaxCall("POST", this.contextUrl + 'rawJsonAndXmlO/', params, success, error, "text/plain", "text/json", undefined, callOpts, this.modifyRequest);
   };
 RestexampleApi.prototype.Test.prototype.noError =
   function (success, error, params, callOpts)

@@ -76,16 +76,29 @@ rawJsonIO input
               (toJSON input)
       in doRequest fromJSON fromJSON request
  
-rawJsonAndXmlIO ::
-                  ApiStateC m =>
-                  ByteString -> m (ApiResponse Rest.Types.Void.Void ByteString)
-rawJsonAndXmlIO input
+rawJsonAndXmlI ::
+                 ApiStateC m =>
+                 ByteString -> m (ApiResponse Rest.Types.Void.Void String)
+rawJsonAndXmlI input
   = let rHeaders
-          = [(hAccept, "text/json"), (hContentType, "text/json")]
+          = [(hAccept, "text/plain,text/json"), (hContentType, "text/json")]
         request
-          = makeReq "POST" "v1.0.0" [["test"], ["rawJsonAndXmlIO"]] []
+          = makeReq "POST" "v1.0.0" [["test"], ["rawJsonAndXmlI"]] []
               rHeaders
               (toJSON input)
+      in doRequest fromJSON toString request
+ 
+rawJsonAndXmlO ::
+                 ApiStateC m =>
+                 [(String, String)] ->
+                   m (ApiResponse Rest.Types.Void.Void ByteString)
+rawJsonAndXmlO pList
+  = let rHeaders
+          = [(hAccept, "text/json"), (hContentType, "text/plain")]
+        request
+          = makeReq "POST" "v1.0.0" [["test"], ["rawJsonAndXmlO"]] pList
+              rHeaders
+              ""
       in doRequest fromJSON fromJSON request
  
 noError ::
