@@ -175,13 +175,13 @@ deriving instance Show (Output o)
 deriving instance Eq   (Output o)
 deriving instance Ord  (Output o)
 
--- | Newtypes around ByteStrings used in `RawJsonAndXmlI` and
--- `RawJsonAndXmlO` to add some protection from using the wrong
--- values.
-
+-- | Newtype around ByteStrings used in `RawJsonAndXmlI` to add some
+-- protection from parsing the input incorrectly.
 newtype Xml = Xml { unXml :: ByteString }
   deriving (Eq, Show)
 
+-- | Newtype around ByteStrings used in `RawJsonAndXmlI` to add some
+-- protection from parsing the input incorrectly.
 newtype Json = Json { unJson :: ByteString }
   deriving (Eq, Show)
 
