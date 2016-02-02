@@ -133,8 +133,8 @@ rawJsonAndXmlO_ = mkHandler (addHeader contentType . mkHeader accept . mkPar typ
     contentType  = Header ["Content-Type"] (return . headMay . catMaybes)
     typeParam   :: Param (Maybe String)
     typeParam    = Param ["type"] (return . headMay . catMaybes)
-    accept       :: Header (Maybe String)
-    accept        = Header ["Accept"] (return . headMay . catMaybes)
+    accept      :: Header (Maybe String)
+    accept       = Header ["Accept"] (return . headMay . catMaybes)
 
 noError :: Handler WithText
 noError = mkConstHandler jsonO $ return Ok
