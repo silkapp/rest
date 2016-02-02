@@ -231,7 +231,7 @@ parser f        (Dicts ds) v = parserD f ds
 
 failureWriter :: Rest m => Errors e -> Reason (FromMaybe Void e) -> m UTF8.ByteString
 failureWriter es err =
-  do formats <- accept
+  do formats <- acceptM
      fromMaybeT (printFallback formats) $
        msum (  (tryPrint err                     es   <$> (formats ++ [XmlFormat]))
             ++ (tryPrint (fallbackError formats) None <$> formats                 )
@@ -352,7 +352,7 @@ unsupportedFormat = throwError . Last . Just . UnsupportedFormat . show
 
 tryOutputs :: Rest m => (t -> Format -> ExceptT (Last DataError) m a) -> t -> ExceptT (Reason e) m a
 tryOutputs try outputs = do
-  formats <- lift accept
+  formats <- lift acceptM
   rethrowLast $ (msum $ try outputs <$> formats) <|> unsupportedFormat formats
   where
     rethrowLast :: Monad m => ExceptT (Last DataError) m a -> ExceptT (Reason e) m a
@@ -364,27 +364,30 @@ outputMultipart vs =
      setHeader "Content-Type" ("multipart/mixed; boundary=" ++ boundary)
      return $ showMultipartBody boundary (MultiPart vs)
 
-accept :: Rest m => m [Format]
-accept =
+acceptM :: Rest m => m [Format]
+acceptM =
   do acceptHeader <- getHeader "Accept"
      ct <- parseContentType
      ty <- fromMaybe "" <$> getParameter "type"
-     let fromQuery =
-           case ty of
-             "json" -> [JsonFormat]
-             "xml"  -> [XmlFormat]
-             _      -> []
-         fromAccept = maybe (allFormats ct) (splitter ct) acceptHeader
-     return (fromQuery ++ fromAccept)
+     return $ accept acceptHeader ct ty
 
+accept :: Maybe String -> Maybe Format -> String -> [Format]
+accept acceptHeader ct ty =
+  let fromQuery =
+        case ty of
+          "json" -> [JsonFormat]
+          "xml"  -> [XmlFormat]
+          _      -> []
+      fromAccept = maybe allFormats splitter acceptHeader
+  in (fromQuery ++ fromAccept)
   where
-    allFormats ct = (maybe id (:) ct) [minBound .. maxBound]
-    splitter ct hdr = nub (match ct =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
+    allFormats = (maybe id (:) ct) [minBound .. maxBound]
+    splitter hdr = nub (match =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
 
-    match ct ty =
-      case map trim <$> (splitOn "+" . trim <$> splitOn "/" ty) of
-        [ ["*"]           , ["*"] ] -> allFormats ct
-        [ ["*"]                   ] -> allFormats ct
+    match ty' =
+      case map trim <$> (splitOn "+" . trim <$> splitOn "/" ty') of
+        [ ["*"]           , ["*"] ] -> allFormats
+        [ ["*"]                   ] -> allFormats
         [ ["text"]        , xs    ] -> xs >>= txt
         [ ["application"] , xs    ] -> xs >>= app
         [ ["image"]       , xs    ] -> xs >>= img
