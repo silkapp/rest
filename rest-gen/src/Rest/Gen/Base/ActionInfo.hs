@@ -441,7 +441,7 @@ handlerInputs (GenHandler dict _ _) = map (handlerInput Proxy) (Dict.getDicts_ .
       RawJsonI       -> defaultDescription JSON "JSON" haskellStringType
       -- Picking JSON or XML is arbitrary here since both are possible
       -- so we stick with the convention of preferring JSON.
-      RawJsonAndXmlI -> defaultDescription JSON "JSON" haskellByteStringType
+      RawJsonAndXmlI -> defaultDescription File "File" haskellByteStringType
       FileI          -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract output description from handlers
@@ -462,7 +462,7 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (Dict.getDicts_
       RawJsonO       -> defaultDescription JSON "JSON" haskellStringType
       -- Picking JSON or XML is arbitrary here since both are possible
       -- so we stick with the convention of preferring JSON.
-      RawJsonAndXmlO -> defaultDescription JSON "JSON" haskellByteStringType
+      RawJsonAndXmlO -> defaultDescription File "File" haskellStringType
       FileO          -> defaultDescription File "File" haskellByteStringType
 
 -- | Extract input description from handlers
