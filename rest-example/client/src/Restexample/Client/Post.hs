@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC-fno-warn-unused-imports#-}
+{-# OPTIONS_GHC -fno-warn-unused-imports#-}
 module Restexample.Client.Post where
 import Rest.Client.Internal
 import qualified Rest.Types.Void
@@ -9,14 +9,14 @@ import qualified Rest.Types.Error
 import qualified Rest.StringMap.HashMap.Strict
 import qualified Type.PostError
 import qualified Type.UserPost
- 
+
 data Identifier = Id Int
                 | Latest
- 
+
 readId :: Identifier -> [String]
 readId (Id x) = ["id", showUrl x]
 readId Latest = ["latest"]
- 
+
 list ::
        ApiStateC m =>
        [(String, String)] ->
@@ -27,7 +27,7 @@ list pList
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
         request = makeReq "GET" "v1.0.0" [["post"]] pList rHeaders ""
       in doRequest fromJSON fromJSON request
- 
+
 byId ::
        ApiStateC m =>
        Int -> m (ApiResponse Rest.Types.Void.Void Type.Post.Post)
@@ -39,7 +39,7 @@ byId integer
               rHeaders
               ""
       in doRequest fromJSON fromJSON request
- 
+
 removeManyId ::
                ApiStateC m =>
                Rest.StringMap.HashMap.Strict.StringHashMap ([(Char)]) (()) ->
@@ -55,7 +55,7 @@ removeManyId input
           = makeReq "DELETE" "v1.0.0" [["post"], ["id"]] [] rHeaders
               (toJSON input)
       in doRequest fromJSON fromJSON request
- 
+
 latest ::
          ApiStateC m => m (ApiResponse Rest.Types.Void.Void Type.Post.Post)
 latest
@@ -64,7 +64,7 @@ latest
         request
           = makeReq "GET" "v1.0.0" [["post"], ["latest"]] [] rHeaders ""
       in doRequest fromJSON fromJSON request
- 
+
 create ::
          ApiStateC m =>
          Type.UserPost.UserPost ->
@@ -75,7 +75,7 @@ create input
         request
           = makeReq "POST" "v1.0.0" [["post"]] [] rHeaders (toJSON input)
       in doRequest fromJSON fromJSON request
- 
+
 remove ::
          ApiStateC m =>
          Identifier -> m (ApiResponse Rest.Types.Void.Void ())

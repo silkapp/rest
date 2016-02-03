@@ -5,21 +5,31 @@
   , OverloadedStrings
   , ScopedTypeVariables
   #-}
-module Api.Test where
+module Api.Test
+  ( resource
+  , WithText
+  , Err (..)
+  , Ok (..)
+  ) where
 
-import Control.Monad.Error.Class
+import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson
+import Data.ByteString.Lazy (ByteString)
 import Data.Data
 import Data.JSON.Schema
+import Data.Maybe
 import Data.Text (Text)
 import GHC.Generics
 import Generics.Generic.Aeson
 import Generics.XmlPickler
+import Safe
 import Text.XML.HXT.Arrow.Pickle
 
 import Rest
-import qualified Rest.Resource as R
+import Rest.Dictionary
+import qualified Rest.Driver.Perform as Driver (accept)
+import qualified Rest.Resource       as R
 
 import ApiTypes
 import qualified Api.Test.Err2 as E2
@@ -51,7 +61,10 @@ resource = mkResourceReader
                 , ("differentFormats"   , differentFormats   )
                 , ("intersectedFormats" , intersectedFormats )
                 , ("intersectedFormats2", intersectedFormats2)
-                , ("errorImport"        , errorImport        )
+                , ("rawXmlIO"           , rawXmlIO           )
+                , ("rawJsonIO"          , rawJsonIO          )
+                , ("rawJsonAndXmlI"     , rawJsonAndXmlI_    )
+                , ("rawJsonAndXmlO"     , rawJsonAndXmlO_    )
                 , ("noError"            , noError            )
                 , ("justStringO"        , justStringO        )
                 , ("preferJson"         , preferJson         )
@@ -85,11 +98,43 @@ intersectedFormats2 = mkInputHandler (xmlE . xmlO . jsonO . stringI) $
     "error" -> throwError $ domainReason Err
     _       -> return Ok
 
-errorImport :: Handler WithText
-errorImport = mkIdHandler (stringI . rawXmlO . xmlE) $ \s (_::Text) ->
+rawXmlIO :: Handler WithText
+rawXmlIO = mkIdHandler (rawXmlI . rawXmlO . xmlE) $ \s _ ->
   case s of
-    "error" -> throwError $ domainReason E2.Err
-    _       -> return "<ok/>"
+    "<error/>" -> throwError $ domainReason E2.Err
+    _          -> return "<ok/>"
+
+rawJsonIO :: Handler WithText
+rawJsonIO = mkIdHandler (rawJsonI . rawJsonO . jsonE) $ \s _ ->
+  case s of
+    "\"error\"" -> throwError $ domainReason E2.Err
+    _           -> return "\"ok\""
+
+rawJsonAndXmlI_ :: Handler WithText
+rawJsonAndXmlI_ = mkInputHandler (stringO . rawJsonAndXmlI) handler
+  where
+    handler :: Either Json Xml -> ExceptT Reason_ WithText String
+    handler = return . \case
+      Left (Json _) -> "json input"
+      Right (Xml _) -> "xml input"
+
+rawJsonAndXmlO_ :: Handler WithText
+rawJsonAndXmlO_ = mkHandler (addHeader contentType . mkHeader accept . mkPar typeParam . rawJsonAndXmlO) handler
+  where
+    handler :: Env (Maybe String, Maybe String) (Maybe String) () -> ExceptT Reason_ WithText ByteString
+    handler (Env (mContentType, mAccept) mType ()) = do
+      let accs = Driver.accept mAccept mContentType mType
+      if JsonFormat `elem` accs
+        then return "\"json\""
+        else if XmlFormat `elem` accs
+          then return "<xml/>"
+          else throwError . OutputError $ UnsupportedFormat "Only json and xml accept headers are allowed"
+    contentType :: Header (Maybe String)
+    contentType  = Header ["Content-Type"] (return . headMay . catMaybes)
+    typeParam   :: Param (Maybe String)
+    typeParam    = Param ["type"] (return . headMay . catMaybes)
+    accept      :: Header (Maybe String)
+    accept       = Header ["Accept"] (return . headMay . catMaybes)
 
 noError :: Handler WithText
 noError = mkConstHandler jsonO $ return Ok

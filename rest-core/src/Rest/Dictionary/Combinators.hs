@@ -17,6 +17,8 @@ module Rest.Dictionary.Combinators
   , xmlI
   , rawXmlI
   , jsonI
+  , rawJsonI
+  , rawJsonAndXmlI
 
   -- ** Output dictionaries
 
@@ -25,6 +27,8 @@ module Rest.Dictionary.Combinators
   , xmlO
   , rawXmlO
   , jsonO
+  , rawJsonO
+  , rawJsonAndXmlO
   , multipartO
 
   -- ** Error dictionaries
@@ -129,10 +133,22 @@ xmlI = L.modify inputs (modDicts (XmlI:))
 rawXmlI :: Dict h p 'Nothing o e -> Dict h p ('Just ByteString) o e
 rawXmlI = L.set inputs (Dicts [RawXmlI])
 
+-- | The input can be used as a JSON `ByteString`.
+
+rawJsonI :: Dict h p 'Nothing o e -> Dict h p ('Just ByteString) o e
+rawJsonI = L.set inputs (Dicts [RawJsonI])
+
 -- | The input can be read into some instance of `Json`.
 
 jsonI :: (Typeable i, FromJSON i, JSONSchema i, FromMaybe i i' ~ i) => Dict h p i' o e -> Dict h p ('Just i) o e
 jsonI = L.modify inputs (modDicts (JsonI:))
+
+-- | The input can be used as a JSON or XML `ByteString`.
+--
+-- An API client can send either format so the handler needs to handle both.
+
+rawJsonAndXmlI :: Dict h p 'Nothing o e -> Dict h p ('Just (Either Json Xml)) o e
+rawJsonAndXmlI = L.set inputs (Dicts [RawJsonAndXmlI])
 
 -- | Open up output type for extension with custom dictionaries.
 
@@ -164,10 +180,22 @@ xmlO = L.modify outputs (modDicts (XmlO:))
 rawXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just ByteString) e
 rawXmlO = L.set outputs (Dicts [RawXmlO])
 
+-- | Allow output as raw JSON represented as a `ByteString`.
+
+rawJsonO :: Dict h p i 'Nothing e -> Dict h p i ('Just ByteString) e
+rawJsonO = L.set outputs (Dicts [RawJsonO])
+
 -- | Allow output as JSON using the `Json` type class.
 
 jsonO :: (Typeable o, ToJSON o, JSONSchema o, FromMaybe o o' ~ o) => Dict h p i o' e -> Dict h p i ('Just o) e
 jsonO = L.modify outputs (modDicts (JsonO:))
+
+-- | Allow output as raw JSON and XML represented as `ByteString`s.
+-- Both values are needed since the accept header determines which one
+-- to send.
+
+rawJsonAndXmlO :: Dict h p i 'Nothing e -> Dict h p i ('Just ByteString) e
+rawJsonAndXmlO = L.set outputs (Dicts [RawJsonAndXmlO])
 
 -- | Allow output as multipart. Writes out the ByteStrings separated
 -- by boundaries, with content type 'multipart/mixed'.

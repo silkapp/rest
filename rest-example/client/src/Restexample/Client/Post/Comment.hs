@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC-fno-warn-unused-imports#-}
+{-# OPTIONS_GHC -fno-warn-unused-imports#-}
 module Restexample.Client.Post.Comment where
 import Rest.Client.Internal
 import qualified Restexample.Client.Post as Post
@@ -7,12 +7,12 @@ import qualified Rest.Types.Void
 import qualified Rest.Types.Container
 import qualified Type.Comment
 import qualified Type.UserComment
- 
+
 type Identifier = [(Char)]
- 
+
 readId :: Identifier -> [String]
 readId x = ["id", showUrl x]
- 
+
 list ::
        ApiStateC m =>
        Post.Identifier ->
@@ -28,7 +28,7 @@ list post pList
               rHeaders
               ""
       in doRequest fromJSON fromJSON request
- 
+
 create ::
          ApiStateC m =>
          Post.Identifier ->

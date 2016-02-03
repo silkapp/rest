@@ -1,4 +1,7 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE
+    DeriveDataTypeable
+  , NoImplicitPrelude
+  #-}
 module Api.Post
   ( Identifier (..)
   , WithPost
@@ -6,7 +9,8 @@ module Api.Post
   , postFromIdentifier
   ) where
 
-import Control.Applicative
+import Prelude.Compat
+
 import Control.Concurrent.STM (STM, TVar, atomically, modifyTVar, readTVar)
 import Control.Monad (unless)
 import Control.Monad.Error.Class

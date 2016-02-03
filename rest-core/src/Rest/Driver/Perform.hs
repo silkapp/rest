@@ -24,7 +24,7 @@ import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Writer
 import Data.Aeson.Utils
-import Data.Char (isSpace, toLower, ord)
+import Data.Char (isSpace, ord, toLower)
 import Data.List
 import Data.List.Split
 import Data.Maybe
@@ -40,7 +40,8 @@ import qualified Data.ByteString.Lazy      as B
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Label.Total          as L
 
-import Rest.Dictionary (Dict, Dicts (..), Error (..), Errors, Format (..), FromMaybe, Header (..), Input (..), Inputs, Output (..), Outputs, Param (..))
+import Rest.Dictionary (Dict, Dicts (..), Error (..), Errors, Format (..), FromMaybe, Header (..),
+                        Input (..), Inputs, Json (..), Output (..), Outputs, Param (..), Xml (..))
 import Rest.Driver.Types
 import Rest.Error
 import Rest.Handler
@@ -156,7 +157,7 @@ writeResponse (RunnableHandler run (GenHandler dict act _)) = do
 fetchInputs :: Rest m => Dict h p j o e -> ExceptT (Reason (FromMaybe Void e)) m (Env h p (FromMaybe () j))
 fetchInputs dict =
   do bs <- getBody
-     ct <- parseContentType
+     ct <- parseContentType <$> getContentType
 
      h <- HeaderError `mapE` headers    (L.get D.headers dict)
      p <- ParamError  `mapE` parameters (L.get D.params dict)
@@ -175,22 +176,24 @@ fetchInputs dict =
                   Nothing             -> throwError (UnsupportedFormat "unknown")
      return (Env h p j)
 
-parseContentType :: Rest m => m (Maybe Format)
-parseContentType =
-  do ct <- fromMaybe "" <$> getHeader "Content-Type"
-     let segs  = concat (take 1 . splitOn ";" <$> splitOn "," ct)
-         types = flip concatMap segs $ \ty ->
-                   case splitOn "/" ty of
-                     ["application", "xml"]          -> [XmlFormat]
-                     ["application", "json"]         -> [JsonFormat]
-                     ["text",        "xml"]          -> [XmlFormat]
-                     ["text",        "json"]         -> [JsonFormat]
-                     ["text",        "plain"]        -> [StringFormat]
-                     ["application", "octet-stream"] -> [FileFormat]
-                     ["application", _             ] -> [FileFormat]
-                     ["image",       _             ] -> [FileFormat]
-                     _                               -> []
-     return (headMay types)
+getContentType :: Rest m => m (Maybe String)
+getContentType = getHeader "Content-Type"
+
+parseContentType :: Maybe String -> Maybe Format
+parseContentType mct =
+  let segs  = concat (take 1 . splitOn ";" <$> splitOn "," (fromMaybe "" mct))
+      types = flip concatMap segs $ \ty ->
+                case splitOn "/" ty of
+                  ["application", "xml"]          -> [XmlFormat]
+                  ["application", "json"]         -> [JsonFormat]
+                  ["text",        "xml"]          -> [XmlFormat]
+                  ["text",        "json"]         -> [JsonFormat]
+                  ["text",        "plain"]        -> [StringFormat]
+                  ["application", "octet-stream"] -> [FileFormat]
+                  ["application", _             ] -> [FileFormat]
+                  ["image",       _             ] -> [FileFormat]
+                  _                               -> []
+  in headMay types
 
 headers :: Rest m => Header h -> ExceptT DataError m h
 headers NoHeader      = return ()
@@ -208,26 +211,29 @@ parser f        None       _ = throwError (UnsupportedFormat (show f))
 parser f        (Dicts ds) v = parserD f ds
   where
     parserD :: Monad m => Format -> [D.Input j] -> ExceptT DataError m j
-    parserD XmlFormat     (XmlI     : _ ) = case eitherFromXML (UTF8.toString v) of
-                                              Left err -> throwError (ParseError err)
-                                              Right  r -> return r
-    parserD XmlFormat     (XmlTextI : _ ) = return (decodeUtf8 v)
-    parserD StringFormat  (ReadI    : _ ) = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
-    parserD JsonFormat    (JsonI    : _ ) = case eitherDecodeV v of
-                                              Right a -> return a
-                                              Left  e -> throwError (ParseError e)
-    parserD StringFormat  (StringI  : _ ) = return (UTF8.toString v)
-    parserD FileFormat    (FileI    : _ ) = return v
-    parserD XmlFormat     (RawXmlI  : _ ) = return v
-    parserD t             []              = throwError (UnsupportedFormat (show t))
-    parserD t             (_        : xs) = parserD t xs
+    parserD XmlFormat     (XmlI           : _ ) = case eitherFromXML (UTF8.toString v) of
+                                                    Left err -> throwError (ParseError err)
+                                                    Right  r -> return r
+    parserD XmlFormat     (XmlTextI       : _ ) = return (decodeUtf8 v)
+    parserD StringFormat  (ReadI          : _ ) = (throwError (ParseError "Read") `maybe` return) (readMay (UTF8.toString v))
+    parserD JsonFormat    (JsonI          : _ ) = case eitherDecodeV v of
+                                                    Right a -> return a
+                                                    Left  e -> throwError (ParseError e)
+    parserD StringFormat  (StringI        : _ ) = return (UTF8.toString v)
+    parserD FileFormat    (FileI          : _ ) = return v
+    parserD XmlFormat     (RawXmlI        : _ ) = return v
+    parserD JsonFormat    (RawJsonI       : _ ) = return v
+    parserD JsonFormat    (RawJsonAndXmlI : _ ) = return (Left $ Json v)
+    parserD XmlFormat     (RawJsonAndXmlI : _ ) = return (Right $ Xml v)
+    parserD t             []                    = throwError (UnsupportedFormat (show t))
+    parserD t             (_              : xs) = parserD t xs
 
 -------------------------------------------------------------------------------
 -- Failure responses.
 
 failureWriter :: Rest m => Errors e -> Reason (FromMaybe Void e) -> m UTF8.ByteString
 failureWriter es err =
-  do formats <- accept
+  do formats <- acceptM
      fromMaybeT (printFallback formats) $
        msum (  (tryPrint err                     es   <$> (formats ++ [XmlFormat]))
             ++ (tryPrint (fallbackError formats) None <$> formats                 )
@@ -291,14 +297,16 @@ validator = tryOutputs try
     try (Dicts ds) f = tryD ds f
       where
         tryD :: forall v'. [Output v'] -> Format -> ExceptT (Last DataError) m ()
-        tryD (XmlO       : _ ) XmlFormat    = return ()
-        tryD (RawXmlO    : _ ) XmlFormat    = return ()
-        tryD (JsonO      : _ ) JsonFormat   = return ()
-        tryD (StringO    : _ ) StringFormat = return ()
-        tryD (FileO      : _ ) FileFormat   = return ()
-        tryD (MultipartO : _ ) _            = return () -- Multipart is always ok, subparts can fail.
-        tryD []                t            = unsupportedFormat t
-        tryD (_          : xs) t            = tryD xs t
+        tryD (XmlO           : _ ) XmlFormat    = return ()
+        tryD (RawXmlO        : _ ) XmlFormat    = return ()
+        tryD (JsonO          : _ ) JsonFormat   = return ()
+        tryD (RawJsonO       : _ ) JsonFormat   = return ()
+        tryD (StringO        : _ ) StringFormat = return ()
+        tryD (FileO          : _ ) FileFormat   = return ()
+        tryD (RawJsonAndXmlO : _ ) _            = return ()
+        tryD (MultipartO     : _ ) _            = return () -- Multipart is always ok, subparts can fail.
+        tryD []                    t            = unsupportedFormat t
+        tryD (_              : xs) t            = tryD xs t
 
 outputWriter :: forall v m e. Rest m => Outputs v -> FromMaybe () v -> ExceptT (Reason e) m UTF8.ByteString
 outputWriter outputs v = tryOutputs try outputs
@@ -313,12 +321,15 @@ outputWriter outputs v = tryOutputs try outputs
     try (Dicts ds) f = tryD ds f
       where
         tryD :: forall v'. FromMaybe () v ~ v' => [Output v'] -> Format -> ExceptT (Last DataError) m UTF8.ByteString
-        tryD (XmlO       : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
-        tryD (RawXmlO    : _ ) XmlFormat    = contentType XmlFormat    >> ok v
-        tryD (JsonO      : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
-        tryD (StringO    : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
-        tryD (MultipartO : _ ) _            = outputMultipart v
-        tryD (FileO      : _ ) FileFormat   =
+        tryD (XmlO           : _ ) XmlFormat    = contentType XmlFormat    >> ok (UTF8.fromString (toXML v))
+        tryD (RawXmlO        : _ ) XmlFormat    = contentType XmlFormat    >> ok v
+        tryD (JsonO          : _ ) JsonFormat   = contentType JsonFormat   >> ok (encode v)
+        tryD (RawJsonO       : _ ) JsonFormat   = contentType JsonFormat   >> ok v
+        tryD (RawJsonAndXmlO : _ ) JsonFormat   = contentType JsonFormat   >> ok v
+        tryD (RawJsonAndXmlO : _ ) XmlFormat    = contentType XmlFormat    >> ok v
+        tryD (StringO        : _ ) StringFormat = contentType StringFormat >> ok (UTF8.fromString v)
+        tryD (MultipartO     : _ ) _            = outputMultipart v
+        tryD (FileO          : _ ) FileFormat   =
           do let (content, filename, isAttachment) = v
                  ext = (reverse . takeWhile (/='.') . reverse) filename
              mime <- fromMaybe "application/octet-stream" <$> lookupMimeType (map toLower ext)
@@ -343,7 +354,7 @@ unsupportedFormat = throwError . Last . Just . UnsupportedFormat . show
 
 tryOutputs :: Rest m => (t -> Format -> ExceptT (Last DataError) m a) -> t -> ExceptT (Reason e) m a
 tryOutputs try outputs = do
-  formats <- lift accept
+  formats <- lift acceptM
   rethrowLast $ (msum $ try outputs <$> formats) <|> unsupportedFormat formats
   where
     rethrowLast :: Monad m => ExceptT (Last DataError) m a -> ExceptT (Reason e) m a
@@ -355,25 +366,35 @@ outputMultipart vs =
      setHeader "Content-Type" ("multipart/mixed; boundary=" ++ boundary)
      return $ showMultipartBody boundary (MultiPart vs)
 
-accept :: Rest m => m [Format]
-accept =
+acceptM :: Rest m => m [Format]
+acceptM =
   do acceptHeader <- getHeader "Accept"
-     ct <- parseContentType
-     ty <- fromMaybe "" <$> getParameter "type"
-     let fromQuery =
-           case ty of
-             "json" -> [JsonFormat]
-             "xml"  -> [XmlFormat]
-             _      -> []
-         fromAccept = maybe (allFormats ct) (splitter ct) acceptHeader
-     return (fromQuery ++ fromAccept)
+     ct <- getHeader "Content-Type"
+     ty <- getParameter "type"
+     return $ accept acceptHeader ct ty
 
+accept :: Maybe String -> Maybe String -> Maybe String -> [Format]
+accept acceptHeader mct mty =
+  let ct :: Maybe Format
+      ct = parseContentType mct
+      fromQuery :: [Format]
+      fromQuery =
+        case mty of
+          Just "json" -> [JsonFormat]
+          Just "xml"  -> [XmlFormat]
+          _           -> []
+      fromAccept :: [Format]
+      fromAccept = maybe (allFormats ct) (splitter ct) acceptHeader
+  in (fromQuery ++ fromAccept)
   where
+    allFormats :: Maybe Format -> [Format]
     allFormats ct = (maybe id (:) ct) [minBound .. maxBound]
+    splitter :: Maybe Format -> String -> [Format]
     splitter ct hdr = nub (match ct =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
 
-    match ct ty =
-      case map trim <$> (splitOn "+" . trim <$> splitOn "/" ty) of
+    match :: Maybe Format -> String -> [Format]
+    match ct ty' =
+      case map trim <$> (splitOn "+" . trim <$> splitOn "/" ty') of
         [ ["*"]           , ["*"] ] -> allFormats ct
         [ ["*"]                   ] -> allFormats ct
         [ ["text"]        , xs    ] -> xs >>= txt

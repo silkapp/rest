@@ -3,6 +3,7 @@
   , DataKinds
   , FlexibleContexts
   , GADTs
+  , GeneralizedNewtypeDeriving
   , KindSignatures
   , ScopedTypeVariables
   , StandaloneDeriving
@@ -37,6 +38,8 @@ module Rest.Dictionary.Types
   , Input (..)
   , Output (..)
   , Error (..)
+  , Xml (..)
+  , Json (..)
 
   -- * Plural dictionaries.
 
@@ -140,13 +143,15 @@ instance Show (Param p) where
 -- needs of the backend resource.
 
 data Input i where
-  JsonI    :: (Typeable i, FromJSON i, JSONSchema i) => Input i
-  ReadI    :: (Info i, Read i, Show i)               => Input i
-  StringI  ::                                           Input String
-  FileI    ::                                           Input ByteString
-  XmlI     :: (Typeable i, XmlPickler i)             => Input i
-  XmlTextI ::                                           Input Text
-  RawXmlI  ::                                           Input ByteString
+  JsonI          :: (Typeable i, FromJSON i, JSONSchema i) => Input i
+  ReadI          :: (Info i, Read i, Show i)               => Input i
+  StringI        ::                                           Input String
+  FileI          ::                                           Input ByteString
+  XmlI           :: (Typeable i, XmlPickler i)             => Input i
+  XmlTextI       ::                                           Input Text
+  RawJsonI       ::                                           Input ByteString
+  RawXmlI        ::                                           Input ByteString
+  RawJsonAndXmlI ::                                           Input (Either Json Xml)
 
 deriving instance Show (Input i)
 deriving instance Eq   (Input i)
@@ -157,16 +162,28 @@ deriving instance Ord  (Input i)
 -- combination of input type to output type.
 
 data Output o where
-  FileO      ::                                         Output (ByteString, String, Bool)
-  RawXmlO    ::                                         Output ByteString
-  JsonO      :: (Typeable o, ToJSON o, JSONSchema o) => Output o
-  XmlO       :: (Typeable o, XmlPickler o)           => Output o
-  StringO    ::                                         Output String
-  MultipartO ::                                         Output [BodyPart]
+  FileO          ::                                         Output (ByteString, String, Bool)
+  RawJsonO       ::                                         Output ByteString
+  RawXmlO        ::                                         Output ByteString
+  JsonO          :: (Typeable o, ToJSON o, JSONSchema o) => Output o
+  XmlO           :: (Typeable o, XmlPickler o)           => Output o
+  StringO        ::                                         Output String
+  RawJsonAndXmlO ::                                         Output ByteString
+  MultipartO     ::                                         Output [BodyPart]
 
 deriving instance Show (Output o)
 deriving instance Eq   (Output o)
 deriving instance Ord  (Output o)
+
+-- | Newtype around ByteStrings used in `RawJsonAndXmlI` to add some
+-- protection from parsing the input incorrectly.
+newtype Xml = Xml { unXml :: ByteString }
+  deriving (Eq, Show)
+
+-- | Newtype around ByteStrings used in `RawJsonAndXmlI` to add some
+-- protection from parsing the input incorrectly.
+newtype Json = Json { unJson :: ByteString }
+  deriving (Eq, Show)
 
 -- | The explicit dictionary `Error` describes how to translate some Haskell
 -- error value to a response body.

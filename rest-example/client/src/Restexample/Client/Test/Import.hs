@@ -1,15 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC-fno-warn-unused-imports#-}
+{-# OPTIONS_GHC -fno-warn-unused-imports#-}
 module Restexample.Client.Test.Import where
 import Rest.Client.Internal
 import qualified Restexample.Client.Test as Test
 import qualified Rest.Types.Void
- 
+
 type Identifier = String
- 
+
 readId :: Identifier -> [String]
 readId x = ["it", showUrl x]
- 
+
 byIt ::
        ApiStateC m => String -> m (ApiResponse Rest.Types.Void.Void ())
 byIt string
@@ -22,7 +22,7 @@ byIt string
               rHeaders
               ""
       in doRequest fromJSON (const ()) request
- 
+
 do_ ::
       ApiStateC m =>
       Identifier -> m (ApiResponse Rest.Types.Void.Void ())

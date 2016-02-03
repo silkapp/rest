@@ -1,6 +1,8 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 module Api.User (resource) where
 
-import Control.Applicative ((<$>))
+import Prelude.Compat
+
 import Control.Concurrent.STM (atomically, modifyTVar, readTVar)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Reader (ReaderT, asks)
