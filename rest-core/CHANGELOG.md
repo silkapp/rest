@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.38
+
+* Add `RawJsonO`, `RawJsonI`, `RawJsonAndXmlI`, and `RawJsonAndXmlO`.
+* Remove Show constraint from ReadId
+
 ## 0.37
 
 * Allow specifying custom multi-action. Previously there was always a

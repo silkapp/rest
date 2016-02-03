@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.19.0.2
+
+* Upgrade to `rest-core 0.38` to add support for `RawJson(AndXml)(I/O)`.
+
 #### 0.19.0.1
 
 * Allow `haskell-src-exts 1.17.*`.

@@ -50,7 +50,7 @@ library
     , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
     , generic-xmlpickler >= 0.1.0.1 && < 0.2
-    , rest-core >= 0.36 && < 0.38
+    , rest-core >= 0.38 && < 0.39
     , safe >= 0.2 && < 0.4
     , transformers >= 0.2 && < 0.6
     , transformers-compat >= 0.4 && < 0.6
@@ -127,7 +127,7 @@ executable rest-example-snap
         base >= 4.6 && < 4.9
       , base-compat >= 0.8 && < 0.10
       , mtl >= 2.0 && < 2.3
-      , rest-core >= 0.36 && < 0.38
+      , rest-core >= 0.38 && < 0.39
       , rest-example
       , rest-snap >= 0.1 && < 0.3
       , snap-core == 0.9.*

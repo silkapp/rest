@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE
     CPP
   , GeneralizedNewtypeDeriving
@@ -6,7 +7,8 @@
   #-}
 module Rest.Driver.Wai (apiToApplication) where
 
-import Control.Applicative
+import Prelude.Compat
+
 import Control.Arrow ((***))
 import Control.Monad.Trans (lift)
 import Network.HTTP.Types.Status (status200)

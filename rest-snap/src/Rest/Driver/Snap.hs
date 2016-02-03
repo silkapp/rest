@@ -1,15 +1,19 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE
+    NoImplicitPrelude
+  , RankNTypes
+  #-}
 module Rest.Driver.Snap
   ( apiToHandler
   , apiToHandler'
   ) where
 
+import Prelude.Compat
+
 import Safe
 import Snap.Core
 import Snap.Util.FileServe (defaultMimeTypes)
 
-import Control.Applicative
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.UTF8  as UTF8
 import qualified Data.CaseInsensitive  as CI

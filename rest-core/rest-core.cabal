@@ -1,5 +1,5 @@
 name:                rest-core
-version:             0.37
+version:             0.38
 description:         Rest API library.
 synopsis:            Rest API library.
 maintainer:          code@silk.co
