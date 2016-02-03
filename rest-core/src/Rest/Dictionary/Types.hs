@@ -89,8 +89,8 @@ data Format
 -- plain `String` identifiers or all Haskell types that have a `Read` instance.
 
 data Ident id where
-  ReadId   :: (Info id, Read id, Show id) => Ident id
-  StringId ::                                Ident String
+  ReadId   :: (Info id, Read id) => Ident id
+  StringId ::                       Ident String
 
 deriving instance Show (Ident id)
 
