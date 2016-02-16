@@ -17,4 +17,4 @@ packages:
 - rest-types/
 - rest-wai/
 extra-deps: []
-resolver: lts-5.1
+resolver: lts-5.3
