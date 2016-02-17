@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveFoldable
@@ -7,6 +6,7 @@
   , DeriveTraversable
   , EmptyDataDecls
   , GADTs
+  , NoImplicitPrelude
   , ScopedTypeVariables
   , StandaloneDeriving
   #-}
