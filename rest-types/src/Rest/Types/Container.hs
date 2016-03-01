@@ -2,6 +2,9 @@
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveGeneric
+  , DeriveFunctor
+  , DeriveFoldable
+  , DeriveTraversable
   , EmptyDataDecls
   , FlexibleContexts
   , FlexibleInstances
@@ -35,7 +38,7 @@ data List a = List
   { offset :: Int
   , count  :: Int
   , items  :: [a]
-  } deriving (Generic, Show, Typeable)
+  } deriving (Generic, Eq, Ord, Show, Read, Typeable, Functor, Foldable, Traversable)
 
 instance XmlPickler a => XmlPickler (List a) where xpickle   = gxpickle
 instance ToJSON     a => ToJSON     (List a) where toJSON    = gtoJson
