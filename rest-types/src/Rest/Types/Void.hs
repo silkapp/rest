@@ -1,9 +1,13 @@
 {-# LANGUAGE
-    DeriveDataTypeable
+    CPP
+  , DeriveDataTypeable
   , EmptyDataDecls
   , RankNTypes
   , TypeFamilies
   #-}
+#if __GLASGOW_HASKELL__ >= 800
+{-# LANGUAGE DataKinds #-}
+#endif
 module Rest.Types.Void (Void (..)) where
 
 import Data.Aeson (FromJSON (..), ToJSON (..))
@@ -50,12 +54,18 @@ instance Read Void where
 -- | Generic. Can't derive it, sadly.
 
 instance Generic Void where
+#if __GLASGOW_HASKELL__ >= 800
+  type Rep Void = D1 ('MetaData "Void" "Rest.Types.Void" "rest-types" 'False) V1
+#else
   type Rep Void = D1 D1Void V1
+#endif
   from = magic
   to (M1 x) = x `seq` Void (error "Impossible: constructing a Void in Generic instance.")
 
+#if __GLASGOW_HASKELL__ < 800
 data D1Void
 
 instance Datatype D1Void where
   datatypeName _ = "Void"
   moduleName _ = "Rest.Types.Void"
+#endif
