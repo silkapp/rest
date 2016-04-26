@@ -191,13 +191,13 @@ checkRouteWithIgnoredMethods ignoredMethods router method uri =
 
 checkRouteFailure :: (Applicative m, Monad m) => Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteFailure method uri router =
-  case route (Just method) (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
+  case route (Just method) (splitUriString $ "v1.0/" <> uri) (Versioned [(Version 1 0 Nothing, Some1 router)]) of
     Left _  -> return ()
     Right _ -> assertFailure ("Should be no route to " ++ show method ++ " " ++ uri ++ ".")
 
 checkRouteSuccess :: (Applicative m, Monad m) => Method -> Uri -> Rest.Router m s -> Assertion
 checkRouteSuccess method uri router =
-  case route (Just method) (splitUriString $ "v1.0/" <> uri) [(Version 1 0 Nothing, Some1 router)] of
+  case route (Just method) (splitUriString $ "v1.0/" <> uri) (Versioned [(Version 1 0 Nothing, Some1 router)]) of
     Left e  -> assertFailure ("No route to " ++ show method ++ " " ++ uri ++ ": " ++ show e)
     Right _ -> return ()
 

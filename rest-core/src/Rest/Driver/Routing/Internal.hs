@@ -80,9 +80,12 @@ route mtd uri = routeWith defaultConfig mtd uri
 
 routeWith :: Config m -> Maybe Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
 routeWith _    Nothing   _   _   = apiError UnsupportedMethod
-routeWith cfg (Just mtd) uri api = runRouter cfg mtd uri $
-  do versionStr <- popSegment
-     case versionStr `Rest.lookupVersion` api of
+routeWith cfg (Just mtd) uri api = runRouter cfg mtd uri $ do
+  case api of
+    Rest.Unversioned (Some1 router) -> routeRoot router
+    Rest.Versioned   vrs            -> do
+      versionStr <- popSegment
+      case versionStr `Rest.lookupVersion` vrs of
           Just (Some1 router) -> routeRoot router
           _                   -> apiError UnsupportedVersion
 

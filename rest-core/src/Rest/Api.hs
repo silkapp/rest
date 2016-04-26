@@ -8,7 +8,8 @@
 -- to generate clients or documentation using 'rest-gen'.
 module Rest.Api
   ( -- * Api data types.
-    Api
+    Api (..)
+  , VersionSet
   , Router (..)
   , Some1 (..)
 
@@ -113,13 +114,21 @@ mkVersion f m l = Version f m (Just l)
 instance Show Version where
   show v = show (full v) ++ "." ++ show (major v) ++ maybe "" (\x -> "." ++ show x) (minor v)
 
--- | An API is a list of versioned routers.
+-- | A version set is a list of versioned routers.
 
-type Api m = [(Version, Some1 (Router m))]
+type VersionSet m = [(Version, Some1 (Router m))]
+
+-- | An API can be versioned or unversioned.
+-- A versioned API is a set of versioned routers.
+-- An unversioned API is just a single router.
+
+data Api m where
+    Unversioned :: Some1 (Router m) -> Api m
+    Versioned   :: VersionSet m -> Api m
 
 -- | Get the latest version of an API.
 
-latest :: Api m -> Maybe (Version, Some1 (Router m))
+latest :: VersionSet m -> Maybe (Version, Some1 (Router m))
 latest = headMay . reverse . sortBy (compare `on` fst)
 
 -- | Parse a 'String' as a 'Version'. The string should contain two or
@@ -135,13 +144,13 @@ parseVersion s =
 -- | Look up a version in an API. The string can either be a valid
 -- version according to 'parseVersion', or "latest".
 
-lookupVersion :: String -> Api m -> Maybe (Some1 (Router m))
+lookupVersion :: String -> VersionSet m -> Maybe (Some1 (Router m))
 lookupVersion "latest" = fmap snd . latest
 lookupVersion str      = (parseVersion str >>=) . flip lookupVersion'
 
 -- | Look up a version in the API.
 
-lookupVersion' :: Version -> Api m -> Maybe (Some1 (Router m))
+lookupVersion' :: Version -> VersionSet m -> Maybe (Some1 (Router m))
 lookupVersion' v versions = best (filter (matches v . fst) versions)
   where best = fmap snd . headMay . sortBy (flip (comparing fst))
         matches :: Version -> Version -> Bool
@@ -160,10 +169,15 @@ lookupVersion' v versions = best (filter (matches v . fst) versions)
 -- * If not parsed or found, return the fallback.
 
 withVersion :: String -> Api m -> r -> (Version -> Some1 (Router m) -> r) -> r
-withVersion ver api err ok =
+withVersion ver (Versioned vrs) err ok =
   maybe err (uncurry ok) $
     case ver of
-      "latest" -> latest api
+      "latest" -> latest vrs
       _        -> do pv <- parseVersion ver
-                     r <- lookupVersion' pv api
+                     r <- lookupVersion' pv vrs
                      return (pv, r)
+withVersion ver (Unversioned r) err ok =
+  maybe err (uncurry ok) $
+    case ver of
+      "latest" -> return (mkVersion 1 0 0, r)
+      _        -> Nothing
