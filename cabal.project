@@ -1,0 +1,17 @@
+packages: code-builder/
+          rest-client/
+          rest-core/
+          rest-example/
+          rest-example/client/
+          rest-gen/
+          rest-happstack/
+          rest-snap/
+          rest-stringmap/
+          rest-types/
+          rest-wai/
+package rest-example
+  flags:
+    snap
+    happstack
+    wai
+    gen
