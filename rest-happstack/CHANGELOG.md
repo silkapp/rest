@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.3.1.1
+
+* Allow rest-core-0.39.
+
 ### 0.3.1
 
 * Generalize type of `apiToHandler` to allow transformer stacks on top

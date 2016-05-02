@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.2.0.1
+
+* Allow rest-core-0.39.
+
 ## 0.2
 
 * Breaking: `Applicative` and `Monad` constraint on `m` in

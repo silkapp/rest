@@ -1,5 +1,5 @@
 name:                rest-snap
-version:             0.2
+version:             0.2.0.1
 description:         Rest driver for Snap.
 synopsis:            Rest driver for Snap.
 maintainer:          code@silk.co
@@ -26,7 +26,7 @@ library
     , base-compat >= 0.8 && < 0.10
     , bytestring >= 0.9 && < 0.11
     , case-insensitive >= 0.4 && < 1.3
-    , rest-core >= 0.34 && < 0.39
+    , rest-core >= 0.34 && < 0.40
     , safe >= 0.2 && < 0.4
     , snap-core == 0.9.*
     , unordered-containers == 0.2.*

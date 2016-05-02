@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.39
+
+* Add support for versionless APIs, thanks to Tenor Biel. This is a
+  breaking change. Old API users will have to add `Versioned` before
+  their list of api versions, so it becomes `Versioned [ (mkVersion
+  ...) ]`.
+
 ## 0.38
 
 * Add `RawJsonO`, `RawJsonI`, `RawJsonAndXmlI`, and `RawJsonAndXmlO`.
