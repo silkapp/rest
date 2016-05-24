@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.14.1
+
+* `Add` instances of `Eq`, `Ord`, `Read`, `Functor`, `Foldable`, and
+  `Traversable` for `List`.
+* Fix compilation with GHC 8.
+
 #### 1.14.0.1
 
 * Allow `aeson 0.9.*` and (revision) `0.10.*`
