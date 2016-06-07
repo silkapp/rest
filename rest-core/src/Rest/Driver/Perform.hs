@@ -30,10 +30,10 @@ import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.UUID (UUID)
+import Data.UUID.V4 (nextRandom)
 import Network.Multipart (BodyPart (..), MultiPart (..), showMultipartBody)
 import Safe
 import System.IO.Unsafe
-import System.Random (randomIO)
 import Text.Xml.Pickle
 
 import qualified Data.ByteString.Lazy      as B
@@ -362,7 +362,7 @@ tryOutputs try outputs = do
 
 outputMultipart :: Rest m => [BodyPart] -> m UTF8.ByteString
 outputMultipart vs =
-  do let boundary = show $ unsafePerformIO (randomIO :: IO UUID)
+  do let boundary = show $ unsafePerformIO nextRandom
      setHeader "Content-Type" ("multipart/mixed; boundary=" ++ boundary)
      return $ showMultipartBody boundary (MultiPart vs)
 
