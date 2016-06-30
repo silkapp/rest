@@ -29,15 +29,13 @@ main = do
               , testCase "Selects should show up only once." testSingleSelect
               , testCase "Removes should show up only once." testSingleRemove
               , testCase "Listing should have List type." testListingType
+              , testCase "Listing pluralization" testListingPluralization
               ]
 
 testListingParams :: Assertion
 testListingParams = assertEqual "Parameters" ["offset", "count"] (params actionInfo)
   where
-    [actionInfo] = resourceToActionInfo resource
-    resource :: Resource IO IO Void () Void
-    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
-    listHandler () = mkListing id $ \_ -> return []
+    [actionInfo] = resourceToActionInfo baseResource
 
 testSingleSelect :: Assertion
 testSingleSelect = assertEqual "Number of select ActionInfos." 1 (length actionInfos)
@@ -90,3 +88,22 @@ testListingType =
 
 instance IsString H.Type where
   fromString = H.fromParseResult . H.parse
+
+
+testListingPluralization :: Assertion
+testListingPluralization =
+  assertEqual "Listing should not doubly pluralize resource names"
+    "List things"
+    (mkActionDescription rn ai)
+  where
+    rn = "things"
+    ai = head $ listGetterActionInfo
+      baseResource { name = rn}
+      "/"
+      (Singleton ())
+
+
+baseResource :: Resource IO IO Void () Void
+baseResource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
+  where
+    listHandler () = mkListing id $ \_ -> return []

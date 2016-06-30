@@ -61,6 +61,7 @@ import Safe
 import qualified Data.JSON.Schema             as J
 import qualified Data.Label.Total             as L
 import qualified Data.List.NonEmpty           as NList
+import Language.English.Plural (plural)
 import qualified Language.Haskell.Exts.Parser as H
 import qualified Language.Haskell.Exts.Syntax as H
 
@@ -533,8 +534,8 @@ mkActionDescription res ai =
       Retrieve   -> "Retrieve " ++ targetS ++ " data"
       Create     -> "Create " ++ targetS
       Delete     -> "Delete " ++ targetS
-      DeleteMany -> "Delete many " ++ targetS
-      List       -> "List " ++ targetS ++ "s"
+      DeleteMany -> "Delete many " ++ plural targetS
+      List       -> "List " ++ plural targetS
       Update     -> "Update " ++ targetS
-      UpdateMany -> "Update many " ++ targetS
+      UpdateMany -> "Update many " ++ plural targetS
       Modify     -> "Modify " ++ targetS
