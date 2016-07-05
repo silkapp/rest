@@ -1,4 +1,5 @@
 {-# LANGUAGE
+  , CPP
     FlexibleInstances
   , OverlappingInstances
   , OverloadedStrings
@@ -34,7 +35,9 @@ import Control.Arrow
 import Control.Monad
 import Control.Monad.Cont
 import Data.Aeson.Utils (FromJSON, ToJSON, eitherDecodeV, encode)
+#if !MIN_VERSION_http_client(0,5,0)
 import Data.Default (def)
+#endif
 import Data.List
 import Data.Monoid
 import Data.String
@@ -73,8 +76,13 @@ convertResponse r =
    , responseBody    = HTTP.responseBody r
    }
 
+#if MIN_VERSION_http_client(0,5,0)
+defaultTimeout :: ResponseTimeout
+defaultTimeout = responseTimeoutMicro (1000 * 1000 * 60 * 5)
+#else
 defaultTimeout :: Maybe Int
 defaultTimeout = Just (1000 * 1000 * 60 * 5)
+#endif
 
 splitHost :: String -> (String, String)
 splitHost = break (== '/')
@@ -90,7 +98,11 @@ doReq (ApiRequest m ur ps rhds bd) =
      hds <- fmap headers askApiInfo
      jar <- fmap cookies getApiState
      let (h, p) = splitHost hst
+#if MIN_VERSION_http_client(0,5,0)
+         req = defaultRequest
+#else
          req = def
+#endif
                 { HTTP.method = CH.pack m
                 , host = CH.pack h
                 , port = prt
@@ -98,7 +110,9 @@ doReq (ApiRequest m ur ps rhds bd) =
                 , queryString = (renderQuery False . simpleQueryToQuery . Prelude.map (CH.pack *** CH.pack)) ps
                 , HTTP.requestHeaders = rhds ++ Prelude.map (fromString *** CH.pack) hds
                 , HTTP.requestBody = RequestBodyLBS bd
+#if !MIN_VERSION_http_client(0,5,0)
                 , checkStatus = \_ _ _ -> Nothing
+#endif
                 , redirectCount = 0
                 , responseTimeout = defaultTimeout
                 , cookieJar = Just jar
