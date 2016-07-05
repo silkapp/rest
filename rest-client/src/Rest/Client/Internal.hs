@@ -1,6 +1,6 @@
 {-# LANGUAGE
-  , CPP
-    FlexibleInstances
+    CPP
+  , FlexibleInstances
   , OverlappingInstances
   , OverloadedStrings
   , UndecidableInstances
