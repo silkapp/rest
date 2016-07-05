@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.5.1.1
+
+* Allow http-conduit 2.2.*
+
 ### 0.5.1.0
 
 * Add `Functor (ApiResponse e)` instance
