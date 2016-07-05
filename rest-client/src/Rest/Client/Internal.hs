@@ -68,7 +68,7 @@ convertResponse r =
   ApiResponse
    { statusCode      = HTTP.statusCode (responseStatus r)
    , statusMessage   = HTTP.statusMessage (responseStatus r)
-   , httpVersion     = (\v -> (httpMajor v, httpMinor v)) (responseVersion r)
+   , httpVersion     = (httpMajor &&& httpMinor) (responseVersion r)
    , responseHeaders = HTTP.responseHeaders r
    , responseBody    = HTTP.responseBody r
    }
@@ -77,7 +77,7 @@ defaultTimeout :: Maybe Int
 defaultTimeout = Just (1000 * 1000 * 60 * 5)
 
 splitHost :: String -> (String, String)
-splitHost hst = break (== '/') hst
+splitHost = break (== '/')
 
 doRequest :: ApiStateC m => (L.ByteString -> Rest.Types.Error.Reason e) -> (L.ByteString -> a) -> ApiRequest -> m (ApiResponse e a)
 doRequest a b = liftM (parseResult a b) . doReq
@@ -98,7 +98,7 @@ doReq (ApiRequest m ur ps rhds bd) =
                 , queryString = (renderQuery False . simpleQueryToQuery . Prelude.map (CH.pack *** CH.pack)) ps
                 , HTTP.requestHeaders = rhds ++ Prelude.map (fromString *** CH.pack) hds
                 , HTTP.requestBody = RequestBodyLBS bd
-                , checkStatus = (\_ _ _ -> Nothing)
+                , checkStatus = \_ _ _ -> Nothing
                 , redirectCount = 0
                 , responseTimeout = defaultTimeout
                 , cookieJar = Just jar
@@ -143,5 +143,5 @@ instance XmlPickler a => XmlStringToType a where
 
 
 makeReq :: String -> String -> [[String]] -> [(String, String)] -> Network.HTTP.Types.Header.RequestHeaders -> L.ByteString -> ApiRequest
-makeReq meth v ls pList hs body = ApiRequest meth (intercalate "/" (v : map URI.encode (concat ls))) pList hs body
+makeReq meth v ls = ApiRequest meth (intercalate "/" (v : map URI.encode (concat ls)))
 
