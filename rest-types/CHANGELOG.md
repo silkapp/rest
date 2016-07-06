@@ -1,5 +1,9 @@
 # Changelog
 
+#### 1.14.1.1
+
+* Fix compilation with GHC 7.8.
+
 ### 1.14.1
 
 * `Add` instances of `Eq`, `Ord`, `Read`, `Functor`, `Foldable`, and
