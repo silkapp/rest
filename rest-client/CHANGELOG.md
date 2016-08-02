@@ -1,6 +1,10 @@
 # Changelog
 
-### 0.5.1.1
+### 0.5.2
+
+* Add `toLbs` function to be used by rest-gen.
+
+#### 0.5.1.1
 
 * Allow http-conduit 2.2.*
 

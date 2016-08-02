@@ -1,5 +1,12 @@
 # Changelog
 
+#### 0.19.0.4
+
+* Fix encoding issue with String inputs in generated clients.
+  Non-ASCII characters would be mangled. Regenerate your client code
+  to fix this. Newly generated code with String inputs needs to depend
+  on rest-client >= 0.5.2, or it will fail to build.
+
 #### 0.19.0.3
 
 * Allow rest-core-0.39.

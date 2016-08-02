@@ -97,9 +97,9 @@ mkCondLibrary :: [Cabal.ModuleName] -> Cabal.CondTree Cabal.ConfVar [Cabal.Depen
 mkCondLibrary modules = Cabal.CondNode
   { Cabal.condTreeData        = cabalLibrary modules
   , Cabal.condTreeConstraints =
-     [ Cabal.Dependency (Cabal.PackageName "base")        (Cabal.withinVersion $ Cabal.Version [4]     [])
-     , Cabal.Dependency (Cabal.PackageName "rest-types")  (Cabal.withinVersion $ Cabal.Version [1, 10] [])
-     , Cabal.Dependency (Cabal.PackageName "rest-client") (Cabal.withinVersion $ Cabal.Version [0,  4] [])
+     [ Cabal.Dependency (Cabal.PackageName "base")        (Cabal.withinVersion $ Cabal.Version [4]       [])
+     , Cabal.Dependency (Cabal.PackageName "rest-types")  (Cabal.withinVersion $ Cabal.Version [1, 10]   [])
+     , Cabal.Dependency (Cabal.PackageName "rest-client") (Cabal.withinVersion $ Cabal.Version [0, 5, 2] [])
      ]
   , Cabal.condTreeComponents  = []
   }
