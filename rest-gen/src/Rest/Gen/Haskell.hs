@@ -375,8 +375,7 @@ data InputInfo = InputInfo
 inputInfo :: DataDesc -> InputInfo
 inputInfo dsc =
   case L.get dataType dsc of
-    String -> InputInfo [] (haskellStringType) "text/plain" "fromString"
-    -- TODO fromJusts
+    String -> InputInfo [] haskellStringType "text/plain" "toLbs"
     XML    -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/xml" "toXML"
     JSON   -> InputInfo (L.get haskellModules dsc) (L.get haskellType dsc) "text/json" "toJSON"
     File   -> InputInfo [] haskellByteStringType "application/octet-stream" "id"

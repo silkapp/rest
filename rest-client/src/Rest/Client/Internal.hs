@@ -26,6 +26,7 @@ module Rest.Client.Internal
   , toJSON
   , fromXML
   , toXML
+  , toLbs
 
   , makeReq
   , doReq
@@ -138,6 +139,9 @@ fromJSON v = (either err id . eitherDecodeV) v
 
 toJSON :: ToJSON a => a -> L.ByteString
 toJSON = encode
+
+toLbs :: String -> L.ByteString
+toLbs = L.fromString
 
 class XmlStringToType a where
   fromXML :: L.ByteString -> a
