@@ -8,8 +8,6 @@ flags:
   semigroups:
     bytestring-builder: false
 packages:
-- ../generic-aeson/
-- ../json-schema/
 - code-builder/
 - rest-client/
 - rest-core/
