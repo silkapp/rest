@@ -5,8 +5,6 @@ flags:
     happstack: true
     wai: true
     gen: true
-  semigroups:
-    bytestring-builder: false
 packages:
 - code-builder/
 - rest-client/
@@ -19,6 +17,3 @@ packages:
 - rest-stringmap/
 - rest-types/
 - rest-wai/
-extra-deps:
-- aeson-1.0.0.0
-- semigroups-0.18.2
