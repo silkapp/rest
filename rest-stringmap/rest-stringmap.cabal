@@ -27,7 +27,7 @@ library
     Rest.StringMap.Util
   build-depends:
       base >= 4.6 && < 4.10
-    , aeson >= 0.7 && < 0.12
+    , aeson >= 0.7 && < 1.1
     , containers == 0.5.*
     , hashable == 1.2.*
     , hxt == 9.3.*

@@ -1,10 +1,15 @@
+resolver: lts-6.10
 flags:
   rest-example:
     snap: true
     happstack: true
     wai: true
     gen: true
+  semigroups:
+    bytestring-builder: false
 packages:
+- ../generic-aeson/
+- ../json-schema/
 - code-builder/
 - rest-client/
 - rest-core/
@@ -16,5 +21,6 @@ packages:
 - rest-stringmap/
 - rest-types/
 - rest-wai/
-extra-deps: []
-resolver: lts-5.3
+extra-deps:
+- aeson-1.0.0.0
+- semigroups-0.18.2
