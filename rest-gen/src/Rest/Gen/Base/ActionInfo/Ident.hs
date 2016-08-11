@@ -1,9 +1,9 @@
 module Rest.Gen.Base.ActionInfo.Ident (Ident (..)) where
 
-import qualified Language.Haskell.Exts.Syntax as H
+import qualified Rest.Gen.NoAnnotation as N
 
 data Ident = Ident
   { description    :: String
-  , haskellType    :: H.Type
-  , haskellModules :: [H.ModuleName]
+  , haskellType    :: N.Type
+  , haskellModules :: [N.ModuleName]
   } deriving (Show, Eq)

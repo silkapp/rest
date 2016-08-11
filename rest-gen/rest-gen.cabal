@@ -46,6 +46,7 @@ library
     Rest.Gen.Base.JSON.Pretty
     Rest.Gen.Base.Link
     Rest.Gen.Base.XML
+    Rest.Gen.NoAnnotation
     Rest.Gen.Utils
   build-depends:
       base >= 4.5 && < 4.10
@@ -59,7 +60,7 @@ library
     , fclabels >= 1.0.4 && < 2.1
     , filepath >= 1.2 && < 1.5
     , hashable >= 1.1 && < 1.3
-    , haskell-src-exts >= 1.15.0 && < 1.18
+    , haskell-src-exts >= 1.18.1 && < 1.19
     , hxt >= 9.2 && < 9.4
     , json-schema >= 0.6 && < 0.8
     , pretty >= 1.0 && < 1.2
@@ -85,7 +86,7 @@ test-suite rest-gen-tests
       base >= 4.5 && < 4.10
     , HUnit >= 1.2 && < 1.4
     , fclabels >= 1.0.4 && < 2.1
-    , haskell-src-exts >= 1.15.0 && < 1.18
+    , haskell-src-exts >= 1.15.0 && < 1.19
     , rest-core >= 0.38 && < 0.40
     , rest-gen
     , test-framework == 0.8.*

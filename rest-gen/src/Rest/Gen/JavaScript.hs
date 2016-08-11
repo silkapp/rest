@@ -9,7 +9,6 @@ import Data.Maybe
 import Text.StringTemplate
 import qualified Data.Label.Total             as L
 import qualified Data.List.NonEmpty           as NList
-import qualified Language.Haskell.Exts.Syntax as H
 
 import Code.Build
 import Code.Build.JavaScript
@@ -17,8 +16,9 @@ import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
+import qualified Rest.Gen.NoAnnotation as N
 
-mkJsApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
+mkJsApi :: N.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =
   do prelude <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/prelude.js")
      epilogue <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/epilogue.js")

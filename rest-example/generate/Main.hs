@@ -18,4 +18,4 @@ main = do
     -- rest-gen finds the originating module for each data type, when
     -- these are re-exported from an internal module they can be
     -- rewritten to something more stable.
-    [(ModuleName "Data.Text.Internal", ModuleName "Data.Text")]
+    [(ModuleName () "Data.Text.Internal", ModuleName () "Data.Text")]

@@ -42,6 +42,7 @@ import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
+import qualified Rest.Gen.NoAnnotation          as N
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 
 mkLabelsNamed ("_" ++) [''Cabal.GenericPackageDescription, ''Cabal.CondTree, ''Cabal.Library]
@@ -52,9 +53,9 @@ data HaskellContext =
     , targetPath     :: String
     , wrapperName    :: String
     , includePrivate :: Bool
-    , sources        :: [H.ModuleName]
-    , imports        :: [H.ImportDecl]
-    , rewrites       :: [(H.ModuleName, H.ModuleName)]
+    , sources        :: [N.ModuleName]
+    , imports        :: [N.ImportDecl]
+    , rewrites       :: [(N.ModuleName, N.ModuleName)]
     , namespace      :: [String]
     }
 
@@ -119,228 +120,295 @@ writeRes ctx node =
 mkRes :: HaskellContext -> ApiResource -> String
 mkRes ctx node = H.prettyPrint $ buildHaskellModule ctx node pragmas Nothing
   where
-    pragmas = [ H.LanguagePragma noLoc [H.Ident "OverloadedStrings"],
-                H.OptionsPragma noLoc (Just H.GHC) "-fno-warn-unused-imports"]
+    pragmas :: [N.ModulePragma]
+    pragmas = [ H.LanguagePragma () [H.Ident () "OverloadedStrings"]
+              , H.OptionsPragma () (Just H.GHC) "-fno-warn-unused-imports"
+              ]
     _warningText = "Warning!! This is automatically generated code, do not modify!"
 
 buildHaskellModule :: HaskellContext -> ApiResource ->
-                      [H.ModulePragma] -> Maybe H.WarningText ->
-                      H.Module
+                      [N.ModulePragma] -> Maybe N.WarningText ->
+                      N.Module
 buildHaskellModule ctx node pragmas warningText =
   rewriteModuleNames (rewrites ctx) $
-     H.Module noLoc name pragmas warningText exportSpecs importDecls decls
+     H.Module () (Just $ H.ModuleHead () name warningText exportSpecs) pragmas importDecls decls
   where
-    name = H.ModuleName $ qualModName $ namespace ctx ++ resId node
+    name :: N.ModuleName
+    name = H.ModuleName () $ qualModName $ namespace ctx ++ resId node
+    exportSpecs :: Maybe N.ExportSpecList
     exportSpecs = Nothing
+    importDecls :: [N.ImportDecl]
     importDecls = nub $ namedImport "Rest.Client.Internal"
                       : extraImports
                      ++ parentImports
                      ++ dataImports
                      ++ idImports
+    decls :: [N.Decl]
     decls = idData node ++ concat funcs
 
+    extraImports :: [N.ImportDecl]
     extraImports = imports ctx
+    parentImports :: [N.ImportDecl]
     parentImports = map mkImport . tail . inits . resParents $ node
+    dataImports :: [N.ImportDecl]
     dataImports = map (qualImport . unModuleName) datImp
+    idImports :: [N.ImportDecl]
     idImports = concat . mapMaybe (return . map (qualImport . unModuleName) . Ident.haskellModules <=< snd) . resAccessors $ node
 
+    funcs :: [[N.Decl]]
+    datImp :: [N.ModuleName]
     (funcs, datImp) = second (nub . concat) . unzip . map (mkFunction (apiVersion ctx) . resName $ node) $ resItems node
-    mkImport p = (namedImport importName) { H.importQualified = True,
-                                            H.importAs = importAs' }
-      where importName = qualModName $ namespace ctx ++ p
-            importAs' = fmap (H.ModuleName . modName) . lastMay $ p
+    mkImport :: [String] -> N.ImportDecl
+    mkImport p = (namedImport importName)
+                   { H.importQualified = True
+                   , H.importAs        = importAs'
+                   }
+      where
+        importName :: String
+        importName = qualModName $ namespace ctx ++ p
+        importAs' :: Maybe N.ModuleName
+        importAs' = fmap (H.ModuleName () . modName) . lastMay $ p
 
-rewriteModuleNames :: [(H.ModuleName, H.ModuleName)] -> H.Module -> H.Module
+rewriteModuleNames :: [(N.ModuleName, N.ModuleName)] -> N.Module -> N.Module
 rewriteModuleNames rews = U.transformBi $ \m -> lookupJustDef m m rews
 
-#if MIN_VERSION_haskell_src_exts(1,17,0)
-noBinds :: Maybe H.Binds
+noBinds :: Maybe N.Binds
 noBinds = Nothing
-#else
-noBinds :: H.Binds
-noBinds = H.BDecls []
-#endif
 
-use :: H.Name -> H.Exp
-use = H.Var . H.UnQual
+use :: N.Name -> N.Exp
+use = H.Var () . H.UnQual ()
 
-useMQual :: (Maybe H.ModuleName) -> H.Name -> H.Exp
+useMQual :: Maybe N.ModuleName -> N.Name -> N.Exp
 useMQual Nothing = use
-useMQual (Just qual) = H.Var . (H.Qual $ qual)
+useMQual (Just qual) = H.Var () . (H.Qual () qual)
 
-mkFunction :: Version -> String -> ApiAction -> ([H.Decl], [H.ModuleName])
+mkFunction :: Version -> String -> ApiAction -> ([N.Decl], [N.ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
-  ([H.TypeSig noLoc [funName] fType,
-    H.FunBind [H.Match noLoc funName fParams Nothing rhs noBinds]],
+  ([H.TypeSig () [funName] fType,
+    H.FunBind () [H.Match () funName fParams rhs noBinds]],
     responseModules errorI ++ responseModules output ++ maybe [] inputModules mInp)
      where
+       funName :: N.Name
        funName = mkHsName ai
-       fParams = map H.PVar $ lPars
+       fParams :: [N.Pat]
+       fParams = map (H.PVar ()) $ lPars
                            ++ maybe [] ((:[]) . hsName . cleanName . description) (ident ai)
                            ++ maybe [] (const [input]) mInp
                            ++ (if null (params ai) then [] else [pList])
+       lUrl :: N.Exp
+       lPars :: [N.Name]
        (lUrl, lPars) = linkToURL res lnk
        mInp :: Maybe InputInfo
-       mInp    = fmap (inputInfo . L.get desc . chooseType) . NList.nonEmpty . inputs $ ai
-       fType   = H.TyForall Nothing [H.ClassA (H.UnQual cls) [m]] $ fTypify tyParts
-         where cls = H.Ident "ApiStateC"
-               m = H.TyVar $ H.Ident "m"
-               fTypify :: [H.Type] -> H.Type
-               fTypify [] = error "Rest.Gen.Haskell.mkFunction.fTypify - expects at least one type"
-               fTypify [ty1] = ty1
-               fTypify [ty1, ty2] = H.TyFun ty1 ty2
-               fTypify (ty1 : tys) = H.TyFun ty1 (fTypify tys)
-               tyParts = map qualIdent lPars
-                         ++ maybe [] (return . Ident.haskellType) (ident ai)
-                         ++ inp
-                         ++ (if null (params ai) then []
-                             else [H.TyList (H.TyTuple H.Boxed [haskellStringType,
-                                                                haskellStringType])])
-                         ++ [H.TyApp m (H.TyApp
-                                         (H.TyApp
-                                           (H.TyCon $ H.UnQual (H.Ident "ApiResponse"))
-                                           (responseHaskellType errorI))
-                                         (responseHaskellType output))]
-               qualIdent (H.Ident s)
-                 | s == cleanHsName res = H.TyCon $ H.UnQual tyIdent
-                 | otherwise = H.TyCon $ H.Qual (H.ModuleName $ modName s) tyIdent
-               qualIdent H.Symbol{} = error "Rest.Gen.Haskell.mkFunction.qualIdent - not expecting a Symbol"
-               inp | Just i  <- mInp
-                   , i' <- inputHaskellType i = [i']
-                   | otherwise = []
-       input = H.Ident "input"
-       pList = H.Ident "pList"
-       rhs = H.UnGuardedRhs $ H.Let binds expr
-         where binds = H.BDecls [rHeadersBind, requestBind]
-               rHeadersBind =
-                 H.PatBind noLoc (H.PVar rHeaders)
-#if !MIN_VERSION_haskell_src_exts(1,16,0)
-                    Nothing
-#endif
-                    (H.UnGuardedRhs $ H.List [H.Tuple H.Boxed [use hAccept     , H.Lit $ H.String $ dataTypesToAcceptHeader JSON $ responseAcceptType responseType],
-                                              H.Tuple H.Boxed [use hContentType, H.Lit $ H.String $ maybe "text/plain" inputContentType mInp]])
-                              noBinds
+       mInp = fmap (inputInfo . L.get desc . chooseType) . NList.nonEmpty . inputs $ ai
+       fType :: N.Type
+       fType = H.TyForall () Nothing (Just ctx) $ fTypify tyParts
+         where
+           ctx :: N.Context
+           ctx = H.CxSingle () $ H.ClassA () (H.UnQual () cls) [m]
+           cls :: N.Name
+           cls = H.Ident () "ApiStateC"
+           m :: N.Type
+           m = H.TyVar () $ H.Ident () "m"
+           fTypify :: [N.Type] -> N.Type
+           fTypify = \case
+             []          -> error "Rest.Gen.Haskell.mkFunction.fTypify - expects at least one type"
+             [ty1]       -> ty1
+             [ty1, ty2]  -> H.TyFun () ty1 ty2
+             (ty1 : tys) -> H.TyFun () ty1 (fTypify tys)
+           tyParts :: [N.Type]
+           tyParts = map qualIdent lPars
+                  ++ maybe [] (return . Ident.haskellType) (ident ai)
+                  ++ inp
+                  ++ (if null (params ai)
+                      then []
+                      else [H.TyList ()
+                              (H.TyTuple () H.Boxed
+                                [ haskellStringType
+                                , haskellStringType
+                                ])])
+                  ++ [H.TyApp () m
+                        (H.TyApp ()
+                          (H.TyApp ()
+                            (H.TyCon () $ H.UnQual () (H.Ident () "ApiResponse"))
+                            (responseHaskellType errorI))
+                          (responseHaskellType output))]
+           qualIdent :: N.Name -> N.Type
+           qualIdent = \case
+             (H.Ident _ s)
+               | s == cleanHsName res -> H.TyCon () $ H.UnQual () tyIdent
+               | otherwise            -> H.TyCon () $ H.Qual () (H.ModuleName () $ modName s) tyIdent
+             H.Symbol{}               -> error "Rest.Gen.Haskell.mkFunction.qualIdent - not expecting a Symbol"
+           inp :: [N.Type]
+           inp | Just i <- mInp
+               , i' <- inputHaskellType i = [i']
+               | otherwise = []
+       input :: N.Name
+       input = H.Ident () "input"
+       pList :: N.Name
+       pList = H.Ident () "pList"
+       rhs :: N.Rhs
+       rhs = H.UnGuardedRhs () $ H.Let () binds expr
+         where
+           binds :: N.Binds
+           binds = H.BDecls () [rHeadersBind, requestBind]
+           rHeadersBind :: N.Decl
+           rHeadersBind =
+             H.PatBind () (H.PVar () rHeaders)
+               (H.UnGuardedRhs () $
+                 H.List ()
+                   [ H.Tuple () H.Boxed
+                     [ use hAccept
+                     , stringLit $ dataTypesToAcceptHeader JSON $ responseAcceptType responseType
+                     ]
+                   , H.Tuple () H.Boxed
+                     [ use hContentType
+                     , stringLit $ maybe "text/plain" inputContentType mInp
+                     ]])
+               noBinds
 
-               rHeaders     = H.Ident "rHeaders"
-               hAccept      = H.Ident "hAccept"
-               hContentType = H.Ident "hContentType"
-               doRequest    = H.Ident "doRequest"
+           rHeaders     :: N.Name
+           rHeaders     = H.Ident () "rHeaders"
+           hAccept      :: N.Name
+           hAccept      = H.Ident () "hAccept"
+           hContentType :: N.Name
+           hContentType = H.Ident () "hContentType"
+           doRequest    :: N.Name
+           doRequest    = H.Ident () "doRequest"
 
-               requestBind =
-                 H.PatBind noLoc (H.PVar request)
-#if !MIN_VERSION_haskell_src_exts(1,16,0)
-                    Nothing
-#endif
-                    (H.UnGuardedRhs $
-                      appLast
-                        (H.App
-                          (H.App
-                            (H.App
-                              (H.App (H.App (use makeReq) (H.Lit $ H.String $ show $ method ai))
-                                     (H.Lit $ H.String ve))
-                              url)
-                            (if null (params ai) then (H.List []) else (use pList)))
-                          (use rHeaders))) noBinds
-               appLast e
-                 | Just i <- mInp = H.App e (H.App (use $ H.Ident $ inputFunc i) (use input))
-                 | otherwise = H.App e (H.Lit $ H.String "")
-               makeReq = H.Ident "makeReq"
-               request = H.Ident "request"
+           requestBind :: N.Decl
+           requestBind =
+             H.PatBind () (H.PVar () request)
+                (H.UnGuardedRhs () $
+                  appLast
+                    (H.App ()
+                      (H.App ()
+                        (H.App ()
+                          (H.App () (H.App () (use makeReq) (stringLit str)) (stringLit ve))
+                          url)
+                        (if null (params ai) then H.List () [] else use pList))
+                      (use rHeaders))) noBinds
+             where
+               str = show $ method ai
+           appLast :: N.Exp -> N.Exp
+           appLast e
+             | Just i <- mInp = H.App () e (H.App () (use $ H.Ident () $ inputFunc i) (use input))
+             | otherwise = H.App () e (stringLit "")
+           makeReq :: N.Name
+           makeReq = H.Ident () "makeReq"
+           request :: N.Name
+           request = H.Ident () "request"
 
-               expr = H.App (H.App (H.App (use doRequest)
-                                          (use $ H.Ident $ responseFunc errorI))
-                                          (use $ H.Ident $ responseFunc output)) (use request)
+           expr :: N.Exp
+           expr = H.App () (H.App () (H.App () (use doRequest)
+                                      (use . H.Ident () $ responseFunc errorI))
+                                      (use . H.Ident () $ responseFunc output))
+                                      (use request)
 
+       ve :: String
+       url :: N.Exp
        (ve, url) = ("v" ++ show ver, lUrl)
        errorI :: ResponseInfo
        errorI = errorInfo responseType
        output :: ResponseInfo
        output = outputInfo responseType
+       responseType :: ResponseType
        responseType = chooseResponseType ai
 
-linkToURL :: String -> Link -> (H.Exp, [H.Name])
-linkToURL res lnk = first H.List $ urlParts res lnk ([], [])
+linkToURL :: String -> Link -> (N.Exp, [N.Name])
+linkToURL res lnk = first (H.List ()) $ urlParts res lnk ([], [])
 
-urlParts :: String -> Link -> ([H.Exp], [H.Name]) -> ([H.Exp], [H.Name])
+urlParts :: String -> Link -> ([N.Exp], [N.Name]) -> ([N.Exp], [N.Name])
 urlParts res lnk ac@(rlnk, pars) =
   case lnk of
     [] -> ac
     (LResource r : a@(LAccess _) : xs)
-      | not (hasParam a) -> urlParts res xs (rlnk ++ [H.List [H.Lit $ H.String r]], pars)
-      | otherwise -> urlParts res xs (rlnk', pars ++ [H.Ident . cleanHsName $ r])
-           where rlnk' = rlnk ++ (H.List [H.Lit $ H.String $ r] : tailed)
-                 tailed = [H.App (useMQual qual $ H.Ident "readId")
-                                 (use $ hsName (cleanName r))]
-                   where qual | r == res = Nothing
-                              | otherwise = Just $ H.ModuleName $ modName r
-    (LParam p : xs) -> urlParts res xs (rlnk ++ [H.List [H.App (use $ H.Ident "showUrl")
+      | not (hasParam a) -> urlParts res xs (rlnk ++ [H.List () [stringLit r]], pars)
+      | otherwise -> urlParts res xs (rlnk', pars ++ [H.Ident () . cleanHsName $ r])
+           where
+             rlnk' = rlnk ++ (H.List () [stringLit r] : tailed)
+             tailed = [H.App () (useMQual qual $ H.Ident () "readId")
+                             (use . hsName $ cleanName r)]
+               where
+                 qual :: Maybe N.ModuleName
+                 qual | r == res  = Nothing
+                      | otherwise = Just . H.ModuleName () $ modName r
+    (LParam p : xs) -> urlParts res xs (rlnk ++ [H.List () [H.App () (use $ H.Ident () "showUrl")
                                                           (use $ hsName (cleanName p))]], pars)
-    (i : xs) -> urlParts res xs (rlnk ++ [H.List [H.Lit $ H.String $ itemString i]], pars)
+    (i : xs) -> urlParts res xs (rlnk ++ [H.List () [stringLit $ itemString i]], pars)
 
-idData :: ApiResource -> [H.Decl]
+idData :: ApiResource -> [N.Decl]
 idData node =
   case resAccessors node of
     [] -> []
     [(_pth, Nothing)] -> []
     [(pth, Just i)] ->
       let pp xs | null pth = xs
-                | otherwise = H.Lit (H.String pth) : xs
-      in [ H.TypeDecl noLoc tyIdent [] (Ident.haskellType i),
-           H.TypeSig noLoc [funName] fType,
-           H.FunBind [ H.Match noLoc funName [H.PVar x] Nothing
-                       (H.UnGuardedRhs $ H.List $ pp [ showURLx ]) noBinds] ]
+                | otherwise = stringLit pth : xs
+      in [ H.TypeDecl () (H.DHead () tyIdent) (Ident.haskellType i),
+           H.TypeSig () [funName] fType,
+           H.FunBind () [ H.Match () funName [H.PVar () x]
+                            (H.UnGuardedRhs () $ H.List () $ pp [showURLx])
+                            noBinds
+                        ]
+         ]
     ls ->
-      let ctor (pth,mi) =
-            H.QualConDecl noLoc [] [] (H.ConDecl (H.Ident (dataName pth)) $ maybe [] f mi)
-#if MIN_VERSION_haskell_src_exts(1,16,0)
-              where f ty = [Ident.haskellType ty]
-#else
-              where f ty = [H.UnBangedTy $ Ident.haskellType ty]
-#endif
-          fun (pth, mi) = [
-                           H.FunBind [H.Match noLoc funName fparams Nothing rhs noBinds]]
-            where (fparams, rhs) =
-                    case mi of
-                      Nothing ->
-                        ([H.PVar $ H.Ident (dataName pth)],
-                         (H.UnGuardedRhs $ H.List [H.Lit (H.String pth)]))
-                      Just{}  ->  -- Pattern match with data constructor
-                        ([H.PParen $ H.PApp (H.UnQual $ H.Ident (dataName pth)) [H.PVar x]],
-                         (H.UnGuardedRhs $ H.List [H.Lit $ H.String pth, showURLx]))
-      in [ H.DataDecl noLoc H.DataType [] tyIdent [] (map ctor ls) []
-         , H.TypeSig noLoc [funName] fType
+      let ctor :: (String, Maybe Ident) -> N.QualConDecl
+          ctor (pth,mi) =
+            H.QualConDecl () Nothing Nothing (H.ConDecl () (H.Ident () (dataName pth)) $ maybe [] f mi)
+              where
+                f ty = [Ident.haskellType ty]
+          fun :: (String, Maybe Ident) -> [N.Decl]
+          fun (pth, mi) = [H.FunBind () [H.Match () funName fparams rhs noBinds]]
+            where
+              (fparams, rhs) =
+                case mi of
+                  Nothing ->
+                    ([H.PVar () $ H.Ident () (dataName pth)],
+                     (H.UnGuardedRhs () $ H.List () [stringLit pth]))
+                  Just{}  ->  -- Pattern match with data constructor
+                    ([H.PParen () $ H.PApp () (H.UnQual () $ H.Ident () (dataName pth)) [H.PVar () x]],
+                     (H.UnGuardedRhs () $ H.List () [stringLit pth, showURLx]))
+      in [ H.DataDecl () (H.DataType ()) Nothing (H.DHead () tyIdent) (map ctor ls) Nothing
+         , H.TypeSig () [funName] fType
          ] ++ concatMap fun ls
     where
-      x        = H.Ident "x"
-      fType    = H.TyFun (H.TyCon $ H.UnQual tyIdent) (H.TyList haskellStringType)
-      funName  = H.Ident "readId"
-      showURLx = H.App (H.Var $ H.UnQual $ H.Ident "showUrl") (H.Var $ H.UnQual $ x)
+      x        :: N.Name
+      x        = H.Ident () "x"
+      fType    :: N.Type
+      fType    = H.TyFun () (H.TyCon () $ H.UnQual () tyIdent) (H.TyList () haskellStringType)
+      funName  :: N.Name
+      funName  = H.Ident () "readId"
+      showURLx :: N.Exp
+      showURLx = H.App () (H.Var () $ H.UnQual () $ H.Ident () "showUrl") (H.Var () $ H.UnQual () $ x)
 
-tyIdent :: H.Name
-tyIdent = H.Ident "Identifier"
+tyIdent :: N.Name
+tyIdent = H.Ident () "Identifier"
 
-mkHsName :: ActionInfo -> H.Name
+mkHsName :: ActionInfo -> N.Name
 mkHsName ai = hsName $ concatMap cleanName parts
   where
       parts = case actionType ai of
-                Retrieve   -> let nm = get ++ by ++ target
-                              in if null nm then ["access"] else nm
-                Create     -> ["create"] ++ by ++ target
-                -- Should be delete, but delete is a JS keyword and causes problems in collect.
-                Delete     -> ["remove"] ++ by ++ target
-                DeleteMany -> ["removeMany"] ++ by ++ target
-                List       -> ["list"]   ++ by ++ target
-                Update     -> ["save"]   ++ by ++ target
-                UpdateMany -> ["saveMany"] ++ by ++ target
-                Modify   -> if resDir ai == "" then ["do"] else [resDir ai]
+        Retrieve   -> case nm of
+          [] -> ["access"]
+          _  -> nm
+          where
+            nm = get ++ by ++ target
+        Create     -> ["create"] ++ by ++ target
+        -- Should be delete, but delete is a JS keyword and causes problems in collect.
+        Delete     -> ["remove"] ++ by ++ target
+        DeleteMany -> ["removeMany"] ++ by ++ target
+        List       -> ["list"] ++ by ++ target
+        Update     -> ["save"] ++ by ++ target
+        UpdateMany -> ["saveMany"] ++ by ++ target
+        Modify   -> if resDir ai == "" then ["do"] else [resDir ai]
 
       target = if resDir ai == "" then maybe [] ((:[]) . description) (ident ai) else [resDir ai]
       by     = if target /= [] && (isJust (ident ai) || actionType ai == UpdateMany) then ["by"] else []
       get    = if isAccessor ai then [] else ["get"]
 
-hsName :: [String] -> H.Name
-hsName []       = H.Ident ""
-hsName (x : xs) = H.Ident $ cleanHsName $ downFirst x ++ concatMap upFirst xs
+hsName :: [String] -> N.Name
+hsName []       = H.Ident () ""
+hsName (x : xs) = H.Ident () $ cleanHsName $ downFirst x ++ concatMap upFirst xs
 
 cleanHsName :: String -> String
 cleanHsName s =
@@ -366,8 +434,8 @@ modName :: String -> String
 modName = concatMap upFirst . cleanName
 
 data InputInfo = InputInfo
-  { inputModules     :: [H.ModuleName]
-  , inputHaskellType :: H.Type
+  { inputModules     :: [N.ModuleName]
+  , inputHaskellType :: N.Type
   , inputContentType :: String
   , inputFunc        :: String
   } deriving (Eq, Show)
@@ -382,8 +450,8 @@ inputInfo dsc =
     Other  -> InputInfo [] haskellByteStringType "text/plain" "id"
 
 data ResponseInfo = ResponseInfo
-  { responseModules     :: [H.ModuleName]
-  , responseHaskellType :: H.Type
+  { responseModules     :: [N.ModuleName]
+  , responseHaskellType :: N.Type
   , responseFunc        :: String
   } deriving (Eq, Show)
 
@@ -428,5 +496,8 @@ defaultErrorDataDesc dt =
   DataDesc
     { _dataType       = dt
     , _haskellType    = haskellVoidType
-    , _haskellModules = [ModuleName "Rest.Types.Void"]
+    , _haskellModules = [ModuleName () "Rest.Types.Void"]
     }
+
+stringLit :: String -> N.Exp
+stringLit s = H.Lit () $ H.String () s s

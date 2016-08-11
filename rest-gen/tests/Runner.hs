@@ -1,12 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
-    OverloadedStrings
+    FlexibleInstances
+  , OverloadedStrings
   , ScopedTypeVariables
   #-}
 
 import Prelude hiding ((.))
 
 import Control.Category ((.))
+import Control.Monad (void)
 import Data.String
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
@@ -88,5 +90,5 @@ testListingType =
     resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     listHandler () = mkListing xmlJsonO $ \_ -> return [()]
 
-instance IsString H.Type where
-  fromString = H.fromParseResult . H.parse
+instance IsString (H.Type ()) where
+  fromString = void . H.fromParseResult . H.parseType

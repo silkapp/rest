@@ -1,0 +1,42 @@
+module Rest.Gen.NoAnnotation where
+
+import qualified Language.Haskell.Exts as A
+
+type Alt = A.Alt ()
+type BangType = A.BangType ()
+type Binds = A.Binds ()
+type ClassDecl = A.ClassDecl ()
+type Context = A.Context ()
+type Decl = A.Decl ()
+type DeclHead = A.DeclHead ()
+type Exp = A.Exp ()
+type ExportSpec = A.ExportSpec ()
+type ExportSpecList = A.ExportSpecList ()
+type FieldDecl = A.FieldDecl ()
+type FieldUpdate = A.FieldUpdate ()
+type GadtDecl = A.GadtDecl ()
+type GuardedRhs = A.GuardedRhs ()
+type ImportDecl = A.ImportDecl ()
+type ImportSpec = A.ImportSpec ()
+type Literal = A.Literal ()
+type Match = A.Match ()
+type Module = A.Module ()
+type ModuleName = A.ModuleName ()
+type ModulePragma = A.ModulePragma ()
+type Name = A.Name ()
+type Pat = A.Pat ()
+type PatField = A.PatField ()
+type QName = A.QName ()
+type QOp = A.QOp ()
+type QualConDecl = A.QualConDecl ()
+type QualStmt = A.QualStmt ()
+type Rhs = A.Rhs ()
+type Sign = A.Sign ()
+type SpecialCon = A.SpecialCon ()
+type SrcLoc = A.SrcLoc
+type SrcSpan = A.SrcSpan
+type SrcSpanInfo = A.SrcSpanInfo
+type Stmt = A.Stmt ()
+type TyVarBind = A.TyVarBind ()
+type Type = A.Type ()
+type WarningText = A.WarningText ()

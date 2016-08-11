@@ -5,6 +5,8 @@ flags:
     happstack: true
     wai: true
     gen: true
+extra-deps:
+- haskell-src-exts-1.18.2
 packages:
 - code-builder/
 - rest-client/

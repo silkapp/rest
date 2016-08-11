@@ -10,7 +10,6 @@ import Data.List.Split (splitOn)
 import Data.Maybe
 import qualified Data.Label.Total             as L
 import qualified Data.List.NonEmpty           as NList
-import qualified Language.Haskell.Exts.Syntax as H
 
 import Code.Build
 import Code.Build.Ruby
@@ -18,8 +17,9 @@ import Rest.Api (Router, Version)
 import Rest.Gen.Base
 import Rest.Gen.Types
 import Rest.Gen.Utils
+import qualified Rest.Gen.NoAnnotation as N
 
-mkRbApi :: H.ModuleName -> Bool -> Version -> Router m s -> IO String
+mkRbApi :: N.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =
   do rawPrelude <- readContent "Ruby/base.rb"
      let prelude = replace "SilkApi" (unModuleName ns) rawPrelude

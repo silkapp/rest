@@ -20,8 +20,9 @@ import Rest.Gen.JavaScript (mkJsApi)
 import Rest.Gen.Ruby (mkRbApi)
 import Rest.Gen.Types
 import Rest.Gen.Utils
+import qualified Rest.Gen.NoAnnotation as N
 
-generate :: Config -> String -> Api m -> [H.ModuleName] -> [H.ImportDecl] -> [(H.ModuleName, H.ModuleName)] -> IO ()
+generate :: Config -> String -> Api m -> [N.ModuleName] -> [N.ImportDecl] -> [(N.ModuleName, N.ModuleName)] -> IO ()
 generate config name api sources imports rewrites =
   withVersion (get apiVersion config) api (putStrLn "Could not find api version" >> exitFailure) $ \ver (Some1 r) ->
      case get action config of
@@ -42,7 +43,7 @@ generate config name api sources imports rewrites =
        Nothing              -> return ()
   where
     packageName = map toLower name
-    moduleName  = H.ModuleName $ upFirst packageName
+    moduleName  = H.ModuleName () $ upFirst packageName
 
 getTargetDir :: Config -> String -> IO String
 getTargetDir config str =

@@ -79,6 +79,7 @@ import Rest.Gen.Base.Link
 import qualified Rest.Gen.Base.ActionInfo.Ident as Ident
 import qualified Rest.Gen.Base.JSON             as J
 import qualified Rest.Gen.Base.XML              as X
+import qualified Rest.Gen.NoAnnotation          as N
 
 --------------------
 -- * The types describing a resource's actions.
@@ -99,8 +100,8 @@ data DataType = String | XML | JSON | File | Other deriving (Show, Eq)
 -- | Core information about the type of the input/output
 data DataDesc = DataDesc
   { _dataType       :: DataType
-  , _haskellType    :: H.Type
-  , _haskellModules :: [H.ModuleName]
+  , _haskellType    :: N.Type
+  , _haskellModules :: [N.ModuleName]
   } deriving (Show, Eq)
 
 mkLabel ''DataDesc
@@ -140,7 +141,7 @@ data ActionInfo = ActionInfo
 isAccessor :: ActionInfo -> Bool
 isAccessor ai = actionType ai == Retrieve && actionTarget ai == Self
 
-defaultDescription :: DataType -> String -> H.Type -> DataDescription
+defaultDescription :: DataType -> String -> N.Type -> DataDescription
 defaultDescription typ typeDesc htype =
   DataDescription
     { _desc = DataDesc
@@ -491,16 +492,16 @@ typeString _ = typeString' . typeOf $ (undefined :: a)
                         (tyConName tyCon)
                         (concatMap (\t -> " (" ++ typeString' t ++ ")") subs)
 
-modString :: forall a. Typeable a => Proxy a -> [H.ModuleName]
-modString _ = map H.ModuleName . filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf $ (undefined :: a)
+modString :: forall a. Typeable a => Proxy a -> [N.ModuleName]
+modString _ = map (H.ModuleName ()) . filter (\v -> v /= "" && take 4 v /= "GHC.") . modString' . typeOf $ (undefined :: a)
   where modString' tr =
           let (tyCon, subs) = splitTyConApp tr
           in  tyConModule tyCon : concatMap modString' subs
 
-toHaskellType :: forall a. Typeable a => Proxy a -> H.Type
+toHaskellType :: forall a. Typeable a => Proxy a -> N.Type
 toHaskellType ty =
   case H.parseType (typeString ty) of
-    H.ParseOk parsedType -> parsedType
+    H.ParseOk parsedType -> void parsedType
     H.ParseFailed _loc msg -> error msg
 
 idIdent :: Id id -> Ident
