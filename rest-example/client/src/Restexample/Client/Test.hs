@@ -31,7 +31,7 @@ differentFormats input
         request
           = makeReq "POST" "v1.0.0" [["test"], ["differentFormats"]] []
               rHeaders
-              (fromString input)
+              (toLbs input)
       in doRequest fromJSON fromXML request
 
 intersectedFormats ::
@@ -42,7 +42,7 @@ intersectedFormats input
         request
           = makeReq "POST" "v1.0.0" [["test"], ["intersectedFormats"]] []
               rHeaders
-              (fromString input)
+              (toLbs input)
       in doRequest fromJSON fromJSON request
 
 intersectedFormats2 ::
@@ -53,7 +53,7 @@ intersectedFormats2 input
         request
           = makeReq "POST" "v1.0.0" [["test"], ["intersectedFormats2"]] []
               rHeaders
-              (fromString input)
+              (toLbs input)
       in doRequest fromXML fromXML request
 
 rawXmlIO ::
@@ -129,7 +129,7 @@ preferJson input
           = [(hAccept, "text/json"), (hContentType, "text/plain")]
         request
           = makeReq "POST" "v1.0.0" [["test"], ["preferJson"]] [] rHeaders
-              (fromString input)
+              (toLbs input)
       in doRequest fromJSON fromJSON request
 
 octetStreamOut ::
