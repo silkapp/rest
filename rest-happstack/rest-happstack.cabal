@@ -29,5 +29,5 @@ library
     , happstack-server >= 7.0.5 && < 7.5
     , mtl >= 2.0 && < 2.3
     , rest-core >= 0.34 && < 0.40
-    , rest-gen >= 0.14 && < 0.20
+    , rest-gen >= 0.14 && < 0.21
     , utf8-string >= 0.3 && < 1.1

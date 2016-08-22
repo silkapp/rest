@@ -147,6 +147,6 @@ executable rest-example-gen
         base >= 4.6 && < 4.10
       , base-compat >= 0.8 && < 0.10
       , rest-example
-      , rest-gen >= 0.14 && < 0.20
+      , rest-gen == 0.20.*
   else
     buildable: False

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.0.0
+
+* Upgrade to `haskell-src-exts 1.18.*`
+
 #### 0.19.0.4
 
 * Fix encoding issue with String inputs in generated clients.
