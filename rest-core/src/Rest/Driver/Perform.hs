@@ -29,7 +29,6 @@ import Data.List
 import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)
-import Data.UUID (UUID)
 import Data.UUID.V4 (nextRandom)
 import Network.Multipart (BodyPart (..), MultiPart (..), showMultipartBody)
 import Safe
