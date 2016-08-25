@@ -1,29 +1,32 @@
 {-# LANGUAGE
     OverloadedStrings
+  , RankNTypes
   , ScopedTypeVariables
   #-}
 
-import Control.Applicative
 import Control.Monad
+import Control.Monad.Except
+import Control.Monad.Identity
 import Control.Monad.Reader
+import Data.Aeson
 import Data.Monoid
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertEqual, assertFailure)
+import qualified Data.HashMap.Strict  as H
 
-import qualified Data.HashMap.Strict as H
-
+import Rest hiding (input)
 import Rest.Api hiding (route)
-import Rest.Dictionary
+import Rest.Dictionary (Format (..), Ident (..))
 import Rest.Driver.Perform (accept)
-import Rest.Driver.RestM (runRestM_)
 import Rest.Driver.Routing
 import Rest.Driver.Types
-import Rest.Handler
 import Rest.Resource
-import Rest.Schema
 import qualified Rest.Api          as Rest
-import qualified Rest.Driver.RestM as RestM
+import qualified Rest.Container    as C
+import qualified Rest.Driver.RestM as RM
+import qualified Rest.Resource     as Res
+import qualified Rest.Run          as Run
 
 main :: IO ()
 main = do
@@ -44,6 +47,7 @@ main = do
               , testCase "Multi-PUT." testMultiPut
               , testCase "Multi-POST" testMultiPost
               , testCase "Accept headers." testAcceptHeaders
+              , testCase "Test listing count" testListingCount
               ]
 
 testListing :: Assertion
@@ -208,3 +212,31 @@ testAcceptHeaders :: Assertion
 testAcceptHeaders =
   do let fmt = accept (Just "text/json") Nothing Nothing
      assertEqual "Accept json format." [JsonFormat] fmt
+
+testListingCount :: Assertion
+testListingCount = assertEqual "listing count" (Right $ C.List 0 5 [1..5::Int]) (eitherDecode bs)
+  where
+    (bs, _meta) = runIdentity . RM.runRestM input $ Run.apiToHandler api
+    input :: RM.RestInput
+    input = RM.emptyInput
+      { RM.parameters = H.fromList [("count", "5")]
+      , RM.paths      = splitUriString "resource"
+      , RM.headers    = H.fromList
+          [ ("Accept"      , "application/json")
+          , ("Content-Type", "application/json")
+          ]
+      }
+    api :: Api (RM.RestM Identity)
+    api = Unversioned (Some1 $ Rest.root -/ Rest.route resource)
+    resource :: Resource (RM.RestM Identity) (RM.RestM Identity) String () Void
+    resource = mkResourceId
+      { Res.name   = "resource"
+      , Res.schema = withListing () $ named []
+      , Res.list   = const listHandler
+      }
+      where
+      listHandler :: ListHandler (RM.RestM Identity)
+      listHandler = mkListing jsonO h
+        where
+          h :: Range -> ExceptT Reason_ (RM.RestM Identity) [Int]
+          h _rng = return [1..10]
