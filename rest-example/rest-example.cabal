@@ -130,8 +130,8 @@ executable rest-example-snap
       , rest-core >= 0.39 && < 0.40
       , rest-example
       , rest-snap >= 0.1 && < 0.3
-      , snap-core == 0.9.*
-      , snap-server == 0.9.*
+      , snap-core >= 0.9 && < 1.1
+      , snap-server >= 0.9 && < 1.1
       , transformers-compat >= 0.4 && < 0.6
   else
     buildable: False
