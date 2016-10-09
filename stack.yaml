@@ -1,4 +1,4 @@
-resolver: lts-6.10
+resolver: lts-7.0
 flags:
   rest-example:
     snap: true

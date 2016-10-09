@@ -16,7 +16,8 @@ env:
 - ARGS="--resolver lts-4"
 - ARGS="--resolver lts-5"
 - ARGS="--resolver lts-6"
-# - ARGS="--resolver nightly"
+- ARGS="--resolver lts-7"
+- ARGS="--resolver nightly"
 
 before_install:
 # Download and unpack the stack executable
