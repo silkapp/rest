@@ -30,13 +30,13 @@ before_install:
 # around some quirks in Travis's terminal implementation.
 script:
 - stack $ARGS --no-terminal --install-ghc install --test --haddock
-- stack exec -- rest-example-gen --haskell --target=./rest-example/client
-- stack build restexample-client
+- stack $ARGS --no-terminal exec -- rest-example-gen --haskell --target=./rest-example/client
+- stack $ARGS --no-terminal build restexample-client
 - rm -f rest-example/api.js
-- stack exec -- rest-example-gen --javascript --target=./rest-example/api.js
+- stack $ARGS --no-terminal exec -- rest-example-gen --javascript --target=./rest-example/api.js
 - node rest-example/api.js
 - rm -f rest-example/api.rb
-- stack exec -- rest-example-gen --ruby --target=./rest-example/api.rb
+- stack $ARGS --no-terminal exec -- rest-example-gen --ruby --target=./rest-example/api.rb
 - ruby rest-example/api.rb
 
 # Caching so the next build will be fast too.
