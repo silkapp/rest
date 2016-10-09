@@ -7,6 +7,8 @@ flags:
     gen: true
 extra-deps:
 - haskell-src-exts-1.18.2
+- HUnit-1.4.0.0
+- call-stack-0.1.0
 packages:
 - code-builder/
 - rest-client/

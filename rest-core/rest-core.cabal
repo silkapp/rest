@@ -75,7 +75,7 @@ test-suite rest-tests
   build-depends:
       base >= 4.5 && < 4.10
     , aeson >= 0.7 && < 1.1
-    , HUnit >= 1.2 && < 1.4
+    , HUnit >= 1.2 && < 1.5
     , bytestring >= 0.9 && < 0.11
     , mtl >= 2.0 && < 2.3
     , rest-core
