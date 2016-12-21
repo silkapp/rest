@@ -262,7 +262,7 @@ api = [(mkVersion 1 0 0, Some1 blog)]
 
 You can run your API in several different web frameworks. At this moment there are packages for
 [happstack](http://hackage.haskell.org/package/rest-happstack),
-[snap](http://hackage.haskell.org/package/rest-happstack) and
+[snap](http://hackage.haskell.org/package/rest-snap) and
 [wai](http://hackage.haskell.org/package/rest-wai). In this tutorial I'll show how to run the API in
 happstack, but the code for other frameworks is very similar.
 
