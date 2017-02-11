@@ -1,7 +1,6 @@
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveGeneric
-  , EmptyDataDecls
   , GeneralizedNewtypeDeriving
   , StandaloneDeriving
   #-}

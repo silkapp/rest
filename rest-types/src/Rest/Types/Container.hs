@@ -1,11 +1,9 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     DeriveDataTypeable
   , DeriveGeneric
   , DeriveFunctor
   , DeriveFoldable
   , DeriveTraversable
-  , EmptyDataDecls
   , FlexibleContexts
   , FlexibleInstances
   , GADTs
@@ -22,9 +20,7 @@ module Rest.Types.Container
 import Prelude hiding (mapM)
 
 import Data.Aeson.Types
-import Data.Foldable
 import Data.JSON.Schema (JSONSchema (..), gSchema)
-import Data.Traversable
 import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson

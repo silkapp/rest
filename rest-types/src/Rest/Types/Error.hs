@@ -4,7 +4,6 @@
   , DeriveFunctor
   , DeriveGeneric
   , DeriveTraversable
-  , EmptyDataDecls
   , GADTs
   , NoImplicitPrelude
   , ScopedTypeVariables

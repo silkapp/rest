@@ -52,6 +52,7 @@ mkUnpickler m = appUnPickle (xpWrap (const m, const ())
                                 (xpickle :: PU ()))
                             )
 
+{-# ANN choice ("HLint: ignore Eta reduce"::String) #-}
 choice :: Unpickler a -> Unpickler a -> Unpickler a
 choice x y = mchoice x pure y
 
