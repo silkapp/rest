@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     FlexibleContexts
   , FlexibleInstances
@@ -7,7 +8,6 @@
   , NamedFieldPuns
   , NoImplicitPrelude
   , RankNTypes
-  , TemplateHaskell
   , TypeSynonymInstances
   #-}
 -- | A 'Resource' type for representing a REST resource, as well as

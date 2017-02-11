@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     GADTs
   , KindSignatures
@@ -129,7 +130,7 @@ data Api m where
 -- | Get the latest version of an API.
 
 latest :: VersionSet m -> Maybe (Version, Some1 (Router m))
-latest = headMay . reverse . sortBy (compare `on` fst)
+latest = headMay . sortBy (flip compare `on` fst)
 
 -- | Parse a 'String' as a 'Version'. The string should contain two or
 -- three numbers separated by dots, e.g. @1.12.3@.

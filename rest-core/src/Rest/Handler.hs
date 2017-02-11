@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     DataKinds
   , DeriveDataTypeable

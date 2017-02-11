@@ -1,15 +1,15 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    DeriveDataTypeable
-  , ExistentialQuantification
+    ExistentialQuantification
   , FlexibleContexts
   , GADTs
   , GeneralizedNewtypeDeriving
   , NamedFieldPuns
   , RankNTypes
   , ScopedTypeVariables
-  , StandaloneDeriving
   , TupleSections
   #-}
+
 module Rest.Driver.Routing.Internal where
 
 import Prelude hiding (id, (.))
@@ -51,6 +51,8 @@ import Rest.Driver.Types
 
 import qualified Rest.Driver.RestM as Rest
 
+{-# ANN module "HLint: ignore Reduce duplication" #-}
+
 type UriParts = [String]
 
 apiError :: (MonadError (Reason e) m) => Reason e -> m a
@@ -76,11 +78,11 @@ runRouter cfg mtd uri = runIdentity
                       . unRouter
 
 route :: (Applicative m, Monad m) => Maybe Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
-route mtd uri = routeWith defaultConfig mtd uri
+route = routeWith defaultConfig
 
 routeWith :: Config m -> Maybe Method -> UriParts -> Rest.Api m -> Either Reason_ (RunnableHandler m)
 routeWith _    Nothing   _   _   = apiError UnsupportedMethod
-routeWith cfg (Just mtd) uri api = runRouter cfg mtd uri $ do
+routeWith cfg (Just mtd) uri api = runRouter cfg mtd uri $
   case api of
     Rest.Unversioned (Some1 router) -> routeRoot router
     Rest.Versioned   vrs            -> do
@@ -102,7 +104,7 @@ routeMultiGet root@(Rest.Embed Rest.Resource{} _) =
      return (RunnableHandler id (mkMultiGetHandler cfg root))
 
 routeRouter :: Rest.Router m s -> Router n (RunnableHandler m)
-routeRouter (Rest.Embed resource@(Rest.Resource { Rest.schema }) subRouters) =
+routeRouter (Rest.Embed resource@Rest.Resource { Rest.schema } subRouters) =
   case schema of
     (Rest.Schema mToplevel step) -> maybe (apiError UnsupportedRoute) return =<< runMaybeT
        (  routeToplevel resource subRouters mToplevel
@@ -114,7 +116,7 @@ routeToplevel :: Rest.Resource m s sid mid aid
               -> [Some1 (Rest.Router s)]
               -> Maybe (Rest.Cardinality sid mid)
               -> MaybeT (Router n) (RunnableHandler m)
-routeToplevel resource@(Rest.Resource { Rest.list }) subRouters mToplevel =
+routeToplevel resource@Rest.Resource { Rest.list } subRouters mToplevel =
   hoistMaybe mToplevel >>= \toplevel ->
   case toplevel of
     Rest.Single sid -> lift $ withSubresource sid resource subRouters
@@ -124,7 +126,7 @@ routeToplevel resource@(Rest.Resource { Rest.list }) subRouters mToplevel =
          lift $ routeListHandler (list mid)
 
 routeCreate :: Rest.Resource m s sid mid aid -> MaybeT (Router n) (RunnableHandler m)
-routeCreate (Rest.Resource { Rest.create }) = guardNullPath >> guardMethod POST >>
+routeCreate Rest.Resource { Rest.create } = guardNullPath >> guardMethod POST >>
   maybe (apiError UnsupportedRoute) (return . RunnableHandler id) create
 
 routeStep :: Rest.Resource m s sid mid aid
@@ -143,7 +145,7 @@ routeNamed :: Rest.Resource m s sid mid aid
            -> [Some1 (Rest.Router s)]
            -> Rest.Endpoint sid mid aid
            -> Router n (RunnableHandler m)
-routeNamed resource@(Rest.Resource { Rest.list, Rest.statics }) subRouters h =
+routeNamed resource@Rest.Resource { Rest.list, Rest.statics } subRouters h =
   case h of
     Left aid -> noRestPath >> hasMethod POST >> return (RunnableHandler id (statics aid))
     Right (Rest.Single getter) -> routeGetter getter resource subRouters
@@ -153,10 +155,10 @@ routeUnnamed :: Rest.Resource m s sid mid aid
              -> [Some1 (Rest.Router s)]
              -> Rest.Cardinality (Rest.Id sid) (Rest.Id mid)
              -> Router n (RunnableHandler m)
-routeUnnamed resource@(Rest.Resource { Rest.list }) subRouters cardinality =
+routeUnnamed resource@Rest.Resource { Rest.list } subRouters cardinality =
   case cardinality of
-    Rest.Single sBy -> withSegment (multi resource sBy) $ \seg ->
-      parseIdent sBy seg >>= \sid -> withSubresource sid resource subRouters
+    Rest.Single sBy -> withSegment (multi resource sBy) $
+      parseIdent sBy >=> \sid -> withSubresource sid resource subRouters
     Rest.Many   mBy ->
       do seg <- popSegment
          mid <- parseIdent mBy seg
@@ -171,13 +173,13 @@ routeGetter :: Rest.Getter sid
 routeGetter getter resource subRouters =
   case getter of
     Rest.Singleton sid -> getOrDeep sid
-    Rest.By        sBy -> withSegment (multi resource sBy) $ \seg ->
-                            parseIdent sBy seg >>= getOrDeep
+    Rest.By        sBy -> withSegment (multi resource sBy) $
+                            parseIdent sBy >=> getOrDeep
   where
     getOrDeep sid = withSubresource sid resource subRouters
 
 multi :: Rest.Resource m s sid mid aid -> Rest.Id sid -> Router n (RunnableHandler m)
-multi (Rest.Resource { Rest.update, Rest.remove, Rest.enter }) sBy =
+multi Rest.Resource { Rest.update, Rest.remove, Rest.enter } sBy =
   asks method >>= \mtd ->
   case mtd of
     PUT    -> handleOrNotFound update
@@ -206,7 +208,7 @@ withSubresource :: sid
                 -> Rest.Resource m s sid mid aid
                 -> [Some1 (Rest.Router s)]
                 -> Router n (RunnableHandler m)
-withSubresource sid resource@(Rest.Resource { Rest.enter, Rest.selects, Rest.actions }) subRouters =
+withSubresource sid resource@Rest.Resource { Rest.enter, Rest.selects, Rest.actions } subRouters =
   withSegment (routeSingle sid resource) $ \seg ->
   case lookup seg selects of
     Just select -> noRestPath >> hasMethod GET >> return (RunnableHandler (enter sid) select)
@@ -220,7 +222,7 @@ withSubresource sid resource@(Rest.Resource { Rest.enter, Rest.selects, Rest.act
           Nothing -> apiError UnsupportedRoute
 
 routeSingle :: sid -> Rest.Resource m s sid mid aid -> Router n (RunnableHandler m)
-routeSingle sid (Rest.Resource { Rest.enter, Rest.get, Rest.update, Rest.remove }) =
+routeSingle sid Rest.Resource { Rest.enter, Rest.get, Rest.update, Rest.remove } =
   asks method >>= \mtd ->
   case mtd of
     GET    -> handleOrNotFound get
@@ -231,7 +233,7 @@ routeSingle sid (Rest.Resource { Rest.enter, Rest.get, Rest.update, Rest.remove 
     handleOrNotFound = maybe (apiError UnsupportedRoute) (return . RunnableHandler (enter sid))
 
 routeName :: String -> Router n ()
-routeName ident = when (not . null $ ident) $
+routeName ident = unless (null ident) $
   do identStr <- popSegment
      when (identStr /= ident) $
        apiError UnsupportedRoute
@@ -287,9 +289,8 @@ guardNullPath = State.get >>= guard . null
 
 hasMethod :: Method -> Router n ()
 hasMethod wantedMethod = asks method >>= \mtd ->
-  if mtd == wantedMethod
-  then return ()
-  else apiError UnsupportedMethod
+  unless (mtd == wantedMethod) $
+    apiError UnsupportedMethod
 
 guardMethod :: (MonadPlus m, MonadReader (RouterData c) m) => Method -> m ()
 guardMethod mtd = asks method >>= guard . (== mtd)
@@ -322,7 +323,7 @@ mkMultiHandler sBy run (GenHandler dict act sec) = GenHandler <$> mNewDict <*> p
          return . StringHashMap.fromList $ zipWith (\(k, _) b -> (k, eitherToStatus b)) (StringHashMap.toList vs) bs
 
 mkMultiGetHandler :: forall m s. (Applicative m, Monad m) => Config m -> Rest.Router m s -> Handler m
-mkMultiGetHandler cfg root = mkInputHandler (xmlJsonI . multipartO) $ \(Resources rs) -> (runMultiResources cfg) cfg root rs
+mkMultiGetHandler cfg root = mkInputHandler (xmlJsonI . multipartO) $ \(Resources rs) -> runMultiResources cfg cfg root rs
 
 defaultRunMultiResources :: (Applicative m, Monad m) => Config m -> Rest.Router m s -> [Resource] -> ExceptT Reason_ m [BodyPart]
 defaultRunMultiResources cfg root rs = lift $ forM rs (runResource cfg root)
@@ -342,8 +343,8 @@ routeResource cfg root res = runRouter cfg (R.method res) (splitUriString $ R.ur
 
 toRestInput :: Resource -> Rest.RestInput
 toRestInput r = Rest.emptyInput
-  { Rest.headers    = H.map (R.unValue) . StringHashMap.toHashMap . R.headers    $ r
-  , Rest.parameters = H.map (R.unValue) . StringHashMap.toHashMap . R.parameters $ r
+  { Rest.headers    = H.map R.unValue . StringHashMap.toHashMap . R.headers    $ r
+  , Rest.parameters = H.map R.unValue . StringHashMap.toHashMap . R.parameters $ r
   , Rest.body       = LUTF8.fromString (R.input r)
   , Rest.method     = Just (R.method r)
   , Rest.paths      = splitUriString (R.uri r)

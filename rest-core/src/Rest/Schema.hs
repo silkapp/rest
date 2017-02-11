@@ -82,7 +82,7 @@ singleBy = singleIdent StringId
 
 -- | A single resource endpoint with an identifier that can be read.
 
-singleRead :: (Show a, Read a, Info a) => (a -> sid) -> Endpoint sid mid aid
+singleRead :: (Read a, Info a) => (a -> sid) -> Endpoint sid mid aid
 singleRead = singleIdent ReadId
 
 -- | A single resource identified as specified by the 'Ident'.
@@ -102,7 +102,7 @@ listingBy = listingIdent StringId
 
 -- | A listing with an identifier that can be read.
 
-listingRead :: (Show a, Read a, Info a) => (a -> mid) -> Endpoint sid mid aid
+listingRead :: (Read a, Info a) => (a -> mid) -> Endpoint sid mid aid
 listingRead = listingIdent ReadId
 
 -- | A listing identified as specified by the 'Ident'.
@@ -118,7 +118,7 @@ unnamedSingle = unnamedSingleIdent StringId
 
 -- | An unnamed single resource with an identifier that can be read.
 
-unnamedSingleRead :: (Show a, Read a, Info a) => (a -> sid) -> Step sid mid aid
+unnamedSingleRead :: (Read a, Info a) => (a -> sid) -> Step sid mid aid
 unnamedSingleRead = unnamedSingleIdent ReadId
 
 -- | An unnamed single resource identified as specified by the
@@ -133,7 +133,7 @@ unnamedListing :: (String -> mid) -> Step sid mid aid
 unnamedListing = unnamedListingIdent StringId
 
 -- | An unnamed listing with an identifier that can be read.
-unnamedListingRead :: (Show a, Read a, Info a) => (a -> mid) -> Step sid mid aid
+unnamedListingRead :: (Read a, Info a) => (a -> mid) -> Step sid mid aid
 unnamedListingRead = unnamedListingIdent ReadId
 
 -- | An unnamed listing identified as specified by the 'Ident'.

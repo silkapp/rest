@@ -27,7 +27,7 @@ data RunnableHandler n = forall m. RunnableHandler
 mapHandler :: Run m n -> RunnableHandler m -> RunnableHandler n
 mapHandler run (RunnableHandler run' h) = RunnableHandler (run . run') h
 
-data Config m
+newtype Config m
   = Config
   { runMultiResources :: forall s. Config m -> Router m s -> [Resource] -> ExceptT Reason_ m [BodyPart]
   }

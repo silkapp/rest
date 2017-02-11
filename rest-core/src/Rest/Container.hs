@@ -1,11 +1,7 @@
 {-# LANGUAGE
     DataKinds
-  , DeriveDataTypeable
-  , EmptyDataDecls
-  , FlexibleInstances
   , GADTs
   , ScopedTypeVariables
-  , TemplateHaskell
   , TypeFamilies
   #-}
 module Rest.Container
@@ -84,7 +80,7 @@ statusO (Dicts es) (Dicts os) = mkStatusDict es           os
 
 mkStatusDict :: forall e o. [Error e] -> [Output o] -> Maybe (Outputs ('Just (Status e o)))
 mkStatusDict es os =
-    case mapMaybe mappingDictO (intersect es os) of
+    case mapMaybe mappingDictO (es `intersect` os) of
       []  -> Nothing
       sos -> Just (Dicts sos)
     where

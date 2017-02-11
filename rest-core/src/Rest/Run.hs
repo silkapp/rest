@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     NoImplicitPrelude
   , RankNTypes
@@ -23,7 +24,7 @@ apiToHandler :: (Applicative m, Monad m) => Rest m => Api m -> m UTF8.ByteString
 apiToHandler = apiToHandler' id
 
 apiToHandler' :: (Applicative m, Monad m) => Rest n => Run m n -> Api m -> n UTF8.ByteString
-apiToHandler' run = apiToHandlerWith I.defaultConfig run
+apiToHandler' = apiToHandlerWith I.defaultConfig
 
 apiToHandlerWith :: Config m -> Rest n => Run m n -> Api m -> n UTF8.ByteString
 apiToHandlerWith cfg run api = do

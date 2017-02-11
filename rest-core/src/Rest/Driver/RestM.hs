@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Rest.Driver.RestM
   ( RestM

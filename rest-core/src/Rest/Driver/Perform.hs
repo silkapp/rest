@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     FlexibleContexts
   , GADTs
@@ -354,7 +355,7 @@ unsupportedFormat = throwError . Last . Just . UnsupportedFormat . show
 tryOutputs :: Rest m => (t -> Format -> ExceptT (Last DataError) m a) -> t -> ExceptT (Reason e) m a
 tryOutputs try outputs = do
   formats <- lift acceptM
-  rethrowLast $ (msum $ try outputs <$> formats) <|> unsupportedFormat formats
+  rethrowLast $ msum (try outputs <$> formats) <|> unsupportedFormat formats
   where
     rethrowLast :: Monad m => ExceptT (Last DataError) m a -> ExceptT (Reason e) m a
     rethrowLast = either (maybe (error "Rest.Driver.Perform: ExceptT threw Last Nothing, this is a bug") (throwError . OutputError) . getLast) return <=< lift . runExceptT
@@ -387,7 +388,7 @@ accept acceptHeader mct mty =
   in (fromQuery ++ fromAccept)
   where
     allFormats :: Maybe Format -> [Format]
-    allFormats ct = (maybe id (:) ct) [minBound .. maxBound]
+    allFormats ct = maybe id (:) ct [minBound .. maxBound]
     splitter :: Maybe Format -> String -> [Format]
     splitter ct hdr = nub (match ct =<< takeWhile (/= ';') . trim <$> splitOn "," hdr)
 

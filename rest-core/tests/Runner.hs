@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     OverloadedStrings
   , RankNTypes
@@ -29,7 +30,7 @@ import qualified Rest.Resource     as Res
 import qualified Rest.Run          as Run
 
 main :: IO ()
-main = do
+main =
   defaultMain [ testCase "Top level listing." testListing
               , testCase "Top level listing (trailing slash)." testListingTrailingSlash
               , testCase "Top level singleton." testToplevelSingleton
@@ -50,19 +51,16 @@ main = do
               , testCase "Test listing count" testListingCount
               ]
 
-testListing :: Assertion
-testListing = checkRoute GET "resource" (Rest.root -/ Rest.route resource)
+listResource :: Resource IO IO Void () Void
+listResource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
   where
-    resource :: Resource IO IO Void () Void
-    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
     listHandler () = mkListing id $ \_ -> return []
 
+testListing :: Assertion
+testListing = checkRoute GET "resource" (Rest.root -/ Rest.route listResource)
+
 testListingTrailingSlash :: Assertion
-testListingTrailingSlash = checkRoute GET "resource/" (Rest.root -/ Rest.route resource)
-  where
-    resource :: Resource IO IO Void () Void
-    resource = mkResourceId { name = "resource", schema = Schema (Just (Many ())) (Named []), list = listHandler }
-    listHandler () = mkListing id $ \_ -> return []
+testListingTrailingSlash = checkRoute GET "resource/" (Rest.root -/ Rest.route listResource)
 
 testToplevelSingleton :: Assertion
 testToplevelSingleton = checkSingleRoute "resource" resource handler_
@@ -163,7 +161,7 @@ testMultiPut = checkRouteSuccess PUT "resource/foo" (Rest.root -/ Rest.route res
     resource = mkResourceReader
       { name   = "resource"
       , schema = Schema Nothing (Named [("foo", Right (Single (By (Id StringId id))))])
-      , update = Just (mkConstHandler xmlJsonO (liftM void ask))
+      , update = Just (mkConstHandler xmlJsonO (fmap void ask))
       }
 
 testMultiPost :: Assertion
@@ -185,7 +183,7 @@ checkRoute method uri router = checkRouteWithIgnoredMethods [method] router meth
 
 checkRoutes :: (Applicative m, Monad m) => [(Method, Uri)] -> Rest.Router m s -> Assertion
 checkRoutes reqs router =
-  do forM_ reqs $ uncurry $ checkRouteWithIgnoredMethods (map fst reqs) router
+  forM_ reqs $ uncurry $ checkRouteWithIgnoredMethods (map fst reqs) router
 
 checkRouteWithIgnoredMethods :: (Applicative m, Monad m) => [Method] -> Rest.Router m s -> Method -> Uri -> Assertion
 checkRouteWithIgnoredMethods ignoredMethods router method uri =

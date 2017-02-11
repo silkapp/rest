@@ -26,3 +26,5 @@ import Rest.Handler ( Env (..), Handler, ListHandler, secureHandler
                     )
 import Rest.Resource (Resource, mkResource, mkResourceId, mkResourceReader, mkResourceReaderWith, Void)
 import Rest.Schema
+
+{-# ANN module "HLint: ignore Use import/export shortcut" #-}
