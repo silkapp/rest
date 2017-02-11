@@ -1,4 +1,7 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC
+  -fno-warn-orphans
+  -Wno-redundant-constraints
+  #-}
 {-# LANGUAGE RankNTypes #-}
 module Rest.Driver.Happstack
   ( apiToHandler
@@ -30,7 +33,7 @@ apiToHandler' run api = toResponse <$> Rest.apiToHandler' run api
 
 instance (Functor m, MonadPlus m, MonadIO m) => Rest (ServerPartT m) where
   getHeader nm     = fmap UTF8.toString . Happstack.getHeader nm <$> askRq
-  getParameter  nm = Just <$> look nm <|> pure Nothing
+  getParameter  nm = optional (look nm)
   getBody =
     do rq <- askRq
        bdy <- liftIO (readMVar (rqBody rq))

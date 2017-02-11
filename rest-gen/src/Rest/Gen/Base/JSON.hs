@@ -7,6 +7,7 @@ module Rest.Gen.Base.JSON
   , showExamples
   ) where
 
+import Control.Applicative ((<|>))
 import Data.Aeson ((.=))
 import Data.JSON.Schema
 import Data.List (transpose)
@@ -104,7 +105,7 @@ showExamples = map (render . pp_value) . showExamples'
 
 
 boundExample :: Num a => Bound -> a
-boundExample b = fromIntegral $ fromMaybe 0 (maybe (lower b) Just (upper b))
+boundExample b = fromIntegral . fromMaybe 0 $ upper b <|> lower b
 
 lengthBoundExample :: Num a => LengthBound -> a
-lengthBoundExample b = fromIntegral $ fromMaybe 0 (maybe (lowerLength b) Just (upperLength b))
+lengthBoundExample b = fromIntegral $ fromMaybe 0 (upperLength b <|> lowerLength b)

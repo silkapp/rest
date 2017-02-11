@@ -41,9 +41,9 @@ showSchema sch =
                                   ++ indent (concatMap (showSchema' "") ss)
                                   ++ ["</xs:choice>"]
 
-  showSchema' ats (Rep l u s)        = showSchema' (ats ++ concatMap (' ':) (mn ++ mx)) s
-        where mn = if l >= 0 then ["minOccurs=" ++ show l] else []
-              mx = if u >= 0 then ["maxOccurs=" ++ show u] else []
+  showSchema' ats (Rep _ u s)        = showSchema' (unwords $ ats : mn ++ mx) s
+        where mn = ["minOccurs=" ++ show u | u >= 0]
+              mx = ["maxOccurs=" ++ show u | u >= 0]
 
   showSchema' ats (Element n (CharData dty)) = ["<xs:element name='" ++ n ++ "' type='" ++ dataToString dty ++ "'" ++ ats ++ "/>"]
   showSchema' ats (Element n (Seq [])) = ["<xs:element name='" ++ n ++ "'" ++ ats ++ "/>"]

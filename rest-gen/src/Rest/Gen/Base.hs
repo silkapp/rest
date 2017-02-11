@@ -1,11 +1,6 @@
-module Rest.Gen.Base
-  ( module Rest.Gen.Base.ActionInfo
-  , module Rest.Gen.Base.ActionInfo.Ident
-  , module Rest.Gen.Base.ApiTree
-  , module Rest.Gen.Base.Link
-  ) where
+module Rest.Gen.Base (module X) where
 
-import Rest.Gen.Base.ActionInfo
-import Rest.Gen.Base.ActionInfo.Ident (Ident (Ident, description))
-import Rest.Gen.Base.ApiTree
-import Rest.Gen.Base.Link
+import Rest.Gen.Base.ActionInfo as X
+import Rest.Gen.Base.ActionInfo.Ident as X (Ident (Ident, description))
+import Rest.Gen.Base.ApiTree as X
+import Rest.Gen.Base.Link as X

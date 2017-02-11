@@ -39,8 +39,8 @@ mkRb ns ver node =
 
 apiConstructor :: Version -> ApiResource -> Code
 apiConstructor ver node =
-  rbClass "BaseApi" $
-    [ function "initialize" ["resUrl"] $ mkStack $
+  rbClass "BaseApi"
+    [ function "initialize" ["resUrl"] $ mkStack
         [ "@url" .=. ("resUrl + '/v" ++ show ver ++ "/'")
         , "@api" .=. "self"
         ]
@@ -68,11 +68,11 @@ mkResObj node =
     ]
 
 mkPostFuncs :: ApiResource -> Code
-mkPostFuncs node = mkStack . map mkFunction . filter (postAction . itemInfo) . resItems $ node
+mkPostFuncs = mkStack . map mkFunction . filter (postAction . itemInfo) . resItems
 
 mkPreFuncs :: ApiResource -> Code
 mkPreFuncs node =
-  let (acs, funcs) = partition (isAccessor . itemInfo) . filter ((\i -> not $ postAction i) . itemInfo) $ resItems node
+  let (acs, funcs) = partition (isAccessor . itemInfo) . filter (not . postAction . itemInfo) $ resItems node
   in mkStack (map mkAccessor acs) <-> mkStack (map mkFunction funcs)
 
 mkAccessor :: ApiAction -> Code
@@ -82,7 +82,7 @@ mkAccessor node@(ApiAction rid _ ai) =
               ++ maybe "" (\i -> "' + " ++ i ++ " + '/") mIdent
       datType  = maybe ":data" ((':':) . fst3 . mkType . L.get (dataType . desc) . chooseType)
                . NList.nonEmpty . outputs $ ai
-      mIdent   = fmap (rbName . cleanName . description) $ ident ai
+      mIdent   = rbName . cleanName . description <$> ident ai
   in function (rbName $ mkFuncParts node) fParams $ ret $
         new (className rid) ["@url + '" ++ urlPart ++ "'", "@api", datType]
 
@@ -96,9 +96,9 @@ mkFunction node@(ApiAction _ _ ai) =
       mOut     = fmap (mkType . L.get (dataType . desc) . chooseType) . NList.nonEmpty . outputs $ ai
       urlPart  = (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + " ++ i ++ " + '/") mIdent
-      mIdent   = fmap (rbName . cleanName . description) $ ident ai
+      mIdent   = rbName . cleanName . description <$> ident ai
   in function (rbName $ mkFuncParts node) fParams $
-        call ("internalSilkRequest")
+        call "internalSilkRequest"
           [ code "@api"
           , code $ ':' : map toLower (show $ method ai)
           , code $ "@url + '" ++ urlPart ++ "'"

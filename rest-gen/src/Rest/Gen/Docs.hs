@@ -11,7 +11,7 @@ module Rest.Gen.Docs
   , writeDocs
   ) where
 
-import Prelude hiding (div, head, id, id, span, (.))
+import Prelude hiding (div, head, span, (.))
 import qualified Prelude as P
 
 import Control.Category ((.))
@@ -24,10 +24,11 @@ import System.Directory
 import System.FilePath
 import Text.Blaze.Html
 import Text.Blaze.Html5 hiding (map, meta, style)
-import Text.Blaze.Html5.Attributes hiding (method, span, title)
+import Text.Blaze.Html5.Attributes hiding (id, method, span, title)
 import Text.Blaze.Html.Renderer.String
 import Text.StringTemplate
-import qualified Data.Label.Total as L
+import qualified Data.Label.Total            as L
+import qualified Text.Blaze.Html5.Attributes as A
 
 import Rest.Api (Router, Version)
 import Rest.Gen.Base
@@ -101,10 +102,10 @@ row = cdiv "row"
 
 -- | Recursively generate information for a resource structure
 resourcesInfo :: DocsContext -> ApiResource -> Html
-resourcesInfo ctx = foldTree $ (\it -> sequence_ . (resourceInfo ctx it :) )
+resourcesInfo ctx = foldTree $ \it -> sequence_ . (resourceInfo ctx it :)
 
 subResourcesInfo :: DocsContext -> ApiResource -> Html
-subResourcesInfo ctx = foldTreeChildren sequence_ $ (\it -> sequence_ . (resourceInfo ctx it :) )
+subResourcesInfo ctx = foldTreeChildren sequence_ $ \it -> sequence_ . (resourceInfo ctx it :)
 
 -- | Generate information for one resource
 resourceInfo :: DocsContext -> ApiResource -> Html
@@ -125,16 +126,16 @@ resourceIdentifiers :: Link -> [Link] -> [Html]
 resourceIdentifiers lnk lnks =
   case lnks of
     [] -> [toHtml "No identifiers"]
-    ls -> map (linkHtml . (lnk ++)) $ ls
+    ls -> map (linkHtml . (lnk ++)) ls
 
 resourceTable :: ApiResource -> Html
 resourceTable it =
   let urlInfo = groupByFirst . concatMap (\ai -> map (,itemInfo ai) $ flattenLast $ itemLink ai) $ resItems it
   in table ! cls "bordered-table resource-table" $
       do thead $ mapM_ (\v -> th ! cls v $ toHtml v) ["URL", "Method", "Description", "Input", "Output", "Errors", "Parameters"]
-         tbody $ flip mapM_ (zip [(1 :: Int)..] urlInfo) $ \(n, (url, ais)) ->
-          do tr ! cls ("stripe-" ++ show (n `mod` 2) ++ " url-main-row") $ mapM_ td $
-                     [ linkHtml $ url
+         tbody $ forM_ (zip [(1 :: Int)..] urlInfo) $ \(n, (url, ais)) ->
+          do tr ! cls ("stripe-" ++ show (n `mod` 2) ++ " url-main-row") $ mapM_ td
+                     [ linkHtml url
                      , toHtml $ show $ method $ P.head ais
                      , toHtml $ mkActionDescription (resName it) $ P.head ais
                      , dataDescriptions "None"  $ inputs $ P.head ais
@@ -142,8 +143,8 @@ resourceTable it =
                      , dataDescriptions "None" $ errors $ P.head ais
                      , toHtml $ if null (params (P.head ais)) then "None" else intercalate ", " $ params $ P.head ais
                      ]
-             flip mapM_ (tail ais) $ \ai ->
-                tr ! cls ("stripe-" ++ show (n `mod` 2) ++ " url-data-row") $ mapM_ td $
+             forM_ (tail ais) $ \ai ->
+                tr ! cls ("stripe-" ++ show (n `mod` 2) ++ " url-data-row") $ mapM_ td
                      [ return ()
                      , toHtml $ show $ method ai
                      , toHtml $ mkActionDescription (resName it) ai
@@ -172,13 +173,13 @@ dataDescriptions _ descs =
 mkCode :: String -> String -> String -> Html
 mkCode lng cap cd =
   let eid = "idv" ++ show (hash cd)
-  in do div ! cls "modal hide fade code" ! id (toValue eid) $
+  in do div ! cls "modal hide fade code" ! A.id (toValue eid) $
           do cdiv "modal-header" $
               do a ! href (toValue "#") ! cls "close" $ toHtml "x"
                  h3 $ toHtml cap
              cdiv "modal-body" $
                div ! style (toValue "overflow:auto; max-height:600px") $
-                 pre ! cls ("prettyprint lang-" ++ lng) $ toHtml $ cd
+                 pre ! cls ("prettyprint lang-" ++ lng) $ toHtml cd
         button ! cls "btn open-modal"
                ! customAttribute (fromString "data-controls-modal") (toValue eid)
                ! customAttribute (fromString "data-backdrop") (toValue "true")
@@ -204,5 +205,5 @@ linkHtml :: Link -> Html
 linkHtml =  mapM_ linkItem
   where linkItem (LParam idf)   = toHtml ("/<" ++ idf ++ ">")
         linkItem (LAccess lnks) = span ! class_ (toValue "link-block") $ sequence_ $ intersperse br
-                                   $ map linkHtml $ reverse $ sortBy (compare `on` length) lnks
+                                   $ map linkHtml $ sortBy (flip compare `on` length) lnks
         linkItem x              = toHtml ("/" ++ itemString x)

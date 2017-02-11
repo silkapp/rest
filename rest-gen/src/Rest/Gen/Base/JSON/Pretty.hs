@@ -11,6 +11,8 @@ import Text.PrettyPrint.HughesPJ hiding (first)
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector         as V
 
+{-# ANN module "Hlint: ignore Use camelCase" #-}
+
 pp_value         :: Value -> Doc
 pp_value v        = case v of
     Null      -> pp_null
@@ -55,7 +57,7 @@ pp_object xs      = vlist "{" "}" $ map pp_field xs
   where pp_field (k,v) = pp_string k <> colon <+> pp_value v
 
 pp_js_string     :: String -> Doc
-pp_js_string x    = pp_string x
+pp_js_string      = pp_string
 
 pp_js_object     :: HashMap Text Value -> Doc
 pp_js_object      = pp_object . map (first unpack) . H.toList

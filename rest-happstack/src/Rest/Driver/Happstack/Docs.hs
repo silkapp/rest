@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Rest.Driver.Happstack.Docs (apiDocsHandler) where
 
@@ -17,7 +18,7 @@ apiDocsHandler rootURL tmpls api =
 
 serveDocs :: (ServerMonad m, MonadPlus m, FilterMonad Response m, MonadIO m) => DocsContext -> ApiResource -> m Response
 serveDocs ctx tree =
-  msum $
+  msum
     [ nullDir >> allDocsHandler ctx tree
     , docHandlers ctx tree
     ]
@@ -31,8 +32,8 @@ allDocsHandler ctx tree =
 docHandlers :: (ServerMonad m, MonadPlus m, FilterMonad Response m, MonadIO m) => DocsContext -> ApiResource -> m Response
 docHandlers ctx = foldTreeChildren msum $ \it subs ->
   dir (resName it) $ msum $
-       [ nullDir >> do pg <- liftIO $ mkSingleResource ctx it
-                       setHeaderM "Content-Type" "text/html"
-                       return $ toResponse pg
-       ]
-    ++ subs
+       (nullDir >> do pg <- liftIO $ mkSingleResource ctx it
+                      setHeaderM "Content-Type" "text/html"
+                      return $ toResponse pg
+       )
+     : subs

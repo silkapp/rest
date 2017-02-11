@@ -26,7 +26,7 @@ import Rest.Resource
 import Rest.Schema
 
 main :: IO ()
-main = do
+main =
   defaultMain [ testCase "Listing has right parameters." testListingParams
               , testCase "Selects should show up only once." testSingleSelect
               , testCase "Removes should show up only once." testSingleRemove

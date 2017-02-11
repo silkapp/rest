@@ -180,7 +180,7 @@ use = H.Var () . H.UnQual ()
 
 useMQual :: Maybe N.ModuleName -> N.Name -> N.Exp
 useMQual Nothing = use
-useMQual (Just qual) = H.Var () . (H.Qual () qual)
+useMQual (Just qual) = H.Var () . H.Qual () qual
 
 mkFunction :: Version -> String -> ApiAction -> ([N.Decl], [N.ModuleName])
 mkFunction ver res (ApiAction _ lnk ai) =
@@ -363,11 +363,12 @@ idData node =
               (fparams, rhs) =
                 case mi of
                   Nothing ->
-                    ([H.PVar () $ H.Ident () (dataName pth)],
-                     (H.UnGuardedRhs () $ H.List () [stringLit pth]))
+                    ( [H.PVar () . H.Ident () $ dataName pth]
+                    , H.UnGuardedRhs () $ H.List () [stringLit pth]
+                    )
                   Just{}  ->  -- Pattern match with data constructor
                     ([H.PParen () $ H.PApp () (H.UnQual () $ H.Ident () (dataName pth)) [H.PVar () x]],
-                     (H.UnGuardedRhs () $ H.List () [stringLit pth, showURLx]))
+                     H.UnGuardedRhs () $ H.List () [stringLit pth, showURLx])
       in [ H.DataDecl () (H.DataType ()) Nothing (H.DHead () tyIdent) (map ctor ls) Nothing
          , H.TypeSig () [funName] fType
          ] ++ concatMap fun ls
@@ -379,7 +380,7 @@ idData node =
       funName  :: N.Name
       funName  = H.Ident () "readId"
       showURLx :: N.Exp
-      showURLx = H.App () (H.Var () $ H.UnQual () $ H.Ident () "showUrl") (H.Var () $ H.UnQual () $ x)
+      showURLx = H.App () (H.Var () $ H.UnQual () $ H.Ident () "showUrl") (H.Var () $ H.UnQual () x)
 
 tyIdent :: N.Name
 tyIdent = H.Ident () "Identifier"
@@ -403,8 +404,8 @@ mkHsName ai = hsName $ concatMap cleanName parts
         Modify   -> if resDir ai == "" then ["do"] else [resDir ai]
 
       target = if resDir ai == "" then maybe [] ((:[]) . description) (ident ai) else [resDir ai]
-      by     = if target /= [] && (isJust (ident ai) || actionType ai == UpdateMany) then ["by"] else []
-      get    = if isAccessor ai then [] else ["get"]
+      by     = ["by" | target /= [] && (isJust (ident ai) || actionType ai == UpdateMany)]
+      get    = ["get" | not (isAccessor ai)]
 
 hsName :: [String] -> N.Name
 hsName []       = H.Ident () ""

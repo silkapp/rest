@@ -4,11 +4,10 @@ module Rest.Gen.JavaScript (mkJsApi) where
 import Prelude hiding ((.))
 
 import Control.Category ((.))
-import Control.Monad
 import Data.Maybe
 import Text.StringTemplate
-import qualified Data.Label.Total             as L
-import qualified Data.List.NonEmpty           as NList
+import qualified Data.Label.Total   as L
+import qualified Data.List.NonEmpty as NList
 
 import Code.Build
 import Code.Build.JavaScript
@@ -20,8 +19,8 @@ import qualified Rest.Gen.NoAnnotation as N
 
 mkJsApi :: N.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =
-  do prelude <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/prelude.js")
-     epilogue <- liftM (render . setManyAttrib attrs . newSTMP) (readContent "Javascript/epilogue.js")
+  do prelude <- render . setManyAttrib attrs . newSTMP <$> readContent "Javascript/prelude.js"
+     epilogue <- render . setManyAttrib attrs . newSTMP <$> readContent "Javascript/epilogue.js"
      let cod = showCode $ mkStack
                 [ unModuleName ns ++ ".prototype.version" .=. string (show ver)
                 , mkJsCode (unModuleName ns) priv r
@@ -39,7 +38,7 @@ mkJs :: String -> ApiResource -> Code
 mkJs ns = foldTreeChildren mkStack (\i ls -> mkStack $ mkRes ns i : ls)
 
 mkRes :: String -> ApiResource -> Code
-mkRes ns node = mkStack $
+mkRes ns node = mkStack
   [ if hasAccessor node
       then resourceLoc ns node .=. mkAccessorConstructor ns node
       else resourceLoc ns node .=. jsObject []
@@ -80,8 +79,8 @@ mkAccessor ns node@(ApiAction _ _ ai) =
   let fParams  = maybeToList mIdent
       urlPart  = (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + encodeURIComponent(" ++ i ++ ") + '/") mIdent
-      mIdent   = fmap (jsId . cleanName . description) $ ident ai
-  in function fParams $
+      mIdent   = jsId . cleanName . description <$> ident ai
+  in function fParams
       [ var "postfix" $ "'" ++ urlPart ++ "'"
       , var "accessor" $ new "this" . code $  "this.contextUrl + postfix, "
                                            ++ "this.secureContextUrl + postfix, "
@@ -100,16 +99,16 @@ mkFunction ns (ApiAction _ _ ai) =
       urlPart  = (if isAccessor ai then const "" else id) $
                  (if resDir ai == "" then "" else resDir ai ++ "/")
               ++ maybe "" (\i -> "' + encodeURIComponent(" ++ i ++ ") + '/") mIdent
-      mIdent   = (if isAccessor ai then const Nothing else id) $ fmap (jsId . cleanName . description) $ ident ai
+      mIdent   = (if isAccessor ai then const Nothing else id) $ jsId . cleanName . description <$> ident ai
   in function fParams $ ret $
         call (ns ++ "." ++ "ajaxCall")
           [ string (method ai)
-          , code $ (if (https ai) then "this.secureContextUrl" else "this.contextUrl") ++ " + '" ++ urlPart ++ "'"
+          , code $ (if https ai then "this.secureContextUrl" else "this.contextUrl") ++ " + '" ++ urlPart ++ "'"
           , code "params"
           , code "success"
           , code "error"
           , string $ maybe "text/plain" snd3 mInp
-          , string $ mOut
+          , string mOut
           , maybe (code "undefined") (\(p, _, f) -> f (code p)) mInp
           , code "callOpts"
           , code "this.modifyRequest"

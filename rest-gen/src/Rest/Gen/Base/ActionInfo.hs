@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-incomplete-patterns #-}
 {-# LANGUAGE
     GADTs
   , LambdaCase
@@ -179,9 +180,7 @@ dataTypesToAcceptHeader :: DataType -> [DataType] -> String
 dataTypesToAcceptHeader def = \case
   [] -> dataTypeToAcceptHeader def
   xs -> intercalate "," . map dataTypeToAcceptHeader . (xs ++) $
-          if null (intersect xs [XML,JSON])
-            then [def]
-            else []
+          [def | null (xs `intersect` [XML, JSON])]
 
 dataTypeToAcceptHeader :: DataType -> String
 dataTypeToAcceptHeader = \case
@@ -219,7 +218,7 @@ chooseResponseType ai = case (NList.nonEmpty $ outputs ai, NList.nonEmpty $ erro
     intersection :: NonEmpty DataDescription -> NonEmpty DataDescription -> ResponseType
     intersection o e =
       -- Try to find a response type that can be used for both output and error.
-      case intersect (f o) (f e) of
+      case f o `intersect` f e of
         -- If the response types are disjoint we need to specify both.
         [] ->
           ResponseType
@@ -238,7 +237,7 @@ chooseResponseType ai = case (NList.nonEmpty $ outputs ai, NList.nonEmpty $ erro
                        -- Prioritize formats
                        . sortBy (comparing cmp)
                        -- Pick only the data types in the intersection of outputs and errors
-                       . filter ((`elem` dts) . (L.get (dataType . desc)))
+                       . filter ((`elem` dts) . L.get (dataType . desc))
                        . NList.toList
           -- When we have an intersection with multiple possible
           -- types, we prefer JSON over XML, and XML over the rest.
@@ -346,7 +345,7 @@ multiUpdateActionInfo id_ pth h =  handlerActionInfo Nothing False UpdateMany An
                                <$> mkMultiHandler id_ (const id) h
 
 removeActionInfo :: Link -> Handler m -> ActionInfo
-removeActionInfo lnk = handlerActionInfo Nothing True Delete Self "" DELETE lnk
+removeActionInfo = handlerActionInfo Nothing True Delete Self "" DELETE
 
 multiRemoveActionInfo :: Monad m => Id sid -> String -> Handler m -> Maybe ActionInfo
 multiRemoveActionInfo id_ pth h =  handlerActionInfo Nothing False DeleteMany Any pth DELETE []
@@ -396,9 +395,7 @@ handlerActionInfo mId postAct actType actTarget pth mth ac h = ActionInfo
     makeLink
       | postAct   = ac ++ dirPart ++ identPart
       | otherwise = dirPart ++ identPart
-      where dirPart   = if pth /= ""
-                        then [LAction pth]
-                        else []
+      where dirPart   = [LAction pth | pth /= ""]
             identPart = maybe [] ((:[]) . LParam . Ident.description) id_
 
 
@@ -465,6 +462,7 @@ handlerOutputs (GenHandler dict _ _) = map (handlerOutput Proxy) (Dict.getDicts_
       -- so we stick with the convention of preferring JSON.
       RawJsonAndXmlO -> defaultDescription File "File" haskellStringType
       FileO          -> defaultDescription File "File" haskellByteStringType
+      -- TODO: MultiPartO
 
 -- | Extract input description from handlers
 handlerErrors :: Handler m -> [DataDescription]

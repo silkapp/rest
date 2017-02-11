@@ -69,16 +69,16 @@ mkLink' ((LAccess _) : ls)     (p : ps)     = "/" ++ p ++ mkLink' ls ps
 getLinkIds :: Link -> [(String, [(String, String)])]
 getLinkIds l =
   case l of
-    []                     -> []
-    (q: (LParam p) : rs)   -> (itemString q, [(itemString q, p)]) : getLinkIds rs
-    (q: (LAccess ls) : rs) -> (itemString q, concatMap snd $ concatMap (getLinkIds . (q : )) ls) : getLinkIds rs
-    (_: rs)                -> getLinkIds rs
+    []                   -> []
+    (q: LParam p   : rs) -> (itemString q, [(itemString q, p)]) : getLinkIds rs
+    (q: LAccess ls : rs) -> (itemString q, concatMap snd $ concatMap (getLinkIds . (q : )) ls) : getLinkIds rs
+    (_: rs)              -> getLinkIds rs
 
 setLinkIds :: Link -> [String] -> String
 setLinkIds _ [] = error "Error in setLinkIds, not enough parameters"
 setLinkIds l (p : ps) =
   case l of
     []                    -> ""
-    (_: (LParam _)  : rs) -> "/" ++ p ++ setLinkIds rs ps
-    (_: (LAccess _) : rs) -> "/" ++ p ++ setLinkIds rs ps
+    (_: LParam _  : rs) -> "/" ++ p ++ setLinkIds rs ps
+    (_: LAccess _ : rs) -> "/" ++ p ++ setLinkIds rs ps
     (s: rs)               -> "/" ++ itemString s ++ setLinkIds rs (p: ps)
