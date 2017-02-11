@@ -1,7 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     CPP
-  , GeneralizedNewtypeDeriving
+  , NoImplicitPrelude
   , OverloadedStrings
   , RankNTypes
   #-}
@@ -43,7 +43,7 @@ apiToApplication run api req =
 toRestInput :: Request -> IO RestInput
 toRestInput req =
   do bs <- lazyRequestBody req
-     return $ RestInput
+     return RestInput
        { headers    = HashMap.fromList
                     . map (CI.mk . string . CI.original *** string)
                     . requestHeaders
@@ -73,7 +73,6 @@ toRestInput req =
            text   = Text.unpack
 
 fromRestOutput :: RestOutput -> Lazy.ByteString -> Response
-fromRestOutput (RestOutput hs rc) bs =
+fromRestOutput (RestOutput hs rc) =
   responseLBS (maybe status200 toEnum rc)
               ((CI.mk . Char8.pack *** Char8.pack) <$> HashMap.toList hs)
-              bs
