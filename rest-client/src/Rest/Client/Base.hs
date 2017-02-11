@@ -1,4 +1,8 @@
-{-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
+{-# OPTIONS
+  -Wno-redundant-constraints
+  -fno-warn-deprecations
+  -fno-warn-orphans
+  #-}
 {-# LANGUAGE
     CPP
   , DeriveFunctor
@@ -9,6 +13,7 @@
   , TypeFamilies
   , UndecidableInstances
   #-}
+
 module Rest.Client.Base
   ( ApiInfo(..)
   , ApiState(..)
@@ -26,7 +31,6 @@ module Rest.Client.Base
 import Prelude hiding (catch)
 #endif
 
-import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Catch (MonadCatch (catch))
 import Control.Monad.Cont hiding (mapM)
@@ -53,10 +57,11 @@ data ApiInfo =
    , headers :: [(String, String)]
    }
 
-data ApiState = ApiState { cookies :: CookieJar }
+newtype ApiState = ApiState { cookies :: CookieJar }
 
 newtype ApiT m a = ApiT { unApiT :: StateT ApiState (ReaderT ApiInfo (ResourceT m)) a }
-  deriving ( Functor, Applicative
+  deriving ( Applicative
+           , Functor
            , Monad
            , MonadIO
            )
@@ -92,8 +97,8 @@ instance MonadBaseControl v m => MonadBaseControl v (ApiT m) where
 #else
 instance MonadTransControl ApiT where
   newtype StT ApiT a = StTApiT { unStTApiT :: StT ResourceT (StT (ReaderT ApiInfo) (StT (StateT ApiState) a)) }
-  liftWith f = ApiT (liftWith (\runs -> liftWith (\runrr -> liftWith (\runrs -> f (liftM StTApiT . runrs . runrr . runs . unApiT)))))
-  restoreT = ApiT . restoreT . restoreT . restoreT . liftM unStTApiT
+  liftWith f = ApiT (liftWith (\runs -> liftWith (\runrr -> liftWith (\runrs -> f (fmap StTApiT . runrs . runrr . runs . unApiT)))))
+  restoreT = ApiT . restoreT . restoreT . restoreT . fmap unStTApiT
 
 instance MonadBaseControl v m => MonadBaseControl v (ApiT m) where
   newtype StM (ApiT m) a = StMApiT { unStMApiT :: ComposeSt ApiT m a }
@@ -143,7 +148,7 @@ instance ApiStateC m => ApiStateC (StateT s m) where
   askApiInfo  = lift askApiInfo
   putApiState = lift . putApiState
 
-runT :: (MonadBaseControl IO m, Monad m) => ApiInfo -> ApiState -> ApiT m a -> ResourceT m a
+runT :: MonadBaseControl IO m => ApiInfo -> ApiState -> ApiT m a -> ResourceT m a
 runT inf st api = runReaderT (evalStateT (unApiT api) st) inf
 
 run :: String -> ApiT IO a -> IO a

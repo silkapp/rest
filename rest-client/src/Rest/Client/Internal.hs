@@ -1,10 +1,12 @@
 {-# LANGUAGE
     CPP
   , FlexibleInstances
-  , OverlappingInstances
   , OverloadedStrings
   , UndecidableInstances
   #-}
+
+#include "overlapping-compat.h"
+
 module Rest.Client.Internal
   ( module Control.Monad
   , module Data.String
@@ -40,7 +42,6 @@ import Data.Aeson.Utils (FromJSON, ToJSON, eitherDecodeV, encode)
 import Data.Default (def)
 #endif
 import Data.List
-import Data.Monoid
 import Data.String
 import Data.String.ToString
 import Network.HTTP.Conduit hiding (method, responseBody, responseHeaders)
@@ -58,6 +59,8 @@ import qualified Network.URI.Encode        as URI
 import qualified Text.Xml.Pickle           as P
 
 import Rest.Client.Base
+
+{-# ANN module ("HLint: ignore Use import/export shortcut"::String) #-}
 
 data ApiRequest = ApiRequest
   { method         :: String
@@ -89,9 +92,9 @@ splitHost :: String -> (String, String)
 splitHost = break (== '/')
 
 doRequest :: ApiStateC m => (L.ByteString -> Rest.Types.Error.Reason e) -> (L.ByteString -> a) -> ApiRequest -> m (ApiResponse e a)
-doRequest a b = liftM (parseResult a b) . doReq
+doRequest a b = fmap (parseResult a b) . doReq
 
-doReq :: (ApiStateC m, MonadIO m) => ApiRequest -> m (Response L.ByteString)
+doReq :: ApiStateC m => ApiRequest -> m (Response L.ByteString)
 doReq (ApiRequest m ur ps rhds bd) =
   do mn  <- fmap manager askApiInfo
      hst <- fmap apiHost askApiInfo
@@ -151,7 +154,7 @@ instance XmlStringToType String where
   fromXML = L.toString
   toXML = L.fromString
 
-instance XmlPickler a => XmlStringToType a where
+instance OVERLAPPABLE_ XmlPickler a => XmlStringToType a where
   fromXML v = ( either err id
               . P.eitherFromXML
               . L.toString
@@ -162,4 +165,3 @@ instance XmlPickler a => XmlStringToType a where
 
 makeReq :: String -> String -> [[String]] -> [(String, String)] -> Network.HTTP.Types.Header.RequestHeaders -> L.ByteString -> ApiRequest
 makeReq meth v ls = ApiRequest meth (intercalate "/" (v : map URI.encode (concat ls)))
-
