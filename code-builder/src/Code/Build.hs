@@ -78,7 +78,7 @@ align v = Code . map addWhite . unCode . code $ v
     where addWhite l = l ++ replicate (codeWidth v - length l) ' '
 
 codeWidth :: Codeable a => a -> Int
-codeWidth = foldr max 0 . map length . unCode . code
+codeWidth = foldr (max . length) 0 . unCode . code
 
 codeLines :: Codeable a => a -> [Code]
 codeLines = map (Code . (:[])) . unCode . code
@@ -167,5 +167,4 @@ a |>+<| b = mkStack $ zipWith (<+|) (codeLines a) (codeList b)
 
 -- | Place two pieces of code under each other
 (<->) :: (Codeable a, Codeable b) => a -> b -> Code
-a <-> b = Code $ (unCode $ code a) ++ (unCode $ code b)
-
+a <-> b = Code $ unCode (code a) ++ unCode (code b)

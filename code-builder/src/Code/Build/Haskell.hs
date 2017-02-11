@@ -17,8 +17,8 @@ hsType :: [String] -> String
 hsType = intercalate " -> "
 
 hsDecl :: Codeable a => String -> [String] -> a -> Code
-hsDecl n pars c | singleLine (code c) = n <++> intercalate " " pars <++> "= " <+| c
-                | otherwise = n <++> intercalate " " pars <++> "=" <-> indent 2 c
+hsDecl n pars c | singleLine (code c) = n <++> unwords pars <++> "= " <+| c
+                | otherwise = n <++> unwords pars <++> "=" <-> indent 2 c
 
 function :: String -> String -> Code
 function n t = n <++> "::" <++> t
