@@ -1,9 +1,12 @@
 {-# LANGUAGE
-    DeriveDataTypeable
+    CPP
+  , DeriveDataTypeable
   , FlexibleInstances
-  , OverlappingInstances
   , ScopedTypeVariables
   #-}
+
+#include "overlapping-compat.h"
+
 module Rest.StringMap.Map.Lazy
   ( StringMap
   , fromMap
@@ -44,7 +47,7 @@ mapKeys f = StringMap . M.mapKeys f . unM
 instance XmlPickler b => XmlPickler (StringMap String b) where
   xpickle = pickleStringMap fromList toList
 
-instance (Ord a, IsString a, ToString a, XmlPickler b) => XmlPickler (StringMap a b) where
+instance OVERLAPPABLE_ (Ord a, IsString a, ToString a, XmlPickler b) => XmlPickler (StringMap a b) where
   xpickle = pickleMap mapKeys mapKeys
 
 instance (ToString a, ToJSON b) => ToJSON (StringMap a b) where

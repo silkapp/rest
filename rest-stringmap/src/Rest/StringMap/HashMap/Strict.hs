@@ -1,9 +1,12 @@
 {-# LANGUAGE
-    DeriveDataTypeable
+    CPP
+  , DeriveDataTypeable
   , FlexibleInstances
-  , OverlappingInstances
   , ScopedTypeVariables
   #-}
+
+#include "overlapping-compat.h"
+
 module Rest.StringMap.HashMap.Strict
   ( StringHashMap
   , fromHashMap
@@ -48,7 +51,7 @@ instance XmlPickler b => XmlPickler (StringHashMap String b) where
   xpickle = pickleStringMap fromList toList
 
 -- | General case
-instance (Eq a, Hashable a, IsString a, ToString a, XmlPickler b) => XmlPickler (StringHashMap a b) where
+instance OVERLAPPABLE_ (Eq a, Hashable a, IsString a, ToString a, XmlPickler b) => XmlPickler (StringHashMap a b) where
   xpickle = pickleMap mapKeys mapKeys
 
 instance (ToString a, ToJSON b) => ToJSON (StringHashMap a b) where
