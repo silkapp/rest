@@ -1,4 +1,4 @@
-resolver: lts-7.10
+resolver: lts-8.5
 flags:
   rest-example:
     snap: true
@@ -6,8 +6,8 @@ flags:
     wai: true
     gen: true
 extra-deps:
-- haskell-src-exts-1.18.2
-- HUnit-1.5.0.0
+- HUnit-1.6.0.0
+allow-newer: true
 packages:
 - code-builder/
 - rest-client/
