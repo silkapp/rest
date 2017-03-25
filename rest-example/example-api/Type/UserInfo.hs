@@ -14,7 +14,7 @@ import Text.XML.HXT.Arrow.Pickle
 
 import qualified Type.User as User
 
-data UserInfo = UserInfo
+newtype UserInfo = UserInfo
   { name :: User.Name
   } deriving (Generic, Show, Typeable)
 

@@ -1,12 +1,3 @@
-{-# LANGUAGE
-    DeriveDataTypeable
-  , DeriveGeneric
-  , LambdaCase
-  , OverloadedStrings
-  , ScopedTypeVariables
-  , TemplateHaskell
-  , TypeFamilies
-  #-}
 module Api.Test.ReservedName (resource) where
 
 import Control.Monad.Reader

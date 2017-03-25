@@ -64,6 +64,7 @@ getPostId = do
   return . fmap Post.id
         =<< liftIO . atomically . postFromIdentifier postIdent
         =<< (lift . lift) (asks posts)
+{-# ANN getPostId "HLint: ignore Use fmap" #-}
 
 userCommentToComment :: UserComment -> IO Comment
 userCommentToComment (UserComment u content) = do
