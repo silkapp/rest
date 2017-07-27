@@ -86,30 +86,56 @@ updateExposedModules :: [Cabal.ModuleName] -> Cabal.GenericPackageDescription ->
 updateExposedModules modules = modify _condLibrary (Just . maybe (mkCondLibrary modules) (set (_exposedModules . _condTreeData) modules))
 
 mkGenericPackageDescription :: String -> [Cabal.ModuleName] -> Cabal.GenericPackageDescription
-mkGenericPackageDescription name modules = Cabal.GenericPackageDescription pkg [] (Just (mkCondLibrary modules)) [] [] []
+mkGenericPackageDescription name modules =
+#if MIN_VERSION_Cabal(2,0,0)
+  Cabal.GenericPackageDescription pkg [] (Just (mkCondLibrary modules)) [] [] [] [] []
+#else
+  Cabal.GenericPackageDescription pkg [] (Just (mkCondLibrary modules)) [] [] []
+#endif
   where
     pkg = Cabal.emptyPackageDescription
-      { Cabal.package        = Cabal.PackageIdentifier (Cabal.PackageName name) (Cabal.Version [0, 1] [])
+      { Cabal.package        = Cabal.PackageIdentifier (cabalPackageName name) (cabalVersion [0, 1])
       , Cabal.buildType      = Just Cabal.Simple
-      , Cabal.specVersionRaw = Right (Cabal.orLaterVersion (Cabal.Version [1, 8] []))
+      , Cabal.specVersionRaw = Right (Cabal.orLaterVersion (cabalVersion [1, 8]))
       }
 
 mkCondLibrary :: [Cabal.ModuleName] -> Cabal.CondTree Cabal.ConfVar [Cabal.Dependency] Cabal.Library
 mkCondLibrary modules = Cabal.CondNode
   { Cabal.condTreeData        = cabalLibrary modules
   , Cabal.condTreeConstraints =
-     [ Cabal.Dependency (Cabal.PackageName "base")        (Cabal.withinVersion $ Cabal.Version [4]       [])
-     , Cabal.Dependency (Cabal.PackageName "rest-types")  (Cabal.withinVersion $ Cabal.Version [1, 10]   [])
-     , Cabal.Dependency (Cabal.PackageName "rest-client") (Cabal.withinVersion $ Cabal.Version [0, 5, 2] [])
+     [ Cabal.Dependency (cabalPackageName "base")        (Cabal.withinVersion $ cabalVersion [4]      )
+     , Cabal.Dependency (cabalPackageName "rest-types")  (Cabal.withinVersion $ cabalVersion [1, 10]  )
+     , Cabal.Dependency (cabalPackageName "rest-client") (Cabal.withinVersion $ cabalVersion [0, 5, 2])
      ]
   , Cabal.condTreeComponents  = []
   }
 
 cabalLibrary :: [Cabal.ModuleName] -> Cabal.Library
+#if MIN_VERSION_Cabal(2,0,0)
+cabalLibrary mods = Cabal.emptyLibrary
+  { Cabal.exposedModules = mods
+  , Cabal.libBuildInfo = (Cabal.libBuildInfo Cabal.emptyLibrary) { Cabal.hsSourceDirs = ["src"] }
+  }
+#else
 #if MIN_VERSION_Cabal(1,22,0)
 cabalLibrary mods = Cabal.Library mods [] [] [] True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
 #else
 cabalLibrary mods = Cabal.Library mods True Cabal.emptyBuildInfo { Cabal.hsSourceDirs = ["src"] }
+#endif
+#endif
+
+cabalVersion :: [Int] -> Cabal.Version
+#if MIN_VERSION_Cabal(2,0,0)
+cabalVersion = Cabal.mkVersion
+#else
+cabalVersion v = Cabal.Version v []
+#endif
+
+cabalPackageName :: String -> Cabal.PackageName
+#if MIN_VERSION_Cabal(2,0,0)
+cabalPackageName =  Cabal.mkPackageName
+#else
+cabalPackageName = Cabal.PackageName
 #endif
 
 writeRes :: HaskellContext -> ApiResource -> IO ()

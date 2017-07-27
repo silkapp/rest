@@ -1,13 +1,10 @@
-resolver: nightly-2017-03-25
+resolver: lts-9.0
 flags:
   rest-example:
     snap: true
     happstack: true
     wai: true
     gen: true
-extra-deps:
-- HUnit-1.6.0.0
-- HStringTemplate-0.8.5
 allow-newer: true
 packages:
 - code-builder/
