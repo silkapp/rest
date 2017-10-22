@@ -1,6 +1,6 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    DataKinds
+    CPP
+  , DataKinds
   , DeriveDataTypeable
   , GADTs
   , KindSignatures
@@ -8,6 +8,9 @@
   , TupleSections
   , TypeFamilies
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 -- | Handlers for endpoints in a 'Resource'.
 module Rest.Handler
   ( -- * Single handlers.

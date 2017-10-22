@@ -1,10 +1,12 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
     CPP
   , NoImplicitPrelude
   , OverloadedStrings
   , RankNTypes
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 module Rest.Driver.Wai (apiToApplication) where
 
 import Prelude.Compat

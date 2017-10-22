@@ -1,9 +1,12 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    GADTs
+    CPP
+  , GADTs
   , KindSignatures
   , NoImplicitPrelude
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 -- | This module allows you to combine 'Resource's into an 'Api'. This
 -- can then be served using 'rest-happstack' or 'rest-snap', or used
 -- to generate clients or documentation using 'rest-gen'.

@@ -1,11 +1,12 @@
-{-# OPTIONS_GHC
-  -fno-warn-orphans
-  -Wno-redundant-constraints
-  #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
-    NoImplicitPrelude
+    CPP
+  , NoImplicitPrelude
   , RankNTypes
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 module Rest.Driver.Snap
   ( apiToHandler
   , apiToHandler'

@@ -1,8 +1,11 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    NoImplicitPrelude
+    CPP
+  , NoImplicitPrelude
   , RankNTypes
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 module Rest.Run
   ( apiToHandler
   , apiToHandler'

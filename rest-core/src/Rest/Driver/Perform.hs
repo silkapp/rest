@@ -1,11 +1,14 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    FlexibleContexts
+    CPP
+  , FlexibleContexts
   , GADTs
   , OverloadedStrings
   , RankNTypes
   , ScopedTypeVariables
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 module Rest.Driver.Perform
   ( Rest (..)
   , failureWriter

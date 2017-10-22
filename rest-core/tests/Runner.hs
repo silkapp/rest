@@ -1,10 +1,12 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    OverloadedStrings
+    CPP
+  , OverloadedStrings
   , RankNTypes
   , ScopedTypeVariables
   #-}
-
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 import Control.Monad
 import Control.Monad.Except
 import Control.Monad.Identity

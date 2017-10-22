@@ -1,8 +1,11 @@
-{-# OPTIONS_GHC
-  -fno-warn-orphans
-  -Wno-redundant-constraints
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE
+    CPP
+  , RankNTypes
   #-}
-{-# LANGUAGE RankNTypes #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 module Rest.Driver.Happstack
   ( apiToHandler
   , apiToHandler'

@@ -17,6 +17,8 @@ env:
 - ARGS="--resolver lts-5"
 - ARGS="--resolver lts-6"
 - ARGS="--resolver lts-7"
+- ARGS="--resolver lts-8"
+- ARGS="--resolver lts-9"
 - ARGS="--resolver nightly"
 
 before_install:
@@ -30,9 +32,10 @@ before_install:
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
 script:
-- stack $ARGS --no-terminal --install-ghc install --test --haddock
+- export EXTRA_DEPS=haskell-src-exts-1.19.1
+- stack $ARGS --no-terminal --install-ghc install --test --haddock $EXTRA_DEPS .
 - stack $ARGS --no-terminal exec -- rest-example-gen --haskell --target=./rest-example/client
-- stack $ARGS --no-terminal build restexample-client
+- stack $ARGS --no-terminal build $EXTRA_DEPS restexample-client
 - rm -f rest-example/api.js
 - stack $ARGS --no-terminal exec -- rest-example-gen --javascript --target=./rest-example/api.js
 - node rest-example/api.js

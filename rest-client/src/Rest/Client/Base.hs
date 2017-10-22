@@ -1,5 +1,4 @@
-{-# OPTIONS
-  -Wno-redundant-constraints
+{-# OPTIONS_GHC
   -fno-warn-deprecations
   -fno-warn-orphans
   #-}
@@ -13,6 +12,9 @@
   , TypeFamilies
   , UndecidableInstances
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 
 module Rest.Client.Base
   ( ApiInfo(..)

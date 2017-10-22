@@ -1,9 +1,12 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    FlexibleContexts
+    CPP
+  , FlexibleContexts
   , GADTs
   , NoImplicitPrelude
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 -- | Error types that can be returned by handlers, as well as some
 -- utilities for manipulating these errors.
 module Rest.Error

@@ -1,6 +1,6 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    FlexibleContexts
+    CPP
+  , FlexibleContexts
   , FlexibleInstances
   , GADTs
   , KindSignatures
@@ -10,6 +10,9 @@
   , RankNTypes
   , TypeSynonymInstances
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 -- | A 'Resource' type for representing a REST resource, as well as
 -- smart constructors for empty resources which can then be filled in
 -- using record updates.

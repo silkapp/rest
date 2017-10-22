@@ -1,11 +1,14 @@
-{-# OPTIONS -Wno-incomplete-patterns #-}
 {-# LANGUAGE
-    GADTs
+    CPP
+  , GADTs
   , LambdaCase
   , NoImplicitPrelude
   , ScopedTypeVariables
   , TemplateHaskell
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 module Rest.Gen.Base.ActionInfo
   ( Accessor
   , ActionInfo (..)

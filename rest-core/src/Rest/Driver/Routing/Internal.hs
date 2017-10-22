@@ -1,6 +1,6 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE
-    ExistentialQuantification
+    CPP
+  , ExistentialQuantification
   , FlexibleContexts
   , GADTs
   , GeneralizedNewtypeDeriving
@@ -9,6 +9,9 @@
   , ScopedTypeVariables
   , TupleSections
   #-}
+#if MIN_VERSION_base(4,9,0)
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 
 module Rest.Driver.Routing.Internal where
 
