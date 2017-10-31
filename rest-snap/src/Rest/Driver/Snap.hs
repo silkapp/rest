@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     CPP
+  , GeneralizedNewtypeDeriving
   , NoImplicitPrelude
   , RankNTypes
   #-}
@@ -32,21 +33,24 @@ import Rest.Driver.Types (Run)
 import qualified Rest.Driver.Types as Rest
 import qualified Rest.Run          as Rest
 
-apiToHandler :: Api Snap -> Snap ()
+newtype Snapped m a = Snapped { unSnapped :: m a }
+  deriving (Applicative, Functor, Monad)
+
+apiToHandler :: (MonadSnap m, Rest m, Applicative m, Monad m) => Api m -> m ()
 apiToHandler = apiToHandler' id
 
-apiToHandler' :: (Applicative m, Monad m) => Run m Snap -> Api m -> Snap ()
-apiToHandler' run api = Rest.apiToHandler' run api >>= writeLBS
+apiToHandler' :: (Applicative m, Monad m, MonadSnap n) => Run m n -> Api m -> n ()
+apiToHandler' run api = writeLBS =<< unSnapped (Rest.apiToHandler' (Snapped . run) api)
 
-instance Rest Snap where
-  getHeader nm       = getsRequest (fmap UTF8.toString . Snap.getHeader (CI.mk . UTF8.fromString $ nm))
-  getParameter  nm   = getsRequest (fmap UTF8.toString . (>>= headMay) . rqParam (UTF8.fromString nm))
-  getBody            = readRequestBody (1 * 1024 * 1024)
-  getMethod          = getsRequest (toRestMethod . rqMethod)
-  getPaths           = getsRequest (map (UTF8.toString . URI.decodeByteString) . filter (not . Char8.null) . Char8.split '/' . rqPathInfo)
-  lookupMimeType     = return . fmap UTF8.toString . flip M.lookup defaultMimeTypes
-  setHeader nm v     = modifyResponse (Snap.setHeader (CI.mk . UTF8.fromString $ nm) (UTF8.fromString v))
-  setResponseCode cd = modifyResponse (Snap.setResponseCode cd)
+instance (MonadSnap m) => Rest (Snapped m) where
+  getHeader nm       = Snapped $ getsRequest (fmap UTF8.toString . Snap.getHeader (CI.mk . UTF8.fromString $ nm))
+  getParameter  nm   = Snapped $ getsRequest (fmap UTF8.toString . (>>= headMay) . rqParam (UTF8.fromString nm))
+  getBody            = Snapped $ readRequestBody (1 * 1024 * 1024)
+  getMethod          = Snapped $ getsRequest (toRestMethod . rqMethod)
+  getPaths           = Snapped $ getsRequest (map (UTF8.toString . URI.decodeByteString) . filter (not . Char8.null) . Char8.split '/' . rqPathInfo)
+  lookupMimeType     = Snapped . return . fmap UTF8.toString . flip M.lookup defaultMimeTypes
+  setHeader nm v     = Snapped $ modifyResponse (Snap.setHeader (CI.mk . UTF8.fromString $ nm) (UTF8.fromString v))
+  setResponseCode cd = Snapped $ modifyResponse (Snap.setResponseCode cd)
 
 toRestMethod :: Snap.Method -> Maybe Rest.Method
 toRestMethod Snap.GET    = Just Rest.GET
