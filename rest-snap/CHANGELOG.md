@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0.0
+
+*  Generalize Snap to MonadSnap, thanks to theNerd247!
+
 #### 0.2.0.1
 
 * Allow rest-core-0.39.
