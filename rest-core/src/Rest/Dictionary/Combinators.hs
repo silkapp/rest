@@ -102,26 +102,29 @@ mkPar = L.set params
 
 {-# DEPRECATED addPar "This is now undefined as it doesn't fit the new Param datatype. Use withParam as an Applicative instead" #-}
 addPar :: Param p -> Dict h p' i o e -> Dict h (p, p') i o e
-addPar = undefined
+addPar p d = L.set params newParam d
+  where
+    newParam = Param ((paramKeyNames cp) ++ (paramKeyNames p)) $ (,) <$> (paramParser p) <*> (paramParser cp)
+    cp = L.get params d
 
-withParam :: (Read a) => String -> ParamM a
+withParam :: (Read a) => String -> Param a
 withParam = flip withParamParser read
 
 -- | @withParamParser name parser@ parses the parameter with name @name@ using
 -- the parser @parser@. If the desiered parameter is missing then a
 -- @MissingField@ DataError is thrown.
-withParamParser :: String -> (String -> a) -> ParamM a
-withParamParser n f = do
+withParamParser :: String -> (String -> a) -> Param a
+withParamParser n f = Param [n] $ do
   s <- asks $ lookup n
   maybe (throwError $ MissingField n) (return . f) s
 
-withParamDefault :: (Read a) => String -> a -> ParamM a
+withParamDefault :: (Read a) => String -> a -> Param a
 withParamDefault n d = withParamParserDefault n d read
 
 -- | like withParamParser except it returns a default value if the parameter
 -- can't be found.
-withParamParserDefault :: String -> a -> (String -> a) -> ParamM a
-withParamParserDefault n d f = do
+withParamParserDefault :: String -> a -> (String -> a) -> Param a
+withParamParserDefault n d f = Param [n] $ do
   s <- asks $ lookup n
   maybe (return d) (return . f) s
 

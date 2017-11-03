@@ -41,13 +41,11 @@ module Rest.Handler
 
 import Prelude.Compat
 
-import Control.Arrow
 import Control.Monad.Except ()
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Trans.Except
 import Rest.Types.Range
-import Safe
 
 import Rest.Dictionary
 import Rest.Error
@@ -124,7 +122,7 @@ mkListing d a = mkGenHandler (mkPar range . d) (a . param)
 -- parameters, @offset@ and @count@. If not passed, the defaults are 0
 -- and 100. The maximum range that can be passed is 1000.
 
-range :: ParamM Range
+range :: Param Range
 range = Range
   <$> (max 0 <$> (withParamDefault "offset" 0))
   <*> ((min 1000 . max 0) <$> (withParamDefault "count" 100))
@@ -141,12 +139,11 @@ mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
 -- | Dictionary for taking ordering information. In addition to the
 -- parameters accepted by 'range', this accepts @order@ and
 -- @direction@.
-orderedRange :: ParamM (Range, Maybe String, Maybe String)
-orderedRange = do
-  r <- range
-  mo <- withParamParserDefault "order" Nothing Just
-  mo <- withParamParserDefault "direction" Nothing Just
-  return (r, mo, md)
+orderedRange :: Param (Range, Maybe String, Maybe String)
+orderedRange = (,,)
+  <$> range
+  <*> (withParamParserDefault "order" Nothing Just)
+  <*> (withParamParserDefault "direction" Nothing Just)
 
 -- | Create a handler for a single resource. Takes the entire
 -- environmend as input.

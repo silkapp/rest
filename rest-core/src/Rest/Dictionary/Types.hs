@@ -36,7 +36,6 @@ module Rest.Dictionary.Types
   , Ident (..)
   , Header (..)
   , Param (..)
-  , ParamM
   , Input (..)
   , Output (..)
   , Error (..)
@@ -131,12 +130,17 @@ instance Show (Header h) where
 -- parser that can fail with a `DataError` or can produce a some value. It has a
 -- Reader context of all the parameter names and their (possibly) raw string data.
 -- use withParam to write an Applicative style parser
-type ParamM a = ExceptT DataError (Reader [(String,String)]) a
-
 data Param a = Param
-  { paramNames :: [String]
-  , paramParser :: ParamM a
+  { paramKeyNames :: [String]
+  , paramParser :: ExceptT DataError (Reader [(String,String)]) a
   }
+
+instance Functor Param where
+  fmap f (Param ns a) = Param ns $ f <$> a
+
+instance Applicative Param where
+  pure x = Param [] $ pure x
+  (Param ns f) <*> (Param ms x) = Param (ns ++ ms) $ f <*> x
 
 noParam :: Param ()
 noParam = Param [] (return ())

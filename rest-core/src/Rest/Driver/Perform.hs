@@ -5,6 +5,7 @@
   , OverloadedStrings
   , RankNTypes
   , ScopedTypeVariables
+  , TupleSections
   #-}
 #if MIN_VERSION_base(4,9,0)
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
@@ -205,10 +206,10 @@ headers (TwoHeaders h1 h2) = (,) <$> headers h1 <*> headers h2
 
 parameters :: Rest m => Param p -> ExceptT DataError m p
 parameters p = do
-  ps <- lift $ mapM getPar (paramNames p)
-  mapExceptT (runReader $ catMaybes ps) (paramParser p)
+  ps <- lift $ mapM getPar (paramKeyNames p)
+  mapExceptT (\x -> return $ runReader x $ catMaybes ps) (paramParser p)
   where
-    getPar s = getParameter s >>= \x -> return . return . (s,)
+    getPar s = getParameter s >>= return . fmap (s,)
   
 parser :: Monad m => Format -> Inputs j -> B.ByteString -> ExceptT DataError m (FromMaybe () j)
 parser NoFormat None       _ = return ()
