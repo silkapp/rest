@@ -204,10 +204,12 @@ headers (Header xs h) = mapM getHeader xs >>= either throwError return . h
 headers (TwoHeaders h1 h2) = (,) <$> headers h1 <*> headers h2
 
 parameters :: Rest m => Param p -> ExceptT DataError m p
-parameters NoParam      = return ()
-parameters (Param xs p) = mapM (lift . getParameter) xs >>= either throwError return . p
-parameters (TwoParams p1 p2) = (,) <$> parameters p1 <*> parameters p2
-
+parameters p = do
+  ps <- lift $ mapM getPar (paramNames p)
+  mapExceptT (runReader $ catMaybes ps) (paramParser p)
+  where
+    getPar s = getParameter s >>= \x -> return . return . (s,)
+  
 parser :: Monad m => Format -> Inputs j -> B.ByteString -> ExceptT DataError m (FromMaybe () j)
 parser NoFormat None       _ = return ()
 parser f        None       _ = throwError (UnsupportedFormat (show f))

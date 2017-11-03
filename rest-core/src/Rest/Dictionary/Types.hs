@@ -26,6 +26,7 @@ module Rest.Dictionary.Types
   , inputs
   , outputs
   , errors
+  , noParam
 
   , empty
   , Modifier
@@ -35,6 +36,7 @@ module Rest.Dictionary.Types
   , Ident (..)
   , Header (..)
   , Param (..)
+  , ParamM
   , Input (..)
   , Output (..)
   , Error (..)
@@ -59,6 +61,8 @@ module Rest.Dictionary.Types
 
 where
 
+import Control.Monad.Except
+import Control.Monad.Reader
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
@@ -115,26 +119,30 @@ instance Show (Header h) where
                                                    . showsPrec 10 k
                                                    )
 
+{-data Param p where-}
+  {-NoParam   ::                                                       Param ()-}
+  {-Param     :: [String] -> ([Maybe String] -> Either DataError p) -> Param p-}
+  {-TwoParams :: Param p -> Param q                                 -> Param (p, q)-}
+
 -- | The explicit dictionary `Param` describes how to translate the request
 -- parameters to some Haskell value. The first field in the `Param`
 -- constructor is a white list of paramters we can recognize, used in generic
 -- validation and for generating documentation. The second field is a custom
--- parser that can fail with a `DataError` or can produce a some value. When
--- explicitly not interested in the parameters we can use `NoParam`.
+-- parser that can fail with a `DataError` or can produce a some value. It has a
+-- Reader context of all the parameter names and their (possibly) raw string data.
+-- use withParam to write an Applicative style parser
+type ParamM a = ExceptT DataError (Reader [(String,String)]) a
 
-data Param p where
-  NoParam   ::                                                       Param ()
-  Param     :: [String] -> ([Maybe String] -> Either DataError p) -> Param p
-  TwoParams :: Param p -> Param q                                 -> Param (p, q)
+data Param a = Param
+  { paramNames :: [String]
+  , paramParser :: ParamM a
+  }
+
+noParam :: Param ()
+noParam = Param [] (return ())
 
 instance Show (Param p) where
-  showsPrec _ NoParam         = showString "NoParam"
   showsPrec n (Param ns _)    = showParen (n > 9) (showString "Param " . showsPrec 10 ns)
-  showsPrec n (TwoParams p q) = showParen (n > 9) ( showString "TwoParams "
-                                                  . showsPrec 10 p
-                                                  . showString " "
-                                                  . showsPrec 10 q
-                                                  )
 
 -- | The explicit dictionary `Input` describes how to translate the request
 -- body into some Haskell value. We currently use a constructor for every
@@ -265,7 +273,7 @@ fclabels [d|
 -- | The empty dictionary, recognizing no types.
 
 empty :: Dict () () 'Nothing 'Nothing 'Nothing
-empty = Dict NoHeader NoParam None None None
+empty = Dict NoHeader noParam None None None
 
 -- | Custom existential packing an error together with a Reason.
 

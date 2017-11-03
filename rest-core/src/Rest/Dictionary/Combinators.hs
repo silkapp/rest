@@ -52,6 +52,10 @@ module Rest.Dictionary.Combinators
 
   , mkPar
   , addPar
+  , withParam
+  , withParamDefault
+  , withParamParser
+  , withParamParserDefault
 
   -- ** Deprecated
 
@@ -64,10 +68,13 @@ import Prelude hiding (id, (.))
 
 import Control.Category
 import Data.Aeson
+import Control.Monad.Except
 import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema
 import Data.Text.Lazy (Text)
+import Data.List (lookup)
 import Data.Typeable
+import Control.Monad.Reader.Class (asks)
 import Network.Multipart (BodyPart)
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.Label.Total as L
@@ -93,8 +100,30 @@ mkPar = L.set params
 
 -- | Add custom sub-dictionary for recognizing parameters.
 
+{-# DEPRECATED addPar "This is now undefined as it doesn't fit the new Param datatype. Use withParam as an Applicative instead" #-}
 addPar :: Param p -> Dict h p' i o e -> Dict h (p, p') i o e
-addPar = L.modify params . TwoParams
+addPar = undefined
+
+withParam :: (Read a) => String -> ParamM a
+withParam = flip withParamParser read
+
+-- | @withParamParser name parser@ parses the parameter with name @name@ using
+-- the parser @parser@. If the desiered parameter is missing then a
+-- @MissingField@ DataError is thrown.
+withParamParser :: String -> (String -> a) -> ParamM a
+withParamParser n f = do
+  s <- asks $ lookup n
+  maybe (throwError $ MissingField n) (return . f) s
+
+withParamDefault :: (Read a) => String -> a -> ParamM a
+withParamDefault n d = withParamParserDefault n d read
+
+-- | like withParamParser except it returns a default value if the parameter
+-- can't be found.
+withParamParserDefault :: String -> a -> (String -> a) -> ParamM a
+withParamParserDefault n d f = do
+  s <- asks $ lookup n
+  maybe (return d) (return . f) s
 
 -- | Open up input type for extension with custom dictionaries.
 
