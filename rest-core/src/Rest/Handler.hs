@@ -124,22 +124,13 @@ mkListing d a = mkGenHandler (mkPar range . d) (a . param)
 -- parameters, @offset@ and @count@. If not passed, the defaults are 0
 -- and 100. The maximum range that can be passed is 1000.
 
-range :: Param Range
-range = Param ["offset", "count"] $ \xs ->
-  maybe (Left (ParseError "range"))
-        (Right . normalize)
-    $ case xs of
-        [Just o, Just c] -> Range         <$> readMay o <*> readMay c
-        [_     , Just c] -> Range 0       <$> readMay c
-        [Just o, _     ] -> (`Range` 100) <$> readMay o
-        _                -> Just $ Range 0 100
-  where normalize r = Range { offset = max 0 . offset $ r
-                            , count  = min 1000 . max 0 . count $ r
-                            }
+range :: ParamM Range
+range = Range
+  <$> (max 0 <$> (withParamDefault "offset" 0))
+  <*> ((min 1000 . max 0) <$> (withParamDefault "count" 100))
 
 -- | Create a list handler that accepts ordering information.
 -- Restricts the type of the 'Input' dictionary to 'None'
-
 mkOrderedListing
   :: (Monad m, o ~ FromMaybe () o', e ~ FromMaybe Void e')
   => Modifier h p 'Nothing o' e'
@@ -150,19 +141,12 @@ mkOrderedListing d a = mkGenHandler (mkPar orderedRange . d) (a . param)
 -- | Dictionary for taking ordering information. In addition to the
 -- parameters accepted by 'range', this accepts @order@ and
 -- @direction@.
-orderedRange :: Param (Range, Maybe String, Maybe String)
-orderedRange = Param ["offset", "count", "order", "direction"] $ \xs ->
-  case xs of
-    [mo, mc, mor, md] ->
-      maybe (Left (ParseError "range"))
-            (Right . (\(o, c) -> (Range o c, mor, md)) . normalize)
-        $ case (mo, mc) of
-            (Just o, Just c) -> (,)    <$> readMay o <*> readMay c
-            (_     , Just c) -> (0,)   <$> readMay c
-            (Just o, _     ) -> (,100) <$> readMay o
-            _                -> Just (0, 100)
-    _ -> error "Internal error in orderedRange rest parameters"
-  where normalize = (max 0 *** (min 1000 . max 0))
+orderedRange :: ParamM (Range, Maybe String, Maybe String)
+orderedRange = do
+  r <- range
+  mo <- withParamParserDefault "order" Nothing Just
+  mo <- withParamParserDefault "direction" Nothing Just
+  return (r, mo, md)
 
 -- | Create a handler for a single resource. Takes the entire
 -- environmend as input.
