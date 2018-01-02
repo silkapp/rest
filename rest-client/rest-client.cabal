@@ -32,7 +32,7 @@ Library
     , exceptions == 0.8.*
     , http-client >= 0.3 && < 0.6
     , http-conduit >= 2.1 && < 2.3
-    , http-types >= 0.7 && < 0.11
+    , http-types >= 0.7 && < 0.12
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
     , monad-control (>= 0.3.3.1 && < 0.4) || (>= 1.0.0.3 && < 1.1)
