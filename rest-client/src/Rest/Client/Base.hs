@@ -48,6 +48,7 @@ import Control.Monad.Writer hiding (mapM)
 import Data.ByteString
 import Data.CaseInsensitive
 import Network.HTTP.Conduit hiding (method, responseBody)
+import Network.HTTP.Client (defaultManagerSettings)
 
 import Rest.Types.Error
 
@@ -157,8 +158,9 @@ run :: String -> ApiT IO a -> IO a
 run = flip runWithPort 80
 
 runWithPort :: String -> Int -> ApiT IO a -> IO a
-runWithPort hst prt api =
-  withManager $ \m ->
+runWithPort hst prt api = do
+  m <- newManager defaultManagerSettings
+  runResourceT $ do
     runT (ApiInfo m hst prt []) (ApiState (createCookieJar [])) api
 
 data ApiResponse e a  =

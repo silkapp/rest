@@ -31,7 +31,7 @@ Library
     , data-default >= 0.5 && < 0.8
     , exceptions == 0.8.*
     , http-client >= 0.3 && < 0.6
-    , http-conduit >= 2.1 && < 2.3
+    , http-conduit >= 2.1 && < 2.4
     , http-types >= 0.7 && < 0.12
     , hxt >= 9.2 && < 9.4
     , hxt-pickle-utils == 0.1.*
