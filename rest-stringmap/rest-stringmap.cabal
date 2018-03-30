@@ -1,5 +1,5 @@
 name:                rest-stringmap
-version:             0.2.0.6
+version:             0.2.0.7
 license:             BSD3
 license-file:        LICENSE
 synopsis:            Maps with stringy keys that can be transcoded to JSON and XML.
