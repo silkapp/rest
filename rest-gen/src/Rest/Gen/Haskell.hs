@@ -395,7 +395,7 @@ idData node =
                   Just{}  ->  -- Pattern match with data constructor
                     ([H.PParen () $ H.PApp () (H.UnQual () $ H.Ident () (dataName pth)) [H.PVar () x]],
                      H.UnGuardedRhs () $ H.List () [stringLit pth, showURLx])
-      in [ H.DataDecl () (H.DataType ()) Nothing (H.DHead () tyIdent) (map ctor ls) Nothing
+      in [ H.DataDecl () (H.DataType ()) Nothing (H.DHead () tyIdent) (map ctor ls) []
          , H.TypeSig () [funName] fType
          ] ++ concatMap fun ls
     where

@@ -1,5 +1,7 @@
 module Rest.Gen.Base.JSON.Pretty (pp_value) where
 
+import Prelude hiding ((<>))
+
 import Control.Arrow (first)
 import Data.Aeson.Types
 import Data.Char

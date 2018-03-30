@@ -50,12 +50,15 @@ data RestOutput = RestOutput
   , responseCode :: Maybe Int
   } deriving Show
 
-instance Monoid RestOutput where
-  mempty = RestOutput { headersSet = H.empty, responseCode = Nothing }
-  o1 `mappend` o2 = RestOutput
+instance Semigroup RestOutput where
+  o1 <> o2 = RestOutput
     { headersSet   = headersSet o2 `H.union` headersSet o1
     , responseCode = responseCode o2 <|> responseCode o1
     }
+
+instance Monoid RestOutput where
+  mempty = RestOutput { headersSet = H.empty, responseCode = Nothing }
+  mappend = (<>)
 
 outputHeader :: String -> String -> RestOutput
 outputHeader h v = mempty { headersSet = H.singleton h v }

@@ -30,8 +30,8 @@ library
     Rest.Types.ShowUrl
     Rest.Types.Void
   build-depends:
-      base >= 4.6 && < 4.11
-    , aeson >= 0.7 && < 1.3
+      base >= 4.6 && < 4.12
+    , aeson >= 0.7 && < 1.4
     , base-compat >= 0.8 && < 0.10
     , case-insensitive >= 1.2 && < 1.3
     , generic-aeson >= 0.1 && < 0.3
