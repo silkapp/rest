@@ -4,7 +4,7 @@
   #-}
 module Rest.Types.ShowUrl (ShowUrl(..)) where
 
-import Data.UUID
+import Data.UUID.Types
 import qualified Data.Text      as ST
 import qualified Data.Text.Lazy as LT
 

@@ -65,7 +65,7 @@ library
     , unordered-containers == 0.2.*
     , uri-encode == 1.5.*
     , utf8-string >= 0.3 && < 1.1
-    , uuid >= 1.2 && < 1.4
+    , uuid-types == 1.0.*
   if impl(ghc < 8.0)
     build-depends: semigroups == 0.18.*
 
