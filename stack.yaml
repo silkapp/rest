@@ -18,3 +18,5 @@ packages:
 - rest-stringmap/
 - rest-types/
 - rest-wai/
+extra-deps:
+- haskell-src-exts-1.20.2
