@@ -1,5 +1,5 @@
 name:                rest-client
-version:             0.5.2.2
+version:             0.5.2.3
 description:         Utility library for use in generated API client libraries.
 synopsis:            Utility library for use in generated API client libraries.
 maintainer:          code@silk.co
@@ -12,6 +12,7 @@ license-file:        LICENSE
 extra-source-files:
   CHANGELOG.md
   LICENSE
+  src/Rest/Client/overlapping-compat.h
 
 source-repository head
   type:              git
