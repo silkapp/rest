@@ -23,7 +23,7 @@ library
   exposed-modules:   Rest.Driver.Snap
   build-depends:
       base == 4.*
-    , base-compat >= 0.8 && < 0.10
+    , base-compat-batteries == 0.10.*
     , bytestring >= 0.9 && < 0.11
     , case-insensitive >= 0.4 && < 1.3
     , rest-core >= 0.34 && < 0.40

@@ -15,3 +15,5 @@ package rest-example
     happstack
     wai
     gen
+constraints:
+  snap-server >= 1.1

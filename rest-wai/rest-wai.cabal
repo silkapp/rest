@@ -23,7 +23,7 @@ library
   exposed-modules:   Rest.Driver.Wai
   build-depends:
       base == 4.*
-    , base-compat >= 0.8 && < 0.10
+    , base-compat-batteries == 0.10.*
     , bytestring == 0.10.*
     , case-insensitive == 1.2.*
     , containers >= 0.4 && < 0.6
