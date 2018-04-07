@@ -29,13 +29,17 @@ import qualified Data.List.NonEmpty                          as NList
 import qualified Distribution.ModuleName                     as Cabal
 import qualified Distribution.Package                        as Cabal
 import qualified Distribution.PackageDescription             as Cabal
-import qualified Distribution.PackageDescription.Parse       as Cabal
 import qualified Distribution.PackageDescription.PrettyPrint as Cabal
 import qualified Distribution.Simple.Utils                   as Cabal
 import qualified Distribution.Verbosity                      as Cabal
 import qualified Distribution.Version                        as Cabal
 import qualified Language.Haskell.Exts.Pretty                as H
 import qualified Language.Haskell.Exts.Syntax                as H
+#if MIN_VERSION_Cabal(2,2,0)
+import qualified Distribution.PackageDescription.Parsec      as Cabal
+#else
+import qualified Distribution.PackageDescription.Parse       as Cabal
+#endif
 
 import Rest.Api (Router, Version)
 
@@ -70,13 +74,20 @@ mkCabalFile ctx tree =
   do cabalExists <- doesFileExist cabalFile
      gpkg <-
        if cabalExists
-       then updateExposedModules modules <$> Cabal.readPackageDescription Cabal.normal cabalFile
+       then updateExposedModules modules <$> readPackageDescription Cabal.normal cabalFile
        else return (mkGenericPackageDescription (wrapperName ctx) modules)
      writeCabalFile cabalFile gpkg
   where
     cabalFile = targetPath ctx </> wrapperName ctx ++ ".cabal"
     modules   = map (Cabal.fromString . unModuleName) (sources ctx)
              ++ map (Cabal.fromString . qualModName . (namespace ctx ++)) (allSubResourceIds tree)
+
+readPackageDescription :: Cabal.Verbosity -> FilePath -> IO Cabal.GenericPackageDescription
+#if MIN_VERSION_Cabal(2,0,0)
+readPackageDescription = Cabal.readGenericPackageDescription
+#else
+readPackageDescription = Cabal.readPackageDescription
+#endif
 
 writeCabalFile :: FilePath -> Cabal.GenericPackageDescription -> IO ()
 writeCabalFile path = Cabal.writeUTF8File path . unlines . filter emptyField . lines . Cabal.showGenericPackageDescription
@@ -95,7 +106,11 @@ mkGenericPackageDescription name modules =
   where
     pkg = Cabal.emptyPackageDescription
       { Cabal.package        = Cabal.PackageIdentifier (cabalPackageName name) (cabalVersion [0, 1])
+#if MIN_VERSION_Cabal(2,2,0)
+      , Cabal.buildTypeRaw   = Just Cabal.Simple
+#else
       , Cabal.buildType      = Just Cabal.Simple
+#endif
       , Cabal.specVersionRaw = Right (Cabal.orLaterVersion (cabalVersion [1, 8]))
       }
 
