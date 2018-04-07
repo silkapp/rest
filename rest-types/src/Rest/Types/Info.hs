@@ -5,6 +5,8 @@
 -- | Module facilitating informative inspection of datatypes.
 module Rest.Types.Info (Info (..)) where
 
+import Prelude.Compat
+
 import Data.Text (Text)
 import Data.Typeable
 

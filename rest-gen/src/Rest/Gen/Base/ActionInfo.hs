@@ -55,7 +55,7 @@ import Control.Category
 import Control.Monad
 import Data.Foldable (find)
 import Data.Label.Derive
-import Data.List (intercalate, intersect, nub, sortBy)
+import Data.List.Compat (intercalate, intersect, nub, sortBy)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
 import Data.Ord

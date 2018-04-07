@@ -9,6 +9,8 @@ module Rest.Gen.Utils
   , mapHead
   ) where
 
+import Prelude.Compat
+
 import Data.Char
 
 import Paths_rest_gen (getDataFileName)

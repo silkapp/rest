@@ -4,9 +4,11 @@ module Rest.StringMap.Util
   , mapSchema
   ) where
 
+import Prelude.Compat
+
 import Data.JSON.Schema (JSONSchema, Schema (Map), schema)
-import Data.Proxy (Proxy)
-import Data.String (IsString (..))
+import Data.Proxy.Compat (Proxy)
+import Data.String.Compat (IsString (..))
 import Data.String.ToString (ToString (..))
 import Text.XML.HXT.Arrow.Pickle (PU, XmlPickler, xpElem, xpList, xpPair, xpTextAttr, xpWrap, xpickle)
 

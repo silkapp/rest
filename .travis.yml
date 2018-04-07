@@ -28,9 +28,6 @@ before_cache:
 
 matrix:
   include:
-    - compiler: "ghc-7.6.3"
-    # env: TEST=--disable-tests BENCH=--disable-benchmarks
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-head,ghc-7.6.3], sources: [hvr-ghc]}}
     - compiler: "ghc-7.8.4"
     # env: TEST=--disable-tests BENCH=--disable-benchmarks
       addons: {apt: {packages: [ghc-ppa-tools,cabal-install-head,ghc-7.8.4], sources: [hvr-ghc]}}
@@ -96,6 +93,16 @@ script:
   # build & run tests, build benchmarks
   - cabal new-build -w ${HC} ${TEST} ${BENCH} all
   - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test -w ${HC} ${TEST} ${BENCH} all; fi
+
+  - GEN_EXE=/home/travis/build/silkapp/rest/dist-newstyle/build/*/ghc-*/rest-example-*/x/rest-example-gen/build/rest-example-gen/rest-example-gen
+  - $GEN_EXE --haskell --target=./rest-example/client
+  - cabal new-build -w ${HC} restexample-client
+  - rm -f rest-example/api.js
+  - $GEN_EXE --javascript --target=./rest-example/api.js
+  - node rest-example/api.js
+  - rm -f rest-example/api.rb
+  - $GEN_EXE --ruby --target=./rest-example/api.rb
+  - ruby rest-example/api.rb
 
   # cabal check
 #  - (cd rest-core-* && cabal check)

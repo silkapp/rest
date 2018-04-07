@@ -10,6 +10,8 @@ module Rest.Gen.Base.Link
   , setLinkIds
   ) where
 
+import Prelude.Compat
+
 -- | Data structure representing Api links
 data LinkItem =
     LResource String

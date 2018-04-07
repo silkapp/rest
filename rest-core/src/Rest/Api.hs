@@ -42,7 +42,7 @@ import Prelude.Compat
 
 import Data.Char
 import Data.Function (on)
-import Data.List (sortBy)
+import Data.List.Compat (sortBy)
 import Data.List.Split
 import Data.Ord (comparing)
 

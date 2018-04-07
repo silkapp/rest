@@ -4,6 +4,8 @@
   #-}
 module Api.Test.Err2 (Err (..)) where
 
+import Prelude.Compat
+
 import Data.Aeson
 import Data.Data
 import Data.JSON.Schema

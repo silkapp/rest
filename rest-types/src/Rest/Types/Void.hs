@@ -10,6 +10,8 @@
 #endif
 module Rest.Types.Void (Void (..)) where
 
+import Prelude.Compat
+
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import Data.JSON.Schema (JSONSchema (..), Schema(Choice))
 import Data.Typeable (Typeable)

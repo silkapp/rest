@@ -12,6 +12,8 @@ module Api.Test
   , Ok (..)
   ) where
 
+import Prelude.Compat
+
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson

@@ -1,11 +1,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Rest.Gen.Ruby (mkRbApi) where
 
-import Prelude hiding ((.))
+import Prelude.Compat hiding ((.))
 
 import Control.Category ((.))
 import Data.Char
-import Data.List
+import Data.List.Compat
 import Data.List.Split (splitOn)
 import Data.Maybe
 import qualified Data.Label.Total             as L
@@ -21,7 +21,7 @@ import qualified Rest.Gen.NoAnnotation as N
 
 mkRbApi :: N.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =
-  do rawPrelude <- readContent "Ruby/base.rb"
+  do rawPrelude <- readContent "files/Ruby/base.rb"
      let prelude = replace "SilkApi" (unModuleName ns) rawPrelude
      let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
      return $ cod ++ "\n" ++ prelude

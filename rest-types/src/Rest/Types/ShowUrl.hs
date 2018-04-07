@@ -4,6 +4,8 @@
   #-}
 module Rest.Types.ShowUrl (ShowUrl(..)) where
 
+import Prelude.Compat
+
 import Data.UUID.Types
 import qualified Data.Text      as ST
 import qualified Data.Text.Lazy as LT

@@ -15,6 +15,8 @@ module Rest.Container
   , defaultE
   ) where
 
+import Prelude.Compat
+
 import Data.Maybe
 
 import Rest.Dictionary

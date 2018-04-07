@@ -1,7 +1,10 @@
 module Code.Build.PHP where
 
+import Prelude.Compat
+
+import Data.List.Compat
+
 import Code.Build
-import Data.List
 
 hashmap :: [(String, Code)] -> Code
 hashmap = call "array" . map (\(a,b) -> a <++> "=>" <++> b)

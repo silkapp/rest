@@ -11,9 +11,11 @@ module Rest.Driver.Happstack
   , apiToHandler'
   ) where
 
+import Prelude.Compat
+
 import Control.Applicative
 import Control.Concurrent.MVar (readMVar)
-import Control.Monad
+import Control.Monad.Compat
 import Control.Monad.Trans (MonadIO (liftIO))
 import Happstack.Server
 

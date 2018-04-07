@@ -7,12 +7,13 @@
 #if MIN_VERSION_base(4,9,0)
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 #endif
-import Control.Monad
-import Control.Monad.Except
-import Control.Monad.Identity
-import Control.Monad.Reader
+import Prelude.Compat
+
+import Control.Monad.Compat
+import Control.Monad.Except (ExceptT)
+import Control.Monad.Identity (Identity, runIdentity)
+import Control.Monad.Reader (ReaderT, ask)
 import Data.Aeson
-import Data.Monoid
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertEqual, assertFailure)

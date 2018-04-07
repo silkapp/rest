@@ -11,15 +11,15 @@ module Rest.Gen.Docs
   , writeDocs
   ) where
 
-import Prelude hiding (div, head, span, (.))
-import qualified Prelude as P
+import Prelude.Compat hiding (div, head, span, (.))
+import qualified Prelude.Compat as P
 
 import Control.Category ((.))
 import Data.Foldable (forM_)
 import Data.Function (on)
 import Data.Hashable (hash)
-import Data.List hiding (head, span)
-import Data.String
+import Data.List.Compat hiding (head, span)
+import Data.String.Compat
 import System.Directory
 import System.FilePath
 import Text.Blaze.Html

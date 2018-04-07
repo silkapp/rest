@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Rest.Gen.JavaScript (mkJsApi) where
 
-import Prelude hiding ((.))
+import Prelude.Compat hiding ((.))
 
 import Control.Category ((.))
 import Data.Maybe
@@ -19,8 +19,8 @@ import qualified Rest.Gen.NoAnnotation as N
 
 mkJsApi :: N.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =
-  do prelude <- render . setManyAttrib attrs . newSTMP <$> readContent "Javascript/prelude.js"
-     epilogue <- render . setManyAttrib attrs . newSTMP <$> readContent "Javascript/epilogue.js"
+  do prelude <- render . setManyAttrib attrs . newSTMP <$> readContent "files/Javascript/prelude.js"
+     epilogue <- render . setManyAttrib attrs . newSTMP <$> readContent "files/Javascript/epilogue.js"
      let cod = showCode $ mkStack
                 [ unModuleName ns ++ ".prototype.version" .=. string (show ver)
                 , mkJsCode (unModuleName ns) priv r

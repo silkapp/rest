@@ -16,20 +16,24 @@ module Rest.Driver.Perform
   , accept
   ) where
 
+import Prelude.Compat
+
 import Control.Applicative
-import Control.Monad
-import Control.Monad.Cont
-import Control.Monad.Error.Class
-import Control.Monad.RWS
-import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Identity
+import Control.Monad.Compat
+import Control.Monad.Cont (ContT)
+import Control.Monad.Error.Class (throwError)
+import Control.Monad.RWS (RWST)
+import Control.Monad.Reader (ReaderT)
+import Control.Monad.State (StateT)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Except (ExceptT, mapExceptT, runExceptT)
+import Control.Monad.Trans.Identity (IdentityT)
 import Control.Monad.Trans.Maybe (MaybeT (..))
-import Control.Monad.Writer
+import Control.Monad.Writer (WriterT)
 import Data.Aeson.Utils
 import Data.Char (isSpace, ord, toLower)
-import Data.List
+import Data.Monoid.Compat (Last (..))
+import Data.List.Compat
 import Data.List.Split
 import Data.Maybe
 import Data.Text.Lazy.Encoding (decodeUtf8)

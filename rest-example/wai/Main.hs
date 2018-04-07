@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
+import Prelude.Compat
+
 import Network.Wai.Handler.Warp
 import Rest.Driver.Wai (apiToApplication)
 
@@ -16,4 +18,3 @@ main = do
   serverData <- exampleBlog
   run 3000 $
     apiToApplication (runBlogApi serverData) api
-

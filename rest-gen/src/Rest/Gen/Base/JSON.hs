@@ -7,10 +7,12 @@ module Rest.Gen.Base.JSON
   , showExamples
   ) where
 
+import Prelude.Compat
+
 import Control.Applicative ((<|>))
 import Data.Aeson ((.=))
 import Data.JSON.Schema
-import Data.List (transpose)
+import Data.List.Compat (transpose)
 import Data.List.Split (chunksOf)
 import Data.Maybe
 import Text.PrettyPrint.HughesPJ

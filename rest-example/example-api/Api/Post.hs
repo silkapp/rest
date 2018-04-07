@@ -17,7 +17,7 @@ import Control.Monad.Error.Class
 import Control.Monad.Reader (ReaderT, asks)
 import Control.Monad.Trans (lift, liftIO)
 import Control.Monad.Trans.Except (ExceptT)
-import Data.List (sortBy)
+import Data.List.Compat (sortBy)
 import Data.Ord (comparing)
 import Data.Set (Set)
 import Data.Time

@@ -1,7 +1,10 @@
 module Code.Build.JavaScript where
 
+import Prelude.Compat
+
+import Data.List.Compat
+
 import Code.Build
-import Data.List
 
 jsObject :: [(String, Code)] -> Code
 jsObject [] = code "{}"

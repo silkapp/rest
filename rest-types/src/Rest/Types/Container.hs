@@ -17,7 +17,7 @@ module Rest.Types.Container
   , SomeOutput(..)
   ) where
 
-import Prelude hiding (mapM)
+import Prelude.Compat hiding (mapM)
 
 import Data.Aeson.Types
 import Data.JSON.Schema (JSONSchema (..), gSchema)

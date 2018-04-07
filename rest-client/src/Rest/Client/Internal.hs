@@ -8,8 +8,8 @@
 #include "overlapping-compat.h"
 
 module Rest.Client.Internal
-  ( module Control.Monad
-  , module Data.String
+  ( module Control.Monad.Compat
+  , module Data.String.Compat
   , module Data.String.ToString
   , MonadIO (..)
   , L.ByteString
@@ -34,15 +34,18 @@ module Rest.Client.Internal
   , doReq
   ) where
 
+import Prelude.Compat
+import qualified Prelude.Compat as Prelude (map)
+
 import Control.Arrow
-import Control.Monad
+import Control.Monad.Compat
 import Control.Monad.Cont
 import Data.Aeson.Utils (FromJSON, ToJSON, eitherDecodeV, encode)
 #if !MIN_VERSION_http_client(0,5,0)
 import Data.Default (def)
 #endif
-import Data.List
-import Data.String
+import Data.List.Compat
+import Data.String.Compat
 import Data.String.ToString
 import Network.HTTP.Conduit hiding (method, responseBody, responseHeaders)
 import Network.HTTP.Types hiding (statusCode, statusMessage)

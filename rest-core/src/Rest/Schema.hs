@@ -36,6 +36,8 @@ module Rest.Schema
   , Endpoint
   ) where
 
+import Prelude.Compat
+
 import Rest.Dictionary (Ident (..))
 import Rest.Info (Info)
 

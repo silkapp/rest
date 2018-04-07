@@ -8,7 +8,7 @@ author:              Silk
 maintainer:          code@silk.co
 category:            Data
 build-type:          Simple
-cabal-version:       >=1.6
+cabal-version:       >=1.10
 
 extra-source-files:
   CHANGELOG.md
@@ -19,8 +19,10 @@ source-repository head
   location:          https://github.com/silkapp/rest.git
 
 library
-  ghc-options:       -Wall
-  hs-source-dirs:    src
+  ghc-options:        -Wall
+  hs-source-dirs:     src
+  default-extensions: NoImplicitPrelude
+  default-language:   Haskell2010
   exposed-modules:
     Code.Build
     Code.Build.Haskell
@@ -28,4 +30,5 @@ library
     Code.Build.PHP
     Code.Build.Ruby
   build-depends:
-      base == 4.*
+      base == 4.*,
+      base-compat-batteries == 0.10.*

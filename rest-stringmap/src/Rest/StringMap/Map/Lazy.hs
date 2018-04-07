@@ -15,10 +15,12 @@ module Rest.StringMap.Map.Lazy
   , fromList
   ) where
 
+import Prelude.Compat
+
 import Data.Aeson
 import Data.JSON.Schema
 import Data.Map (Map)
-import Data.String
+import Data.String.Compat
 import Data.String.ToString
 import Data.Typeable
 import Text.XML.HXT.Arrow.Pickle

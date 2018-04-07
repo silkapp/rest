@@ -16,9 +16,10 @@ extra-source-files:
   LICENSE
 
 library
-  default-language:  Haskell2010
-  ghc-options:       -Wall
-  hs-source-dirs:    example-api
+  default-extensions: NoImplicitPrelude
+  default-language:   Haskell2010
+  ghc-options:        -Wall
+  hs-source-dirs:     example-api
   exposed-modules:
     Api
     Api.Post
@@ -49,6 +50,7 @@ library
     , hxt == 9.3.*
     , json-schema >= 0.6 && < 0.8
     , mtl >= 2.0 && < 2.3
+    , mtl-compat >= 0.1 && < 0.3
     , generic-xmlpickler >= 0.1.0.1 && < 0.2
     , rest-core >= 0.39 && < 0.40
     , safe >= 0.2 && < 0.4
@@ -83,10 +85,11 @@ flag gen
   manual:      True
 
 executable rest-example-happstack
-  default-language:  Haskell2010
-  ghc-options:       -Wall
-  main-is:           Main.hs
-  hs-source-dirs:    happstack
+  default-extensions: NoImplicitPrelude
+  default-language:   Haskell2010
+  ghc-options:        -Wall
+  main-is:            Main.hs
+  hs-source-dirs:     happstack
   if flag(happstack)
     buildable: True
     build-depends:
@@ -94,6 +97,7 @@ executable rest-example-happstack
       , base-compat-batteries == 0.10.*
       , happstack-server >= 7.1 && < 7.6
       , mtl >= 2.0 && < 2.3
+      , mtl-compat >= 0.1 && < 0.3
       , rest-example
       , rest-happstack >= 0.2 && < 0.4
       , transformers-compat >= 0.4 && < 0.7
@@ -101,10 +105,11 @@ executable rest-example-happstack
     buildable: False
 
 executable rest-example-wai
-  default-language:  Haskell2010
-  ghc-options:       -Wall
-  main-is:           Main.hs
-  hs-source-dirs:    wai
+  default-extensions: NoImplicitPrelude
+  default-language:   Haskell2010
+  ghc-options:        -Wall
+  main-is:            Main.hs
+  hs-source-dirs:     wai
   if flag(wai)
     buildable: True
     build-depends:
@@ -117,16 +122,18 @@ executable rest-example-wai
     buildable: False
 
 executable rest-example-snap
-  default-language:  Haskell2010
-  ghc-options:       -Wall
-  main-is:           Main.hs
-  hs-source-dirs:    snap
+  default-extensions: NoImplicitPrelude
+  default-language:   Haskell2010
+  ghc-options:        -Wall
+  main-is:            Main.hs
+  hs-source-dirs:     snap
   if flag(snap)
     buildable: True
     build-depends:
         base >= 4.6 && < 4.12
       , base-compat-batteries == 0.10.*
       , mtl >= 2.0 && < 2.3
+      , mtl-compat >= 0.1 && < 0.3
       , rest-core >= 0.39 && < 0.40
       , rest-example
       , rest-snap >= 0.1 && < 0.4
@@ -137,10 +144,11 @@ executable rest-example-snap
     buildable: False
 
 executable rest-example-gen
-  default-language:  Haskell2010
-  ghc-options:       -Wall
-  main-is:           Main.hs
-  hs-source-dirs:    generate
+  default-extensions: NoImplicitPrelude
+  default-language:   Haskell2010
+  ghc-options:        -Wall
+  main-is:            Main.hs
+  hs-source-dirs:     generate
   if flag(gen)
     buildable: True
     build-depends:

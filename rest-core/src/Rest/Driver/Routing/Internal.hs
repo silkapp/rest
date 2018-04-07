@@ -15,7 +15,7 @@
 
 module Rest.Driver.Routing.Internal where
 
-import Prelude hiding (id, (.))
+import Prelude.Compat hiding (id, (.))
 
 import Control.Applicative
 import Control.Arrow

@@ -2,8 +2,10 @@ module Rest.Gen
   ( generate
   ) where
 
+import Prelude.Compat
+
 import Data.Char
-import Data.Foldable
+import Data.Foldable.Compat
 import Data.Label
 import Data.Maybe
 import System.Directory

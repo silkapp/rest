@@ -4,6 +4,8 @@
   #-}
 module Type.UserComment where
 
+import Prelude.Compat
+
 import Data.Aeson
 import Data.JSON.Schema
 import Data.Text (Text)

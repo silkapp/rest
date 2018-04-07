@@ -12,6 +12,8 @@ module Rest.Types.Container.Resource
   , Value (..)
   ) where
 
+import Prelude.Compat
+
 import Data.Aeson hiding (Value)
 import Data.CaseInsensitive (CI)
 import Data.JSON.Schema (JSONSchema (..), gSchema)
@@ -19,10 +21,11 @@ import Data.Typeable
 import GHC.Generics
 import Generics.Generic.Aeson
 import Generics.XmlPickler (gxpickle)
-import Rest.StringMap.HashMap.Strict (StringHashMap)
-import Rest.Types.Method
 import Text.XML.HXT.Arrow.Pickle
 import qualified Data.JSON.Schema.Combinators as Json
+
+import Rest.StringMap.HashMap.Strict (StringHashMap)
+import Rest.Types.Method
 
 type KeyValues = StringHashMap String Value
 type CaseInsensitiveKeyValues = StringHashMap (CI String) Value

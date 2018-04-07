@@ -1,11 +1,12 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Api.Post.Comment (resource) where
 
+import Prelude.Compat
+
 import Control.Concurrent.STM (atomically, modifyTVar', readTVar)
 import Control.Monad.Reader
 import Control.Monad.Trans.Except
-import Data.List
-import Data.Monoid
+import Data.List.Compat
 import Data.Ord
 import Data.Time
 import qualified Data.HashMap.Strict as H

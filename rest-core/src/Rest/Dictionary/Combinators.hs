@@ -60,7 +60,7 @@ module Rest.Dictionary.Combinators
   , someE
   ) where
 
-import Prelude hiding (id, (.))
+import Prelude.Compat hiding (id, (.))
 
 import Control.Category
 import Data.Aeson

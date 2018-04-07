@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Prelude.Compat
+
 import Control.Monad.Trans (liftIO)
 import Snap.Http.Server
 import Snap.Core
@@ -28,4 +30,3 @@ main = do
 -- | Request handler
 handle :: ServerData -> Snap ()
 handle serverData = apiToHandler' (liftIO . runBlogApi serverData) api
-

@@ -7,7 +7,9 @@
 #endif
 module Rest.Driver.Happstack.Docs (apiDocsHandler) where
 
-import Control.Monad
+import Prelude.Compat
+
+import Control.Monad.Compat
 import Control.Monad.Trans
 import Happstack.Server
 import Rest.Api

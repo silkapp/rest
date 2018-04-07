@@ -15,11 +15,13 @@ module Rest.StringMap.HashMap.Lazy
   , toList
   ) where
 
+import Prelude.Compat
+
 import Data.Aeson
 import Data.HashMap.Strict (HashMap)
 import Data.Hashable
 import Data.JSON.Schema
-import Data.String
+import Data.String.Compat
 import Data.String.ToString
 import Data.Typeable
 import Text.XML.HXT.Arrow.Pickle

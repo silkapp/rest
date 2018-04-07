@@ -14,6 +14,8 @@ module Rest.Gen.Types
   , ImportDecl (..)
   ) where
 
+import Prelude.Compat
+
 import Language.Haskell.Exts.SrcLoc (noLoc)
 import Language.Haskell.Exts.Syntax (ImportDecl (..), ModuleName (..), Name (..), QName (..), SpecialCon (..), Type (..))
 

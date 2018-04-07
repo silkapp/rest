@@ -1,8 +1,8 @@
+cabal-version: >=1.8
 name: restexample-client
 version: 0.1.1.1
-cabal-version: >=1.8
-build-type: Simple
 license: AllRightsReserved
+build-type: Simple
 
 library
     exposed-modules:
@@ -12,6 +12,7 @@ library
         Restexample.Client.Test.FooBar
         Restexample.Client.Test.Import
         Restexample.Client.User
+    hs-source-dirs: src
     build-depends:
         base ==4.*,
         rest-types ==1.14.*,
@@ -19,5 +20,3 @@ library
         text >=0.10 && <1.3,
         rest-example ==0.2.*,
         rest-stringmap ==0.2.*
-    hs-source-dirs: src
-

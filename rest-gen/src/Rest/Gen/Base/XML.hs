@@ -4,7 +4,9 @@ module Rest.Gen.Base.XML
   , showExample
   ) where
 
-import Data.List
+import Prelude.Compat
+
+import Data.List.Compat
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.Pickle.Schema
 

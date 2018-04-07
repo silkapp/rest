@@ -1,5 +1,7 @@
 module Api.Test.ReservedName (resource) where
 
+import Prelude.Compat
+
 import Control.Monad.Reader
 import Data.Text (Text)
 

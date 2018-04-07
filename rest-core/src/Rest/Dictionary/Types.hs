@@ -59,6 +59,8 @@ module Rest.Dictionary.Types
 
 where
 
+import Prelude.Compat
+
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.JSON.Schema

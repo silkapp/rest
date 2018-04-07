@@ -23,9 +23,11 @@ module Rest.Gen.Base.ApiTree
   , subResourceNames
   ) where
 
+import Prelude.Compat
+
 import Data.Char
-import Data.Function
-import Data.List
+import Data.Function.Compat
+import Data.List.Compat
 import Data.Maybe
 
 import Rest.Api (Router (..), Some1 (..))

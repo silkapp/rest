@@ -14,12 +14,13 @@ module Rest.Driver.RestM
   , RestOutput (..)
   ) where
 
+import Prelude.Compat
+
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.Writer (WriterT (..), tell)
 import Data.CaseInsensitive (CI, mk)
 import Data.HashMap.Strict (HashMap)
-import Data.Semigroup
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.HashMap.Strict       as H
 

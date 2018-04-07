@@ -11,15 +11,15 @@ module Rest.Gen.Haskell
   , mkHsApi
   ) where
 
-import Control.Applicative
+import Prelude.Compat hiding (id, (.))
+
 import Control.Arrow (first, second)
 import Control.Category
-import Control.Monad
+import Control.Monad.Compat
 import Data.Label (modify, set)
 import Data.Label.Derive (mkLabelsNamed)
-import Data.List
+import Data.List.Compat
 import Data.Maybe
-import Prelude hiding (id, (.))
 import Safe
 import System.Directory
 import System.FilePath

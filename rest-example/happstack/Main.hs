@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
+import Prelude.Compat
+
 import Control.Concurrent (forkIO, killThread)
 import Control.Monad.Trans (liftIO)
 import Happstack.Server.SimpleHTTP
@@ -28,4 +30,3 @@ main = do
 -- | Request handler
 handle :: ServerData -> ServerPartT IO Response
 handle serverData = apiToHandler' (liftIO . runBlogApi serverData) api
-

@@ -8,6 +8,8 @@ module Rest.Driver.Types
   , module Rest.Types.Method
   ) where
 
+import Prelude.Compat
+
 import Control.Monad.Trans.Except
 import Network.Multipart (BodyPart)
 
