@@ -26,7 +26,7 @@ library
     Rest.Driver.Happstack
     Rest.Driver.Happstack.Docs
   build-depends:
-      base == 4.*
+      base >= 4.7 && < 4.12
     , base-compat-batteries == 0.10.*
     , containers >= 0.4 && < 0.6
     , happstack-server >= 7.0.5 && < 7.6

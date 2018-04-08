@@ -27,7 +27,7 @@ Library
     Rest.Client.Base
     Rest.Client.Internal
   build-depends:
-      base == 4.*
+      base >= 4.7 && < 4.12
     , aeson-utils >= 0.2.1 && < 0.4
     , base-compat-batteries == 0.10.*
     , bytestring >= 0.9 && < 0.11

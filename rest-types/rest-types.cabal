@@ -32,7 +32,7 @@ library
     Rest.Types.ShowUrl
     Rest.Types.Void
   build-depends:
-      base >= 4.6 && < 4.12
+      base >= 4.7 && < 4.12
     , aeson >= 0.7 && < 1.4
     , base-compat-batteries == 0.10.*
     , case-insensitive >= 1.2 && < 1.3

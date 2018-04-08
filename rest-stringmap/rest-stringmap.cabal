@@ -29,7 +29,7 @@ library
     Rest.StringMap.Map.Strict
     Rest.StringMap.Util
   build-depends:
-      base >= 4.6 && < 4.12
+      base >= 4.7 && < 4.12
     , aeson >= 0.7 && < 1.4
     , base-compat-batteries == 0.10.*
     , containers == 0.5.*

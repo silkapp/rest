@@ -14,7 +14,7 @@ library
         Restexample.Client.User
     hs-source-dirs: src
     build-depends:
-        base ==4.*,
+        base >=4.7&&<4.12,
         rest-types ==1.14.*,
         rest-client ==0.5.*,
         text >=0.10 && <1.3,

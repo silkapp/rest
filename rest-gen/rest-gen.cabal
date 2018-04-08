@@ -48,7 +48,7 @@ library
     Rest.Gen.NoAnnotation
     Rest.Gen.Utils
   build-depends:
-      base >= 4.5 && < 4.12
+      base >= 4.7 && < 4.12
     , Cabal >= 1.16 && < 2.4
     , HStringTemplate >= 0.6 && < 0.9
     , aeson >= 0.7 && < 1.4
@@ -86,7 +86,7 @@ test-suite rest-gen-tests
   type:              exitcode-stdio-1.0
   ghc-options:       -Wall
   build-depends:
-      base >= 4.5 && < 4.12
+      base >= 4.7 && < 4.12
     , HUnit >= 1.2 && < 1.7
     , fclabels >= 1.0.4 && < 2.1
     , haskell-src-exts >= 1.15.0 && < 1.21

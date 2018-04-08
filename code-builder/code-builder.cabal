@@ -30,5 +30,5 @@ library
     Code.Build.PHP
     Code.Build.Ruby
   build-depends:
-      base == 4.*,
+      base >= 4.7 && < 4.12,
       base-compat-batteries == 0.10.*

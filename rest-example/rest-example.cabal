@@ -41,7 +41,7 @@ library
     Type.UserPost
     Type.UserSignupError
   build-depends:
-      base >= 4.6 && < 4.12
+      base >= 4.7 && < 4.12
     , aeson >= 0.7 && < 1.4
     , base-compat-batteries == 0.10.*
     , bytestring >= 0.9 && < 0.11
@@ -93,7 +93,7 @@ executable rest-example-happstack
   if flag(happstack)
     buildable: True
     build-depends:
-        base >= 4.6 && < 4.12
+        base >= 4.7 && < 4.12
       , base-compat-batteries == 0.10.*
       , happstack-server >= 7.1 && < 7.6
       , mtl >= 2.0 && < 2.3
@@ -113,7 +113,7 @@ executable rest-example-wai
   if flag(wai)
     buildable: True
     build-depends:
-        base >= 4.6 && < 4.12
+        base >= 4.7 && < 4.12
       , base-compat-batteries == 0.10.*
       , rest-example
       , rest-wai >= 0.1 && < 0.3
@@ -130,7 +130,7 @@ executable rest-example-snap
   if flag(snap)
     buildable: True
     build-depends:
-        base >= 4.6 && < 4.12
+        base >= 4.7 && < 4.12
       , base-compat-batteries == 0.10.*
       , mtl >= 2.0 && < 2.3
       , mtl-compat >= 0.1 && < 0.3
@@ -152,7 +152,7 @@ executable rest-example-gen
   if flag(gen)
     buildable: True
     build-depends:
-        base >= 4.6 && < 4.12
+        base >= 4.7 && < 4.12
       , base-compat-batteries == 0.10.*
       , rest-example
       , rest-gen == 0.20.*

@@ -42,7 +42,7 @@ library
     Rest.Schema
     Rest.ShowUrl
   build-depends:
-      base >= 4.5 && < 4.12
+      base >= 4.7 && < 4.12
     , aeson >= 0.7 && < 1.4
     , aeson-utils >= 0.2 && < 0.4
     , base-compat-batteries == 0.10.*
@@ -79,7 +79,7 @@ test-suite rest-tests
   main-is:           Runner.hs
   type:              exitcode-stdio-1.0
   build-depends:
-      base >= 4.5 && < 4.12
+      base >= 4.7 && < 4.12
     , base-compat-batteries == 0.10.*
     , aeson >= 0.7 && < 1.4
     , HUnit >= 1.2 && < 1.7
