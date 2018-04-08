@@ -8,8 +8,9 @@ import Data.Char
 import Data.List.Compat
 import Data.List.Split (splitOn)
 import Data.Maybe
-import qualified Data.Label.Total             as L
-import qualified Data.List.NonEmpty           as NList
+import qualified Data.ByteString.UTF8 as B
+import qualified Data.Label.Total     as L
+import qualified Data.List.NonEmpty   as NList
 
 import Code.Build
 import Code.Build.Ruby
@@ -21,8 +22,7 @@ import qualified Rest.Gen.NoAnnotation as N
 
 mkRbApi :: N.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkRbApi ns priv ver r =
-  do rawPrelude <- readContent "files/Ruby/base.rb"
-     let prelude = replace "SilkApi" (unModuleName ns) rawPrelude
+  do let prelude = replace "SilkApi" (unModuleName ns) $ B.toString rbBase
      let cod = showCode . mkRb (unModuleName ns) ver . sortTree . (if priv then id else noPrivate) . apiSubtrees $ r
      return $ cod ++ "\n" ++ prelude
 

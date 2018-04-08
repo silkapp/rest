@@ -14,9 +14,6 @@ data-files:
   files/Docs/*.st
   files/Docs/*.js
   files/Docs/*.css
-  files/Javascript/prelude.js
-  files/Javascript/epilogue.js
-  files/Ruby/base.rb
 extra-source-files:
   CHANGELOG.md
   LICENSE
@@ -57,9 +54,11 @@ library
     , aeson >= 0.7 && < 1.4
     , base-compat-batteries == 0.10.*
     , blaze-html >= 0.5 && < 0.10
+    , bytestring >= 0.9 && < 0.11
     , code-builder == 0.1.*
     , directory >= 1.1 && < 1.4
     , fclabels >= 1.0.4 && < 2.1
+    , file-embed == 0.0.*
     , filepath >= 1.2 && < 1.5
     , hashable >= 1.1 && < 1.3
     , haskell-src-exts >= 1.20 && < 1.21
@@ -75,6 +74,7 @@ library
     , text >= 0.11 && < 1.3
     , uniplate >= 1.6.12 && < 1.7
     , unordered-containers == 0.2.*
+    , utf8-string >= 0.3 && < 1.1
     , vector >= 0.10 && < 0.13
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.2 && < 0.9

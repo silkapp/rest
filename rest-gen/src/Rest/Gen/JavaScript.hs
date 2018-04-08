@@ -6,8 +6,9 @@ import Prelude.Compat hiding ((.))
 import Control.Category ((.))
 import Data.Maybe
 import Text.StringTemplate
-import qualified Data.Label.Total   as L
-import qualified Data.List.NonEmpty as NList
+import qualified Data.ByteString.UTF8 as B
+import qualified Data.Label.Total     as L
+import qualified Data.List.NonEmpty   as NList
 
 import Code.Build
 import Code.Build.JavaScript
@@ -19,8 +20,8 @@ import qualified Rest.Gen.NoAnnotation as N
 
 mkJsApi :: N.ModuleName -> Bool -> Version -> Router m s -> IO String
 mkJsApi ns priv ver r =
-  do prelude <- render . setManyAttrib attrs . newSTMP <$> readContent "files/Javascript/prelude.js"
-     epilogue <- render . setManyAttrib attrs . newSTMP <$> readContent "files/Javascript/epilogue.js"
+  do let prelude  = render . setManyAttrib attrs . newSTMP . B.toString $ jsPrelude
+     let epilogue = render . setManyAttrib attrs . newSTMP . B.toString $ jsEpilogue
      let cod = showCode $ mkStack
                 [ unModuleName ns ++ ".prototype.version" .=. string (show ver)
                 , mkJsCode (unModuleName ns) priv r

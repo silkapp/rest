@@ -1,22 +1,32 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Rest.Gen.Utils
-  ( readContent
-  , groupByFirst
+  ( groupByFirst
   , fst3
   , snd3
   , thd3
   , upFirst
   , downFirst
   , mapHead
+
+  , jsEpilogue
+  , jsPrelude
+  , rbBase
   ) where
 
 import Prelude.Compat
 
+import Data.ByteString (ByteString)
 import Data.Char
+import Data.FileEmbed
 
-import Paths_rest_gen (getDataFileName)
+jsEpilogue :: ByteString
+jsEpilogue = $(embedFile "files/Javascript/epilogue.js")
 
-readContent :: String -> IO String
-readContent f = getDataFileName f >>= readFile
+jsPrelude :: ByteString
+jsPrelude = $(embedFile "files/Javascript/prelude.js")
+
+rbBase :: ByteString
+rbBase = $(embedFile "files/Ruby/base.rb")
 
 groupByFirst :: Eq a => [(a,b)] -> [(a,[b])]
 groupByFirst = foldr add []
