@@ -129,10 +129,13 @@ rawJsonAndXmlO_ = mkHandler (addHeader contentType . mkHeader accept . mkPar typ
         else if XmlFormat `elem` accs
           then return "<xml/>"
           else throwError . OutputError $ UnsupportedFormat "Only json and xml accept headers are allowed"
+
     contentType :: Header (Maybe String)
     contentType  = Header ["Content-Type"] (return . headMay . catMaybes)
+    
     typeParam   :: Param (Maybe String)
-    typeParam    = Param ["type"] (return . headMay . catMaybes)
+    typeParam    = withParamParserDefault "type" Nothing Just 
+
     accept      :: Header (Maybe String)
     accept       = Header ["Accept"] (return . headMay . catMaybes)
 

@@ -417,9 +417,7 @@ paramNames :: Param a -> [String]
 paramNames = nub . paramNames_
 
 paramNames_ :: Param a -> [String]
-paramNames_ NoParam = []
 paramNames_ (Param s _) = s
-paramNames_ (TwoParams p1 p2) = paramNames p1 ++ paramNames p2
 
 -- | Extract input description from handlers
 handlerInputs :: Handler m -> [DataDescription]
